@@ -1,0 +1,3621 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <link rel="stylesheet" href="styles.css" />
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta http-equiv="Content-Security-Policy" content="upgrade-insecure-requests">
+  <title>Michael Mazur</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" type="image/x-icon" href="favicon.ico" />
+  <link rel="shortcut icon" href="favicon.ico" />
+  <link rel="apple-touch-icon" href="favicon.svg" />
+  <meta name="theme-color" content="#000000" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;800&display=swap" rel="stylesheet" />
+  
+  <!-- Prefetch likely-to-visit case study pages -->
+  <link rel="prefetch" href="case-studies/personalization/personalization.html" />
+  <link rel="prefetch" href="case-studies/onboarding/onboarding.html" />
+  
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/ScrollTrigger.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brown:  #615B55;
+      --cream:  #FDF9EE;
+      --muted:  rgba(253,249,238,0.45);
+      --mono:   'Inter', sans-serif;
+    }
+
+    html { scroll-behavior: auto; }
+
+    body {
+      font-family: var(--mono);
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 1.6;
+      background: #ffffff;
+      color: #000000;
+      overflow-x: hidden;
+      transition: background-color 0.3s ease;
+      cursor: none !important;
+    }
+
+
+    /* Custom cursor */
+    #customCursor {
+      position: fixed;
+      width: 20px;
+      height: 20px;
+      border-radius: 50%;
+      background: #000000;
+      pointer-events: none;
+      z-index: 9999;
+      transition: none;
+      transform: translate(-50%, -50%);
+      opacity: 1 !important;
+      display: block !important;
+      left: 50%;
+      top: 50%;
+    }
+
+    #customCursor.white {
+      background: #ffffff;
+    }
+    
+    /* Hide custom cursor on mobile/touch devices */
+    @media (hover: none) and (pointer: coarse) {
+      #customCursor {
+        display: none !important;
+      }
+    }
+    
+
+    /* ─────────────────────────────
+       SECTION BASE
+    ───────────────────────────── */
+    .section {
+      min-height: 100vh;
+      width: 100%;
+      max-width: 1080px;
+      margin: 0 auto;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* ─────────────────────────────
+       HERO
+    ───────────────────────────── */
+    .hero {
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      padding: 60px 0;
+      min-height: 80vh;
+      position: relative;
+      overflow: visible;
+    }
+
+
+    /* Raycast's exact fade-in animations */
+    .page_fadeInUp {
+      animation: raycastFadeInUp 0.6s ease-out forwards;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .page_fadeInUpStagger {
+      animation: raycastFadeInUp 0.8s ease-out 0.2s forwards;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+
+    /* Raycast keyframe animations */
+    @keyframes raycastAmbient {
+      0% { 
+        transform: scale(1) rotate(0deg);
+        opacity: 1;
+      }
+      33% {
+        transform: scale(1.05) rotate(1deg);
+        opacity: 0.8;
+      }
+      66% {
+        transform: scale(0.98) rotate(-1deg);
+        opacity: 0.9;
+      }
+      100% { 
+        transform: scale(1.02) rotate(0.5deg);
+        opacity: 0.85;
+      }
+    }
+
+    @keyframes raycastTexture {
+      0% { transform: translate(0, 0); }
+      100% { transform: translate(-40px, -40px); }
+    }
+
+    @keyframes raycastFadeInUp {
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    /* Page load up and in animations */
+    @keyframes pageUpIn {
+      0% {
+        opacity: 0;
+        transform: translateY(80px);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    @keyframes pageMediaUpIn {
+      0% {
+        opacity: 0;
+        transform: translateY(100px) scale(0.95);
+      }
+      100% {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+      }
+    }
+
+    /* Initial hidden state for elements with more dramatic motion */
+    .page-animate {
+      opacity: 0;
+      transform: translateY(120px);
+    }
+    
+    /* More dramatic motion for hero elements */
+    .hero-logo.page-animate {
+      opacity: 0;
+      transform: translateX(-50%) translateY(150px) scale(0.8);
+    }
+    
+    .hero-text-content.page-animate {
+      opacity: 0;
+      transform: translate(-50%, -50%) translateY(80px);
+    }
+    
+
+    .page-animate-media {
+      opacity: 0;
+      transform: translateX(-100px);
+    }
+
+    .hero-logo {
+      width: clamp(138px, 13.8vw, 207px);
+      height: auto;
+      position: absolute;
+      top: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      opacity: 1;
+      cursor: pointer;
+    }
+    .hero-logo svg { width: 100%; height: auto; display: block; }
+
+    .hero-title {
+      font-size: clamp(36px, 4.5vw, 64px);
+      font-weight: 500;
+      line-height: 1.04;
+      letter-spacing: -0.04em;
+      color: #000000;
+      width: 75vw;
+      margin-bottom: 16px;
+      opacity: 1;
+      transition: color 0.8s ease;
+    }
+    .hero-title em { font-style: italic; }
+    
+    .hero-title {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    
+    .hero-sub {
+      opacity: 0;
+      transform: translateY(30px);
+    }
+    
+    @media (max-width: 600px) {
+      .hero-title, .hero-sub {
+        transform: translateY(60px);
+      }
+      .hero-text-content {
+        top: 140px !important;
+      }
+    }
+
+    .hero-text-content {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      position: absolute;
+      top: 39%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 100%;
+    }
+
+    .hero-sub {
+      color: #000000;
+      font-size: 24px;
+      font-weight: 300;
+      line-height: 1.8;
+      margin-top: 12px;
+      margin-bottom: 0;
+      white-space: nowrap;
+      opacity: 0.5;
+      transition: color 0.8s ease;
+    }
+
+    @media (min-width: 1600px) {
+      .hero-title {
+        font-size: 88px;
+        line-height: 96px;
+        letter-spacing: -0.07em;
+        margin-bottom: 0;
+      }
+      .hero-sub {
+        font-size: 32px;
+        margin-top: 32px;
+      }
+      .hero-text-content {
+        top: 37%;
+      }
+    }
+
+    .hero-cta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .btn {
+      height: 48px;
+      width: 164px;
+      background: var(--cream);
+      border-radius: 40px;
+      border: none;
+      cursor: pointer;
+      font-family: var(--mono);
+      font-size: 15px;
+      font-weight: 500;
+      color: #5B534B;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-decoration: none;
+      outline: none;
+      transition: all 0.3s ease;
+      transform: scale(1);
+    }
+    .btn:hover { 
+      background: #EDE4CE; 
+      transform: scale(1.05);
+    }
+    .btn-icon { width: 48px; border-radius: 10px; }
+
+    /* ─────────────────────────────
+       PROJECTS CAROUSEL
+    ───────────────────────────── */
+    .projects-section {
+      min-height: 60vh;
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-start;
+      overflow: hidden;
+      position: relative;
+      padding: 40px 0;
+      margin-top: -5vh;
+      max-width: none;
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+    }
+
+
+
+    .projects-track-wrap {
+      overflow: hidden;
+      width: 100%;
+      cursor: grab;
+      user-select: none;
+    }
+    .projects-track-wrap:active { cursor: grabbing; }
+    .projects-track-wrap #customCursor { display: none; }
+
+    .projects-track {
+      display: flex;
+      align-items: center;
+      gap: 20px;
+      padding: 0;
+      width: max-content;
+      /* will-change removed for performance */
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      transform-style: preserve-3d;
+      -webkit-transform-style: preserve-3d;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+    }
+
+    .project-card {
+      flex: 0 0 auto;
+      width: 450px !important;
+      height: 480px !important; /* Base height - fixed */
+      background: transparent;
+      border-radius: 16px;
+      overflow: hidden;
+      position: relative;
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+                  box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      opacity: 1;
+    }
+    
+    .project-card:hover {
+      transform: scale(1.015) !important;
+      transform-origin: center center;
+      transition: transform 0.3s ease-out !important;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.05);
+      z-index: 10;
+      cursor: pointer;
+    }
+    
+    
+    /* Apply border-radius to the card itself, not just media */
+    .project-card {
+      border-radius: 16px !important;
+      overflow: hidden !important;
+    }
+    
+    /* Scale down personalization media slightly to give border-radius breathing room */
+    .project-card[data-case-study="personalization"] video,
+    .project-card[data-case-study="personalization"] img {
+      width: 98%;
+      height: 98%;
+      top: 1%;
+      left: 1%;
+    }
+
+    /* Staggered heights with specific classes for consistent sizing */
+    .project-card.height-1 {
+      height: 480px !important;
+      align-self: center;
+    }
+    
+    .project-card.height-2 {
+      height: 520px !important;
+      align-self: center;
+    }
+
+    .project-card.height-3 {
+      height: 500px !important;
+      align-self: center;
+    }
+
+    .project-card.height-4 {
+      height: 550px !important;
+      align-self: center;
+    }
+
+    .project-card:hover {
+      transform: translateY(-8px);
+      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    }
+
+    .project-card-media {
+      width: 100%;
+      height: 100%;
+      position: relative;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+    
+    /* Smooth cover image to video transitions with GPU acceleration */
+    .project-card-media img,
+    .project-card-media video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+      transition: opacity 0.3s ease;
+      /* GPU forcing removed for performance */
+      -webkit-font-smoothing: antialiased; /* Smooth text */
+    }
+    
+    .project-card-media img.static-image {
+      z-index: 2;
+      transition: opacity 0.1s ease-out;
+    }
+    
+    .project-card-media video.hover-gif {
+      z-index: 1;
+      opacity: 1;
+      transition: none;
+      visibility: visible;
+    }
+    
+    /* No CSS hover transitions - JavaScript will handle everything */
+    
+    /* Removed CSS hover for video - JavaScript will control visibility */
+
+    .project-card img,
+    .project-card video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center;
+      border-radius: 16px;
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      /* will-change removed for performance */
+    }
+
+    /* Onboarding video - normal positioning */
+    [data-case-study="onboarding"] video {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Fix for marketplace video black line on right side */
+    [data-case-study="freight-marketplace"] video {
+      width: 101%;
+      height: 100%;
+      left: -0.5px;
+    }
+
+    .project-card .static-image {
+      opacity: 1;
+      z-index: 2;
+    }
+
+    .project-card .hover-gif {
+      opacity: 0;
+      z-index: 3;
+      transition: opacity 0.25s ease-out;
+    }
+
+    .project-overlay {
+      position: absolute;
+      bottom: 24px;
+      left: 24px;
+      right: 24px;
+      background: transparent;
+      padding: 16px 20px;
+      border-radius: 12px;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+
+
+    .project-overlay-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: #000000;
+      margin-bottom: 2px;
+      line-height: 1.3;
+    }
+
+    .project-overlay-desc {
+      font-size: 14px;
+      color: #000000;
+      line-height: 1.4;
+    }
+
+    .project-card-phones {
+      width: 100%;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      padding: 24px 16px;
+    }
+    .project-card-phones img {
+      height: 75%;
+      width: auto;
+      border-radius: 8px;
+      box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+      transition: transform 0.3s ease;
+    }
+    .project-card:hover .project-card-phones img {
+      transform: translateY(-3px);
+    }
+
+    .project-card-text {
+      flex: 1;
+      padding: 48px 40px;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+    }
+
+    .project-company {
+      font-size: 11px;
+      font-weight: 400;
+      letter-spacing: 0.18em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 16px;
+    }
+
+    .project-title {
+      font-size: clamp(28px, 3vw, 44px);
+      font-weight: 800;
+      line-height: 1.06;
+      letter-spacing: -0.03em;
+      color: var(--cream);
+      margin-bottom: 20px;
+    }
+
+    .project-desc {
+      font-size: clamp(14px, 1.1vw, 16px);
+      font-weight: 300;
+      color: rgba(253,249,238,0.6);
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+
+    .project-cta {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    /* ─────────────────────────────
+       WORDS SECTION
+    ───────────────────────────── */
+    .words-section {
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 0 8vw;
+      min-height: 100vh;
+      width: 100%;
+      max-width: 100vw;
+      box-sizing: border-box;
+    }
+
+    .words-label {
+      font-size: 54px;
+      font-weight: 800;
+      letter-spacing: 0px;
+      text-transform: none;
+      color: var(--cream);
+      margin-bottom: 64px;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .words-layout {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      width: 100%;
+      max-width: 1000px;
+      gap: 40px;
+    }
+
+    .words-list {
+      flex: 0 0 auto;
+      list-style: none;
+      opacity: 0;
+      transform: translateX(-30px);
+    }
+
+    .words-list li {
+      font-size: 48px;
+      font-weight: 800;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      margin-bottom: 16px;
+      color: var(--muted);
+      cursor: pointer;
+      transition: color 0.3s ease, opacity 0.3s ease;
+      user-select: none;
+      opacity: 0.6;
+    }
+    .words-list li.active { 
+      color: var(--cream); 
+      opacity: 1;
+    }
+    .words-list li:hover { 
+      color: var(--cream); 
+      opacity: 1;
+    }
+
+    .words-connector {
+      flex: 1;
+      position: relative;
+      height: 200px;
+      opacity: 0;
+    }
+
+    .words-connector svg {
+      width: 100%;
+      height: 100%;
+      overflow: visible;
+    }
+
+    .connector-path {
+      fill: none;
+      stroke: var(--cream);
+      stroke-width: 1.5;
+      stroke-linecap: round;
+      stroke-linejoin: round;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      stroke-dasharray: 1000;
+      stroke-dashoffset: 1000;
+    }
+    .connector-path.visible {
+      opacity: 1;
+      animation: drawLine 0.8s cubic-bezier(0.16,1,0.3,1) forwards;
+    }
+
+    @keyframes drawLine {
+      to { stroke-dashoffset: 0; }
+    }
+
+    .words-description {
+      flex: 0 0 497px;
+      max-width: 497px;
+      opacity: 0;
+      transform: translateX(30px);
+    }
+
+    .words-description p {
+      font-size: clamp(20px, 2vw, 28px);
+      font-weight: 400;
+      line-height: 1.4;
+      letter-spacing: -0.02em;
+      color: var(--cream);
+      opacity: 0;
+      transform: translateY(8px);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+    }
+    .words-description p.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+
+    
+
+
+
+
+
+
+
+
+
+
+
+
+
+    
+    
+    
+    
+
+
+
+
+    .view-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 32px;
+      background: transparent;
+      color: #ffffff;
+      border: 1px solid #ffffff;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 500;
+      font-family: var(--mono);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .view-button:hover {
+      background: rgba(253,249,238,0.05);
+      border-color: rgba(253,249,238,0.3);
+      transform: translateY(-2px);
+    }
+
+    .arrow-button {
+      width: 48px;
+      height: 48px;
+      background: transparent;
+      border: 1px solid #ffffff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: #ffffff;
+    }
+
+    .arrow-button:hover {
+      background: rgba(253,249,238,0.05);
+      border-color: rgba(253,249,238,0.3);
+      transform: translateY(-2px);
+    }
+
+    .arrow-button svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    /* Responsive Design */
+    @media (max-width: 1024px) {
+
+
+
+
+    }
+
+    @media (max-width: 768px) {
+
+
+
+      
+      
+    }
+
+    /* ─────────────────────────────
+       EXPERIENCE SECTION
+    ───────────────────────────── */
+    .section.words-section {
+      max-width: 1560px !important;
+    }
+    
+    .experience-content {
+      max-width: 1560px;
+      margin: 0 auto;
+      padding: 0 40px;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .experience-title {
+      font-size: clamp(32px, 4vw, 48px);
+      font-weight: 500;
+      line-height: 1.2;
+      letter-spacing: -0.02em;
+      color: #fff;
+      margin-bottom: 16px;
+      text-align: center;
+      transition: color 0.8s ease;
+    }
+
+    .experience-subtitle {
+      font-size: 24px;
+      font-weight: 300;
+      color: #A0A2A5;
+      opacity: 1;
+      text-align: center;
+      margin-bottom: 60px;
+      transition: color 0.8s ease;
+    }
+
+    @media (min-width: 1600px) {
+      .experience-title {
+        font-size: 88px;
+        line-height: 96px;
+        letter-spacing: -0.05em;
+        margin-bottom: 0;
+      }
+      .experience-subtitle {
+        font-size: 32px;
+        margin-top: 32px;
+        margin-bottom: 80px;
+      }
+    }
+
+
+    .experience-list {
+      margin-bottom: 40px;
+      width: 760px !important;
+      max-width: none;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .experience-item {
+      display: flex;
+      align-items: center;
+      padding: 24px 0;
+      border-bottom: 1px solid #222323;
+      transition: all 0.3s ease, border-bottom-color 0.8s ease;
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    /* All items should have same opacity by default */
+    .experience-item,
+    .experience-item-hidden.show {
+      opacity: 1;
+      transition: opacity 0.3s ease;
+    }
+
+    /* Hover states for experience list - apply to all visible items */
+    .experience-list:hover .experience-item {
+      opacity: 0.3 !important;
+      transition: opacity 0.4s ease-in-out !important;
+    }
+
+    .experience-list:hover .experience-item-hidden.show {
+      opacity: 0.3 !important;
+      transition: opacity 0.4s ease-in-out !important;
+    }
+
+    .experience-list:hover .experience-item:hover {
+      opacity: 1 !important;
+      transition: opacity 0.2s ease-out !important;
+    }
+
+    .experience-list:hover .experience-item-hidden.show:hover {
+      opacity: 1 !important;
+      transition: opacity 0.2s ease-out !important;
+    }
+
+    .experience-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: 12px;
+      margin-right: 20px;
+      transition: all 0.3s ease;
+      background-size: contain;
+      background-repeat: no-repeat;
+      background-position: center;
+    }
+
+    .experience-icon.stripe {
+      background-image: url('images/stripe.png');
+    }
+
+    .experience-icon.uber {
+      background-image: url('images/uber.png');
+    }
+
+    .experience-icon.huge {
+      background-image: url('images/huge.png');
+    }
+
+    .experience-icon.instrument {
+      background-image: url('images/instrument.png');
+    }
+
+    .experience-icon.away {
+      background-image: url('images/away.png');
+    }
+
+    .experience-icon.spring {
+      background-image: url('images/spring.png');
+    }
+
+    .experience-icon.chartbeat {
+      background-image: url('images/chartbeat.png');
+    }
+
+    .experience-icon.clarity {
+      background-image: url('images/clarity.png');
+    }
+
+    .experience-item-hidden {
+      display: flex;
+      align-items: center;
+      padding: 0;
+      border-bottom: 1px solid #222323;
+      transition: all 0.4s ease, border-bottom-color 0.8s ease;
+      opacity: 0;
+      transform: translateY(20px);
+      max-height: 0;
+      overflow: hidden;
+      margin: 0;
+      /* Ensure proper document flow */
+      position: relative;
+      width: 100%;
+    }
+
+    .experience-item-hidden.show {
+      opacity: 1;
+      transform: translateY(0);
+      max-height: 120px; /* Increased to accommodate larger content */
+      padding: 24px 0;
+      /* Force layout recalculation */
+      min-height: 72px;
+    }
+
+    .experience-item-hidden.clarity-last {
+      border-bottom: none;
+    }
+
+
+    .experience-details {
+      flex: 1;
+    }
+
+    .experience-company {
+      font-size: 20px;
+      font-weight: 500;
+      color: var(--cream);
+      margin: 0 0 4px 0;
+      line-height: 1.2;
+      transition: color 0.8s ease;
+    }
+
+    .experience-role {
+      font-size: 14px;
+      font-weight: 300;
+      color: #A0A2A5;
+      opacity: 1;
+      margin: 0;
+      line-height: 1.3;
+      transition: color 0.8s ease;
+    }
+
+    .experience-years {
+      font-size: 16px;
+      font-weight: 300;
+      color: #A0A2A5;
+      opacity: 1;
+      white-space: nowrap;
+      transition: color 0.8s ease;
+    }
+
+    .experience-footer {
+      text-align: center;
+      margin-top: 60px;
+    }
+
+    @media (min-width: 1600px) {
+      .words-section {
+        margin-top: 160px;
+      }
+      .contact-section {
+        margin-top: 200px;
+      }
+      .experience-footer {
+        margin-top: 100px;
+      }
+      .experience-list {
+        width: 1040px !important;
+      }
+      .experience-item {
+        padding: 32px 0;
+      }
+      .experience-item-hidden.show {
+        padding: 32px 0;
+        max-height: 200px;
+        min-height: 144px;
+      }
+      .experience-icon {
+        width: 80px;
+        height: 80px;
+        margin-right: 16px;
+      }
+      .experience-company {
+        font-size: 32px;
+      }
+      .experience-role {
+        font-size: 24px;
+        letter-spacing: -0.02em;
+      }
+      .experience-years {
+        font-size: 24px;
+        letter-spacing: -0.02em;
+      }
+    }
+
+    .view-all-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 32px;
+      background: transparent;
+      color: #ffffff;
+      border: 1px solid #ffffff;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 500;
+      font-family: var(--mono);
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .view-all-button:hover {
+      background: rgba(253,249,238,0.05);
+      border-color: rgba(253,249,238,0.3);
+      transform: translateY(-2px);
+    }
+
+    @media (min-width: 1600px) {
+      .view-all-button {
+        font-size: 24px;
+        padding: 24px 48px;
+      }
+    }
+
+    @media (max-width: 700px) {
+      .experience-content {
+        padding: 0 20px;
+      }
+      
+      .experience-list {
+        max-width: 100%;
+      }
+      
+      .experience-item {
+        flex-direction: column;
+        align-items: flex-start;
+        padding: 20px 0;
+      }
+      
+      .experience-icon {
+        margin-right: 0;
+        margin-bottom: 16px;
+      }
+      
+      .experience-years {
+        margin-top: 8px;
+      }
+    }
+
+    /* ─────────────────────────────
+       CONTACT SECTION
+    ───────────────────────────── */
+    .contact-section {
+      background: transparent;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: flex-start;
+      padding: 42px 8vw 40px 8vw;
+      min-height: 80vh;
+      max-width: none;
+      width: 100vw;
+      margin-left: calc(-50vw + 50%);
+    }
+
+    .contact-content {
+      max-width: 600px;
+      text-align: center;
+      opacity: 0;
+      transform: translateY(30px);
+    }
+
+    .contact-title {
+      font-size: 48px;
+      font-weight: 500;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      color: #ffffff; /* White on black background initially */
+      margin-bottom: 24px;
+      transition: color 0.8s ease;
+    }
+
+    .contact-subtitle {
+      font-size: clamp(18px, 2vw, 24px);
+      font-weight: 300;
+      color: #ffffff; /* White on black background initially */
+      margin-bottom: 64px;
+      line-height: 1.4;
+      transition: color 0.8s ease;
+    }
+
+    @media (min-width: 1600px) {
+      .contact-content {
+        max-width: 900px;
+      }
+      .contact-title {
+        font-size: 88px;
+        line-height: 96px;
+        letter-spacing: -0.07em;
+        margin-bottom: 0;
+      }
+      .contact-subtitle {
+        font-size: 32px;
+        margin-top: 32px;
+      }
+    }
+
+    .contact-email {
+      font-size: 20px;
+      font-weight: 300;
+      color: var(--cream);
+      margin-bottom: 80px;
+      transition: color 0.8s ease;
+      text-decoration: none;
+    }
+
+    .contact-email:hover {
+      opacity: 0.8;
+    }
+
+    .contact-actions {
+      margin-top: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .copy-button {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 16px 40px;
+      min-width: 240px;
+      background: #000000;
+      color: #ffffff;
+      border: none;
+      border-radius: 50px;
+      font-size: 16px;
+      font-weight: 500;
+      transition: all 0.3s ease;
+      cursor: pointer;
+      font-family: var(--mono);
+    }
+
+    .copy-button:hover {
+      background: #333333;
+      transform: translateY(-2px);
+    }
+
+    .copy-button svg {
+      flex-shrink: 0;
+    }
+
+    @media (min-width: 1600px) {
+      .copy-button {
+        font-size: 24px;
+        padding: 24px 48px;
+        min-width: 280px;
+      }
+      .copy-button svg {
+        width: 20px;
+        height: 22px;
+      }
+    }
+
+
+    .social-icons {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 40px;
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    
+    .social-icon {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      width: 64px;
+      height: 64px;
+      background: #E9E8EA;
+      border-radius: 12px;
+      transition: all 0.3s ease;
+      text-decoration: none;
+    }
+
+    .social-icon:hover {
+      transform: translateY(-2px);
+      background: #D9D8DA;
+    }
+
+    .social-icon img {
+      width: 32px;
+      height: 32px;
+      transition: all 0.3s ease;
+      filter: brightness(0);
+    }
+
+    .social-icon:first-child img {
+      filter: brightness(0);
+    }
+    
+    .social-icon:first-child {
+      transform: rotate(-15deg);
+    }
+    
+    .social-icon:nth-child(2) {
+      transform: translateY(-20px);
+    }
+    
+    .social-icon:nth-child(2):hover {
+      transform: translateY(-22px);
+    }
+    
+    .social-icon:last-child {
+      transform: rotate(15deg);
+    }
+    
+    .social-icon:first-child:hover {
+      transform: rotate(-15deg) translateY(-2px);
+    }
+    
+    .social-icon:last-child:hover {
+      transform: rotate(15deg) translateY(-2px);
+    }
+
+    /* Toast notification */
+    .toast {
+      position: fixed;
+      top: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #10B981;
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.3s ease;
+      z-index: 10000;
+      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+    }
+
+    .toast.show {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(10px);
+    }
+
+    @media (max-width: 700px) {
+      .contact-section {
+        padding: 42px 20px 30px 20px;
+      }
+      
+      .copy-button {
+        width: 280px;
+      }
+    }
+
+    /* ─────────────────────────────
+       BACKGROUND TRANSITIONS
+    ───────────────────────────── */
+    .bg-transition {
+      display: none;
+    }
+
+
+    @media (max-width: 700px) {
+      .hero-title { width: 90vw; white-space: normal; }
+      .hero-sub { white-space: normal; }
+    }
+
+    @media (max-width: 600px) {
+      .hero-title { 
+        font-size: 38px !important;
+        width: 90vw; 
+        white-space: normal;
+        line-height: 1.2;
+        margin-bottom: 0 !important;
+      }
+      .hero-title em::before {
+        content: '\A';
+        white-space: pre;
+      }
+      .hero-sub { 
+        font-size: 16px !important;
+        white-space: normal;
+        margin-top: 16px;
+        opacity: 0.5 !important;
+      }
+      .hero-text-content {
+        top: 140px !important;
+      }
+      
+      .projects-section {
+        margin-top: -176px !important;
+      }
+      .projects-track {
+        gap: 8px !important;
+      }
+      .project-card { 
+        width: 374px !important;
+        height: 450px !important;
+        flex: 0 0 auto;
+        margin-right: 16px;
+      }
+      .project-card.height-1,
+      .project-card.height-2,
+      .project-card.height-3,
+      .project-card.height-4 {
+        height: 450px !important;
+      }
+      .project-card-media img,
+      .project-card-media video {
+        object-fit: cover !important;
+        object-position: center center !important;
+        width: 100% !important;
+        height: 100% !important;
+        top: 0 !important;
+        left: 0 !important;
+      }
+      .project-card-image { 
+        flex: 0 0 40%;
+        padding: 20px;
+      }
+      .project-card-text {
+        padding: 20px;
+      }
+      .words-layout { 
+        flex-direction: column; 
+        gap: 40px;
+      }
+      .words-connector { display: none; }
+      .words-description { 
+        max-width: 100%; 
+        text-align: center;
+      }
+      .words-list {
+        text-align: center;
+      }
+      .experience-content {
+        padding: 0 40px;
+        max-width: 100vw;
+        width: 100vw;
+        box-sizing: border-box;
+        margin: 0 auto;
+      }
+      .experience-list {
+        width: 100% !important;
+        max-width: 100% !important;
+      }
+      .experience-title {
+        font-size: 38px !important;
+      }
+      .experience-subtitle {
+        font-size: 16px !important;
+        margin-bottom: 40px;
+      }
+      .experience-item {
+        flex-direction: row;
+        align-items: center;
+        padding: 16px 0;
+        position: relative;
+      }
+      .experience-icon {
+        margin-right: 12px;
+        margin-bottom: 0;
+        width: 40px;
+        height: 40px;
+        flex-shrink: 0;
+      }
+      .experience-details {
+        flex: 1;
+      }
+      .experience-years {
+        position: absolute;
+        right: 0;
+        top: 50%;
+        transform: translateY(-50%);
+        margin-top: 0;
+        font-size: 14px;
+      }
+      .words-section {
+        margin-top: -4px !important;
+        max-width: none !important;
+        width: 100% !important;
+        margin-left: 0 !important;
+        margin-right: 0 !important;
+        padding-left: 0 !important;
+        padding-right: 0 !important;
+      }
+      .view-all-button {
+        touch-action: manipulation !important;
+        pointer-events: auto !important;
+        cursor: pointer !important;
+        -webkit-tap-highlight-color: rgba(253,249,238,0.1) !important;
+        -webkit-touch-callout: none !important;
+        -webkit-user-select: none !important;
+        user-select: none !important;
+        position: relative !important;
+        z-index: 999 !important;
+        min-height: 44px !important;
+        min-width: 44px !important;
+      }
+      .experience-content {
+        padding: 0 40px !important;
+        max-width: none !important;
+        width: 100% !important;
+        box-sizing: border-box !important;
+        margin: 0 !important;
+      }
+      .contact-title {
+        font-size: 38px !important;
+      }
+      .contact-subtitle {
+        font-size: 16px !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<!-- Custom cursor - LIGHTWEIGHT VERSION -->
+<div id="customCursor" style="position: fixed; width: 20px; height: 20px; border-radius: 50%; background: #000000; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); opacity: 1 !important; display: block !important; left: 50%; top: 50%;"></div>
+
+<script>
+// Hide cursor element on mobile immediately
+(function() {
+  const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   (navigator.maxTouchPoints > 0 && window.matchMedia('(hover: none)').matches);
+  
+  if (isMobile) {
+    const cursor = document.getElementById('customCursor');
+    if (cursor) {
+      cursor.style.display = 'none';
+    }
+  }
+})();
+
+// Load mobile images on mobile devices
+(function() {
+  const isMobile = window.innerWidth <= 600;
+  
+  if (isMobile) {
+    document.addEventListener('DOMContentLoaded', function() {
+      const mobileImages = {
+        'personalization': 'images/personalization-mobile.png',
+        'platform-experience': 'images/platformexperience-mobile.png',
+        'freight-marketplace': 'images/marketplace-mobile.png',
+        'onboarding': 'images/onboarding-mobile.png'
+      };
+      
+      Object.keys(mobileImages).forEach(caseStudy => {
+        const cards = document.querySelectorAll(`[data-case-study="${caseStudy}"] .static-image`);
+        cards.forEach(img => {
+          img.src = mobileImages[caseStudy];
+        });
+      });
+    });
+  }
+})();
+</script>
+
+<script>
+// Ensure custom cursor is visible immediately (only on desktop)
+(function() {
+  const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   (navigator.maxTouchPoints > 0 && window.matchMedia('(hover: none)').matches);
+  
+  if (isMobile) return;
+  
+  const cursor = document.getElementById('customCursor');
+  if (cursor) {
+    cursor.style.cssText = 'position: fixed !important; width: 20px !important; height: 20px !important; border-radius: 50% !important; background: #000000 !important; pointer-events: none !important; z-index: 9999 !important; transform: translate(-50%, -50%) !important; opacity: 1 !important; display: block !important; left: 50% !important; top: 50% !important;';
+  }
+})();
+</script>
+
+<!-- Background transition element -->
+<div class="bg-transition" id="bgTransition"></div>
+
+<!-- ── HERO ── -->
+<section class="section hero" id="hero">
+  <div class="hero-logo page-animate" id="heroLogo"><!-- logo injected by JS --></div>
+  <div class="hero-text-content page-animate" id="heroTextContent">
+    <h1 class="hero-title" id="heroTitle">Design that makes<br>complex things <em>feel natural.</em></h1>
+    <p class="hero-sub" id="heroSub">Craft, conviction, and clarity.
+
+</p>
+  </div>
+</section>
+
+<!-- ── PROJECTS CAROUSEL ── -->
+<section class="projects-section" id="projects">
+  
+  
+  <div class="projects-track-wrap" id="projectsWrap">
+    <div class="projects-track" id="projectsTrack">
+
+      <!-- Original set -->
+      <div class="project-card page-animate-media height-4" data-case-study="personalization">
+        <div class="project-card-media">
+          <img src="images/personalization-cover.jpg" alt="Personalization" class="static-image" />
+          <video src="images/personalization.mp4?v=2" poster="images/personalization-cover.jpg" alt="Personalization animation" class="hover-gif" muted playsinline preload="metadata" loading="lazy"></video>
+        </div>
+      </div>
+
+      <div class="project-card page-animate-media height-1" data-case-study="platform-experience">
+        <div class="project-card-media">
+          <img src="images/platform-experience-cover.jpg" alt="Platform experience" class="static-image" />
+          <video src="images/platformexperience.mp4" poster="images/platform-experience-cover.jpg" alt="Payment platform animation" class="hover-gif" muted playsinline preload="metadata" loading="lazy"></video>
+        </div>
+      </div>
+
+      <div class="project-card page-animate-media height-2" data-case-study="onboarding">
+        <div class="project-card-media">
+          <img src="images/onboarding-cover.jpg" alt="Onboarding" class="static-image" />
+          <video src="images/onboarding.mp4" poster="images/onboarding-cover.jpg" alt="Onboarding animation" class="hover-gif" muted playsinline preload="metadata" loading="lazy"></video>
+        </div>
+      </div>
+
+      <div class="project-card page-animate-media height-3" data-case-study="freight-marketplace">
+        <div class="project-card-media">
+          <img src="images/freight-marketplace-cover.jpg" alt="Freight marketplace" class="static-image" />
+          <video src="images/freightmarketplace.mp4" poster="images/freight-marketplace-cover.jpg" alt="Freight marketplace animation" class="hover-gif" muted playsinline preload="metadata" loading="lazy"></video>
+        </div>
+      </div>
+
+      <!-- Duplicate set for infinite loop -->
+      <div class="project-card page-animate-media height-4" data-case-study="personalization">
+        <div class="project-card-media">
+          <img src="images/personalization-cover.jpg" alt="Personalization" class="static-image" />
+          <video src="images/personalization.mp4?v=2" poster="images/personalization-cover.jpg" alt="Personalization animation" class="hover-gif" muted playsinline preload="metadata" loading="lazy"></video>
+        </div>
+      </div>
+
+      <div class="project-card page-animate-media height-1" data-case-study="platform-experience">
+        <div class="project-card-media">
+          <img src="images/platform-experience-cover.jpg" alt="Platform experience" class="static-image" />
+          <video src="images/platformexperience.mp4" poster="images/platform-experience-cover.jpg" alt="Payment platform animation" class="hover-gif" muted playsinline preload="metadata" loading="lazy"></video>
+        </div>
+      </div>
+
+      <div class="project-card page-animate-media height-2" data-case-study="onboarding">
+        <div class="project-card-media">
+          <img src="images/onboarding-cover.jpg" alt="Onboarding" class="static-image" />
+          <video src="images/onboarding.mp4" poster="images/onboarding-cover.jpg" alt="Onboarding animation" class="hover-gif" muted playsinline preload="metadata" loading="lazy"></video>
+        </div>
+      </div>
+
+      <div class="project-card page-animate-media height-3" data-case-study="freight-marketplace">
+        <div class="project-card-media">
+          <img src="images/freight-marketplace-cover.jpg" alt="Freight marketplace" class="static-image" />
+          <video src="images/freightmarketplace.mp4" poster="images/freight-marketplace-cover.jpg" alt="Freight marketplace animation" class="hover-gif" muted playsinline preload="metadata" loading="lazy"></video>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</section>
+
+
+<!-- ── EXPERIENCE SECTION ── -->
+<section class="section words-section" id="words">
+  <div class="experience-content">
+    <h2 class="experience-title">Experience</h2>
+    <p class="experience-subtitle">12 years across agencies, and product teams.
+
+</p>
+
+    <div class="experience-list">
+      <div class="experience-item">
+        <div class="experience-icon stripe"></div>
+        <div class="experience-details">
+          <h3 class="experience-company">Stripe</h3>
+          <p class="experience-role">Product designer</p>
+        </div>
+        <div class="experience-years">2022 - 2025</div>
+      </div>
+
+      <div class="experience-item">
+        <div class="experience-icon uber"></div>
+        <div class="experience-details">
+          <h3 class="experience-company">Uber</h3>
+          <p class="experience-role">Product designer</p>
+        </div>
+        <div class="experience-years">2019 - 2022</div>
+      </div>
+
+      <div class="experience-item">
+        <div class="experience-icon huge"></div>
+        <div class="experience-details">
+          <h3 class="experience-company">Huge</h3>
+          <p class="experience-role">Contract product designer</p>
+        </div>
+        <div class="experience-years">2019</div>
+      </div>
+
+      <div class="experience-item">
+        <div class="experience-icon instrument"></div>
+        <div class="experience-details">
+          <h3 class="experience-company">Instrument</h3>
+          <p class="experience-role">Contract product designer</p>
+        </div>
+        <div class="experience-years">2019</div>
+      </div>
+      
+      <!-- Hidden additional items -->
+      <div class="experience-item-hidden">
+        <div class="experience-icon away"></div>
+        <div class="experience-details">
+          <h3 class="experience-company">Away</h3>
+          <p class="experience-role">Contract product designer</p>
+        </div>
+        <div class="experience-years">2017 - 2019</div>
+      </div>
+
+      <div class="experience-item-hidden">
+        <div class="experience-icon spring"></div>
+        <div class="experience-details">
+          <h3 class="experience-company">Spring Inc</h3>
+          <p class="experience-role">Contract product designer</p>
+        </div>
+        <div class="experience-years">2016 - 2017</div>
+      </div>
+
+      <div class="experience-item-hidden">
+        <div class="experience-icon chartbeat"></div>
+        <div class="experience-details">
+          <h3 class="experience-company">Chartbeat</h3>
+          <p class="experience-role">Contract product designer</p>
+        </div>
+        <div class="experience-years">2015 - 2016</div>
+      </div>
+
+      <div class="experience-item-hidden clarity-last">
+        <div class="experience-icon clarity"></div>
+        <div class="experience-details">
+          <h3 class="experience-company">Clarity consulting</h3>
+          <p class="experience-role">Product designer</p>
+        </div>
+        <div class="experience-years">2013 - 2015</div>
+      </div>
+    </div>
+
+    <div class="experience-footer">
+      <button class="view-all-button" id="viewMoreLink" onclick="
+        console.log('Inline click triggered');
+        var items = document.querySelectorAll('.experience-item-hidden');
+        var btn = this;
+        for(var i = 0; i < items.length; i++) {
+          items[i].style.display = 'flex';
+          items[i].classList.add('show');
+        }
+        btn.style.display = 'none';
+        return false;
+      ">View all</button>
+    </div>
+  </div>
+</section>
+
+<!-- ── CONTACT SECTION ── -->
+<section class="section contact-section" id="contact">
+  <div class="contact-content">
+    <div class="social-icons">
+      <a href="https://www.linkedin.com/in/michaelmazur00/" target="_blank" class="social-icon">
+        <img src="images/linkedin.svg" alt="LinkedIn">
+      </a>
+      <a href="https://x.com/mmazur00" target="_blank" class="social-icon">
+        <img src="images/x.svg" alt="X">
+      </a>
+      <a href="https://github.com/MichaelMazur00" target="_blank" class="social-icon">
+        <img src="images/github.svg" alt="GitHub">
+      </a>
+    </div>
+    <h2 class="contact-title">Let's talk</h2>
+    <p class="contact-subtitle">If you are interested in learning more or exploring a potential partnership, reach out.</p>
+    
+    <div class="contact-actions">
+      <button class="copy-button" id="copyButton" onclick="
+        var email = 'michael.mazur00@gmail.com';
+        navigator.clipboard.writeText(email).then(function() {
+          var toast = document.createElement('div');
+          toast.id = 'copyToast';
+          toast.textContent = 'Email copied to clipboard!';
+          toast.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #000; color: #fff; padding: 12px 24px; border-radius: 25px; font-size: 14px; z-index: 10000;';
+          document.body.appendChild(toast);
+          setTimeout(function() { document.body.removeChild(toast); }, 2000);
+        }).catch(function() {
+          alert('Email: ' + email);
+        });
+        return false;
+      ">
+        <span>E-mail</span>
+        <svg width="12" height="13" viewBox="0 0 30 32" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path fill-rule="evenodd" clip-rule="evenodd" d="M6.81818 6.80556H3.40909C2.50425 6.80556 1.63778 7.16427 0.998582 7.80229C0.359382 8.44031 0 9.30517 0 10.2083V28.3565C0 29.2596 0.359375 30.1245 0.998582 30.7625C1.63778 31.4005 2.50425 31.7593 3.40909 31.7593H19.3182C20.223 31.7593 21.0895 31.4006 21.7287 30.7625C22.3679 30.1245 22.7273 29.2596 22.7273 28.3565V24.9537H26.1364C27.0412 24.9537 27.9077 24.595 28.5469 23.957C29.1861 23.319 29.5455 22.4541 29.5455 21.5509V3.40278C29.5455 2.49962 29.1861 1.63475 28.5469 0.996733C27.9077 0.358717 27.0412 0 26.1364 0H10.2273C8.34375 0 6.81818 1.52274 6.81818 3.40278V6.80556ZM20.4545 10.2083V28.3565C20.4545 28.6571 20.3352 28.9463 20.1222 29.159C19.9091 29.3716 19.6193 29.4907 19.3182 29.4907H3.40911C3.10797 29.4907 2.8182 29.3716 2.60514 29.159C2.39207 28.9463 2.27276 28.6571 2.27276 28.3565V10.2083C2.27276 9.90776 2.39207 9.61852 2.60514 9.40586C2.81821 9.19319 3.10798 9.07409 3.40911 9.07409H19.3182C19.6193 9.07409 19.9091 9.19319 20.1222 9.40586C20.3352 9.61853 20.4545 9.90776 20.4545 10.2083ZM22.7273 22.6852H26.1364C26.4375 22.6852 26.7273 22.5661 26.9403 22.3534C27.1534 22.1407 27.2727 21.8515 27.2727 21.5509V3.40279C27.2727 3.10222 27.1534 2.81298 26.9403 2.60032C26.7273 2.38764 26.4375 2.26855 26.1364 2.26855H10.2273C9.59942 2.26855 9.09091 2.77612 9.09091 3.40281V6.80559H19.3182C20.223 6.80559 21.0895 7.16429 21.7287 7.80232C22.3679 8.44033 22.7273 9.3052 22.7273 10.2084V22.6852Z" fill="currentColor"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</section>
+
+
+<script>
+// Initialize GSAP
+gsap.registerPlugin(ScrollTrigger);
+
+// Smart video preloading function - called after animations complete
+window.preloadHoverVideos = function() {
+  // Delay video preloading to not block initial page load
+  setTimeout(() => {
+    console.log('Preloading hover videos with delay...');
+    const allHoverVideos = document.querySelectorAll('.hover-gif[src*=".mp4"]');
+    
+    allHoverVideos.forEach((video, index) => {
+      setTimeout(() => {
+        video.preload = 'auto';
+        video.load();
+      }, index * 500); // Much longer delay between videos
+    });
+  }, 2000); // Wait 2 seconds before starting preload
+};
+
+
+// Inject logo SVG
+(function() {
+  var logoDiv = document.querySelector('.hero-logo');
+  logoDiv.innerHTML = `
+    <svg xmlns="http://www.w3.org/2000/svg" width="60" height="auto" viewBox="-15 0 380 119" style="opacity: 1;">
+      <style>
+        /* Initial state - letters are visible for entrance animation */
+        .letter-flip {
+          opacity: 1;
+          transform: translateX(0px);
+          transition: opacity 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        /* Then hide letters with stagger after intro */
+        .logo-letters-hide .letter-flip {
+          opacity: 0;
+          transform: translateX(15px);
+          transition-delay: 0s;
+        }
+        
+        .logo-letters-hide .letter-a { transition-delay: 0.2s; }
+        .logo-letters-hide .letter-z { transition-delay: 0.15s; }
+        .logo-letters-hide .letter-u { transition-delay: 0.1s; }
+        .logo-letters-hide .letter-r { transition-delay: 0.05s; }
+        
+        .m {
+          transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+        }
+        
+        /* After letters hide, M moves to center */
+        .logo-letters-hide .m {
+          transform: translateX(40px);
+        }
+        
+        /* Hover states */
+        .logo-letters-hide:hover .m {
+          transform: translateX(10px);
+        }
+        
+        .logo-letters-hide:hover .letter-flip {
+          opacity: 1;
+          transform: translateX(10px);
+        }
+        
+        .logo-letters-hide:hover .letter-a { transition-delay: 0.05s; }
+        .logo-letters-hide:hover .letter-z { transition-delay: 0.1s; }
+        .logo-letters-hide:hover .letter-u { transition-delay: 0.15s; }
+        .logo-letters-hide:hover .letter-r { transition-delay: 0.2s; }
+        
+        path {
+          fill: currentColor;
+        }
+      </style>
+      
+      <g class="logo-container" transform="translate(60, 0) scale(1.9125)">
+        <!-- Invisible hover area around M -->
+        <rect x="-10" y="-10" width="130" height="130" fill="transparent" style="cursor: pointer;" />
+        
+        <!-- M -->
+        <path class="m" d="M14.064 35.7119H10.704L7.34399 18.7199C6.28799 13.5359 5.80799 10.5599 5.27999 7.48791C5.42399 11.4719 5.42399 14.7839 5.42399 19.8719V35.7119H-1.44839e-05V-8.67844e-05H8.54399L10.992 12.7199C11.76 16.8959 12.192 19.2959 12.576 21.9839C12.96 19.2959 13.344 16.8959 14.112 12.7199L16.56 -8.67844e-05H24.96V35.7119H19.392V19.8719C19.392 14.7839 19.44 11.4719 19.584 7.48791C19.056 10.5119 18.48 13.5839 17.52 18.3839L14.064 35.7119Z" fill="currentColor"/>
+        
+        <!-- A -->
+        <g transform="translate(30, 9)">
+          <path class="letter-flip letter-a" d="M-1.75238e-05 17.8565C-1.75238e-05 14.4005 1.34398 12.9125 4.46398 11.4725L9.83998 8.97648C10.56 8.59248 10.752 8.35248 10.752 7.44048V7.24848C10.752 5.52048 10.176 4.65648 8.30398 4.65648H8.20798C6.47998 4.65648 5.85598 5.56848 5.85598 7.29648V9.07248H0.335982V6.57648C0.335982 2.88048 1.91998 0.000473976 7.82398 0.000473976H8.59198C14.544 0.000473976 16.56 2.35248 16.56 6.57648V19.9205C16.56 21.0245 16.8 21.3605 17.952 21.3605H18.672V26.6885H13.776C11.904 26.6885 11.136 25.4405 10.896 23.7125C10.272 24.6725 8.54398 26.8805 5.56798 26.8805H5.42398C2.15998 26.8805 -1.75238e-05 24.3365 -1.75238e-05 20.8325V17.8565ZM10.752 13.2485C10.128 13.6325 8.35198 14.6405 7.58398 15.1685C6.47998 15.8885 5.95198 16.6085 5.95198 18.2885V19.5845C5.95198 21.2645 6.71998 22.2245 8.20798 22.2245C9.74398 22.2245 10.752 21.0245 10.752 19.3445V13.2485Z" fill="currentColor"/>
+        </g>
+        
+        <!-- Z -->
+        <g transform="translate(52, 9)">
+          <path class="letter-flip letter-z" d="M6.83665e-05 26.208V21.648L8.06407 4.99201H0.432069V7.62939e-06H14.8321V4.32001L6.57607 21.12H15.1681V26.208H6.83665e-05Z" fill="currentColor"/>
+        </g>
+        
+        <!-- U -->
+        <g transform="translate(70, 9)">
+          <path class="letter-flip letter-u" d="M17.0879 26.208H11.1359V23.136C10.4159 24.48 8.20791 26.4 5.61591 26.4H5.32791C2.06391 26.4 -9.36985e-05 23.952 -9.36985e-05 21.024V7.62939e-06H6.14391V18.816C6.14391 20.688 7.00791 21.696 8.49591 21.696C10.1759 21.696 10.9919 20.688 10.9919 18.624V7.62939e-06H17.0879V26.208Z" fill="currentColor"/>
+        </g>
+        
+        <!-- R -->
+        <g transform="translate(92, 9)">
+          <path class="letter-flip letter-r" d="M6.09606 26.4004H5.48363e-05V0.19239H6.00005V3.16839C6.38405 2.64039 7.82405 0.000390053 11.0401 0.000390053H11.2321C14.6401 0.000390053 15.8881 2.25639 15.8881 5.56839V12.6244H10.0801V7.72839C10.0801 5.66439 9.60006 4.89639 8.11206 4.89639C6.62406 4.89639 6.09606 5.80839 6.09606 7.72839V26.4004Z" fill="currentColor"/>
+        </g>
+      </g>
+    </svg>
+  `;
+  
+  // No need for initial animation - letters start visible
+  
+  // The hide animation will be triggered by the main GSAP timeline
+  window.triggerLogoHide = function() {
+    var logoContainer = logoDiv.querySelector('.logo-container');
+    if (logoContainer) {
+      logoContainer.classList.add('logo-letters-hide');
+    }
+  };
+})();
+</script>
+
+<script>
+// GSAP Animations - OPTIMIZED FOR PERFORMANCE
+document.addEventListener('DOMContentLoaded', function() {
+  
+  // Hero entrance animation - TEMPORARILY SIMPLIFIED FOR PERFORMANCE TESTING
+  // Skip complex hero timeline for now
+  // const heroTimeline = gsap.timeline({ delay: 0.2 });
+  
+  // TEMPORARILY DISABLED FOR PERFORMANCE TESTING
+  // heroTimeline
+  //   .to('#heroLogo', {
+  //     opacity: 1,
+  //     y: 0,
+  //     duration: 0.8,
+  //     ease: 'power3.out',
+  //     // force3D removed for performance
+  //   })
+  //   .to('#heroTitle', {
+  //     opacity: 1,
+  //     y: 0,
+  //     duration: 0.8,
+  //     ease: 'power3.out',
+  //     // force3D removed for performance
+  //   }, '-=0.4')
+  //   .to('#heroSub', {
+  //     opacity: 1,
+  //     y: 0,
+  //     duration: 0.8,
+  //     ease: 'power3.out'
+  //   }, '-=0.4')
+  // ;
+
+
+  // Projects header animation removed - now handled by page load animation
+
+  // Set initial state for page animations - OPTIMIZED
+  gsap.set('.page-animate-media', {
+    opacity: 0,
+    x: -40, // Reduced from -60 for lighter feel
+  });
+
+  // Page load animations - OPTIMIZED VERSION
+  const mainTimeline = gsap.timeline();
+  
+  // Debug: Check if elements exist
+  console.log('Logo element:', document.querySelector('.hero-logo.page-animate'));
+  console.log('Hero text element:', document.querySelector('.hero-text-content.page-animate'));
+  
+  // Mobile detection for fallback
+  const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 600;
+  
+  mainTimeline
+    // Logo animation - SIMPLIFIED FOR MOBILE COMPATIBILITY
+    .to('.hero-logo.page-animate', {
+      opacity: 1,
+      y: 0,
+      scale: 1,
+      duration: 0.7,
+      ease: 'power2.out',
+      onStart: () => {
+        setTimeout(() => {
+          if (window.triggerLogoHide) {
+            window.triggerLogoHide();
+          }
+        }, 1000);
+      }
+    }, 0.2)
+    // Hero text content - SIMPLIFIED FOR MOBILE COMPATIBILITY  
+    .to('.hero-text-content.page-animate', {
+      opacity: 1,
+      y: 0,
+      duration: 0.8,
+      ease: 'power2.out'
+    }, 0.3)
+    // Hero title animation
+    .to('.hero-title', {
+      opacity: 1,
+      y: 0,
+      duration: 0.6,
+      ease: 'power2.out'
+    }, 0.4)
+    // Hero subtitle animation
+    .to('.hero-sub', {
+      opacity: 0.5,
+      y: 0,
+      duration: 0.6,
+      ease: 'power2.out'
+    }, 0.5)
+  
+  mainTimeline
+    // Project cards - OPTIMIZED
+    .to('.page-animate-media', {
+      opacity: 1,
+      x: 0,
+      duration: 0.3, // Faster duration  
+      stagger: 0.04, // Tight stagger
+      ease: 'power2.out', // Lighter easing
+      onComplete: () => {
+        console.log('Cards animation completed - starting carousel');
+        
+        // Start preloading videos after animation
+        window.preloadHoverVideos();
+        
+        // Start carousel with multiple attempts
+        setTimeout(() => {
+          console.log('Attempting to start carousel...');
+          if (window.carouselReady) {
+            window.carouselReady();
+          } else {
+            console.log('carouselReady not available, retrying...');
+            setTimeout(() => {
+              if (window.carouselReady) {
+                window.carouselReady();
+              }
+            }, 500);
+          }
+        }, 100);
+      }
+    }, 0.5); // Start sooner
+  
+  // Mobile fallback - if animations don't work, force visibility
+  if (isMobileDevice) {
+    setTimeout(() => {
+      const logo = document.querySelector('.hero-logo.page-animate');
+      const textContent = document.querySelector('.hero-text-content.page-animate');
+      
+      if (logo && logo.style.opacity === '0') {
+        console.log('Forcing hero logo visibility on mobile');
+        logo.style.opacity = '1';
+        logo.style.transform = 'translateX(-50%) translateY(0px) scale(1)';
+      }
+      
+      if (textContent && textContent.style.opacity === '0') {
+        console.log('Forcing hero text visibility on mobile');
+        textContent.style.opacity = '1';
+        textContent.style.transform = 'translate(-50%, -50%) translateY(0px)';
+      }
+    }, 2000); // Give GSAP time to work, then force if needed
+  }
+
+  // Remove scroll-triggered animation that conflicts with carousel movement
+  // Cards are already animated by main timeline and should stay stable during scroll
+  
+  // Ensure carousel starts after page load - use original system
+  setTimeout(() => {
+    console.log('Forcing original carousel system to start...');
+    if (window.carouselReady) {
+      window.carouselReady();
+    } else {
+      console.log('carouselReady not available yet, retrying...');
+      setTimeout(() => {
+        if (window.carouselReady) {
+          window.carouselReady();
+        }
+      }, 1000);
+    }
+  }, 2000); // Wait 2 seconds for everything to initialize
+
+  // Set initial states for experience section
+  gsap.set('.experience-content', {
+    opacity: 0,
+    y: 15, // Reduced for lighter feel
+  });
+  
+  gsap.set('.experience-title, .experience-subtitle', {
+    opacity: 0,
+    y: 15, // Reduced for lighter feel
+  });
+  
+  gsap.set('.experience-item', {
+    opacity: 0,
+    y: 10, // Small distance for list items
+  });
+
+  // Experience section animation - OPTIMIZED FOR SPEED
+  const experienceTimeline = gsap.timeline({
+    scrollTrigger: {
+      trigger: '#words',
+      start: 'top 90%', // Start earlier
+      end: 'bottom 20%',
+      toggleActions: 'play none none none'
+    }
+  });
+
+  experienceTimeline
+    .to('.experience-content', {
+      opacity: 1,
+      y: 0,
+      duration: 0.4, // Much faster
+      ease: 'power2.out', // Snappier easing
+      // force3D removed for performance
+    })
+    .to('.experience-title', {
+      y: 0,
+      duration: 0.5, // Much faster
+      ease: 'power2.out', // Snappier easing
+      // force3D removed for performance
+    }, '-=0.3') // Overlap more
+    .to('.experience-subtitle', {
+      opacity: 1,
+      y: 0,
+      duration: 0.4, // Much faster
+      ease: 'power2.out', // Snappier easing
+      // force3D removed for performance
+    }, '-=0.4') // Better overlap
+    .to('.experience-item', {
+      opacity: 1,
+      y: 0,
+      duration: 0.4, // Much faster
+      stagger: 0.05, // Tighter stagger
+      ease: 'power2.out', // Snappier easing
+      // force3D removed for performance
+    }, '-=0.3'); // Better overlap
+
+
+
+  
+  
+
+  
+  // Fade out carousel completely as experience section comes into focus
+  gsap.to('#projectsWrap', {
+    opacity: 0,
+    scrollTrigger: {
+      trigger: '#words',
+      start: 'top 80%',
+      end: 'top 20%',
+      scrub: 0.5, // Smooth scrubbing with reduced intensity
+      toggleActions: 'play none none reverse'
+    }
+  });
+
+  // Set initial states for contact section
+  gsap.set('.contact-content', {
+    opacity: 0,
+    y: 30, // Fade up distance
+  });
+  
+  gsap.set('.social-icons, .contact-title, .contact-subtitle', {
+    opacity: 0,
+    y: 20, // Individual element fade up
+  });
+  
+  // Keep copy button completely hidden until background transition
+  gsap.set('.contact-actions', {
+    opacity: 0,
+    y: 40, // Larger offset for copy button
+    visibility: 'hidden' // Extra hidden state
+  });
+
+
+
+
+
+
+  // Contact section animation - different speeds for mobile vs desktop
+  const isMobileAnimation = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+  const mobileDuration = isMobileAnimation ? 0.4 : 0.8; // Faster on mobile
+  const mobileSubDuration = isMobileAnimation ? 0.3 : 0.6; // Faster sub-animations on mobile
+  
+  const contactTimeline = gsap.timeline({
+    scrollTrigger: {
+      trigger: '#contact',
+      start: 'top 80%',
+      toggleActions: 'play none none none'
+    }
+  });
+
+  contactTimeline
+    .to('.contact-content', {
+      opacity: 1,
+      y: 0,
+      duration: mobileDuration,
+      ease: 'power2.out'
+    })
+    .to('.social-icons', {
+      opacity: 1,
+      y: 0,
+      duration: mobileSubDuration,
+      ease: 'power2.out'
+    }, isMobileAnimation ? '-=0.3' : '-=0.6')
+    .to('.contact-title', {
+      opacity: 1,
+      y: 0,
+      duration: mobileSubDuration,
+      ease: 'power2.out'
+    }, isMobileAnimation ? '-=0.2' : '-=0.4')
+    .to('.contact-subtitle', {
+      opacity: 0.5,
+      y: 0,
+      duration: mobileSubDuration,
+      ease: 'power2.out'
+    }, isMobileAnimation ? '-=0.3' : '-=0.6')
+    .to('.contact-actions', {
+      opacity: 1,
+      y: 0,
+      visibility: 'visible',
+      duration: mobileSubDuration,
+      ease: 'power2.out'
+    }, isMobileAnimation ? '-=0.2' : '-=0.4');
+    
+  // Copy button now animates as part of the main contact timeline above
+
+  // Footer fade out on scroll up - using window scroll event (desktop only)
+  let lastScrollY = window.scrollY;
+  let contactSectionSeen = false;
+  let hasBeenFadedOut = false;
+  let fadeInTimeout = null;
+  
+  // Check if mobile device
+  const isMobile = /Android|webOS|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || window.innerWidth <= 768;
+  
+  window.addEventListener('scroll', function() {
+    // Skip fade effect on mobile
+    if (isMobile) {
+      gsap.set('.contact-content', { opacity: 1 });
+      return;
+    }
+    const currentScrollY = window.scrollY;
+    const scrollDirection = currentScrollY > lastScrollY ? 'down' : 'up';
+    const contactSection = document.getElementById('contact');
+    
+    if (!contactSection) return;
+    
+    const contactRect = contactSection.getBoundingClientRect();
+    const windowHeight = window.innerHeight;
+    
+    // Check if contact section is visible
+    if (contactRect.top < windowHeight && contactRect.bottom > 0) {
+      contactSectionSeen = true;
+    }
+    
+    // Clear any pending fade in timeout
+    if (fadeInTimeout) {
+      clearTimeout(fadeInTimeout);
+      fadeInTimeout = null;
+    }
+    
+    // If user has seen contact section and is now scrolling up
+    if (contactSectionSeen && scrollDirection === 'up' && contactRect.top > 0) {
+      // Fade out based on how far the section has moved up
+      const fadeDistance = Math.min(contactRect.top / windowHeight, 1);
+      const opacity = Math.max(0, 1 - fadeDistance * 2);
+      hasBeenFadedOut = true;
+      
+      console.log('Fading contact content to opacity:', opacity, 'Direction:', scrollDirection);
+      gsap.set('.contact-content', { opacity: opacity });
+    } else if (scrollDirection === 'down' || contactRect.top <= 0) {
+      // If it has been faded out before, delay the fade back in
+      if (hasBeenFadedOut && scrollDirection === 'down') {
+        fadeInTimeout = setTimeout(() => {
+          console.log('Delayed fade in triggered');
+          gsap.to('.contact-content', { 
+            opacity: 1, 
+            duration: 0.6,
+            ease: 'power2.out'
+          });
+        }, 300); // 300ms delay
+      } else {
+        // Immediate restore for first time viewing
+        gsap.set('.contact-content', { opacity: 1 });
+      }
+    }
+    
+    lastScrollY = currentScrollY;
+  });
+
+  // Background fade is now implemented separately below
+});
+
+// Four-phase background fade: white → black → black → white
+(function() {
+  var r1 = 255, g1 = 255, b1 = 255; // White #FFFFFF (hero)
+  var r2 = 0,   g2 = 0,   b2 = 0;   // Black #000000 (carousel)
+  var r3 = 0,   g3 = 0,   b3 = 0;   // Black #000000 (experience)
+  var r4 = 255, g4 = 255, b4 = 255; // White #FFFFFF (contact)
+
+  function onScroll() {
+    var projectsSection = document.getElementById('projects');
+    var wordsSection = document.getElementById('words');
+    var contactSection = document.getElementById('contact');
+    
+    if (!projectsSection) return;
+    
+    // DEBUG: Log scroll function execution
+    console.log('🔄 onScroll() called at scrollY:', window.scrollY);
+
+    var viewportHeight = window.innerHeight;
+    var scrollY = window.scrollY;
+    
+    // Phase 1: Abrupt white to black when most cards are in viewport
+    var carouselTop = projectsSection.getBoundingClientRect().top;
+    var carouselVisible = carouselTop <= (viewportHeight * 0.3); // Switch when 70% of cards visible
+    var inCarousel = carouselVisible;
+    
+    var currentR, currentG, currentB;
+    
+    if (!inCarousel) {
+      // Pure white for hero section
+      currentR = 255;
+      currentG = 255;
+      currentB = 255;
+      console.log('📍 PHASE: Hero section (white) - RGB:', currentR, currentG, currentB);
+    } else {
+      // Black for carousel section
+      currentR = 0;
+      currentG = 0;
+      currentB = 0;
+      console.log('📍 PHASE: Carousel section (black) - RGB:', currentR, currentG, currentB);
+      
+      // Phase 2: Stay black for experience section
+      if (wordsSection) {
+        var wordsStart = wordsSection.offsetTop - (viewportHeight * 0.6);
+        var wordsEnd = wordsStart + 400;
+        var phase2T = Math.min(Math.max((scrollY - wordsStart) / (wordsEnd - wordsStart), 0), 1);
+        var ease2 = 1 - Math.pow(1 - phase2T, 4);
+        
+        if (phase2T > 0) {
+          currentR = Math.round(r2 + (r3-r2)*ease2);
+          currentG = Math.round(g2 + (g3-g2)*ease2);
+          currentB = Math.round(b2 + (b3-b2)*ease2);
+          console.log('📍 PHASE 2: Words transition - RGB:', currentR, currentG, currentB, 'ease2:', ease2);
+        }
+      }
+      
+      // Phase 3: Black to white when deep into/past resume section
+      if (contactSection && wordsSection) {
+        // Calculate dynamic resume section height accounting for expanded experience items
+        var baseResumeHeight = wordsSection.offsetHeight;
+        var expandedItemsHeight = 0;
+        
+        // Check if experience list is expanded and calculate additional height
+        var hiddenItemsShown = document.querySelectorAll('.experience-item-hidden.show');
+        if (hiddenItemsShown.length > 0) {
+          // Calculate actual height of expanded items
+          expandedItemsHeight = 0;
+          hiddenItemsShown.forEach(item => {
+            expandedItemsHeight += item.offsetHeight;
+          });
+          
+          // Fallback to estimated height if measurement fails
+          if (expandedItemsHeight === 0) {
+            expandedItemsHeight = hiddenItemsShown.length * 72;
+          }
+          
+          console.log('📏 Expanded experience items detected:', hiddenItemsShown.length, 'Additional height:', expandedItemsHeight);
+        }
+        
+        var resumeSectionHeight = baseResumeHeight + expandedItemsHeight;
+        var contactStart = wordsSection.offsetTop + (resumeSectionHeight * 0.75);
+        // End transition well into contact section to ensure full white
+        var contactEnd = contactSection.offsetTop + (contactSection.offsetHeight * 0.3);
+        var phase3T = Math.min(Math.max((scrollY - contactStart) / (contactEnd - contactStart), 0), 1);
+        var ease3 = 1 - Math.pow(1 - phase3T, 3); // Even more gradual curve
+        
+        // Debug logging
+        if (phase3T > 0 && Math.floor(Date.now() / 1000) % 2 === 0) {
+          console.log('Phase 3 transition:', {
+            scrollY: scrollY,
+            baseResumeHeight: baseResumeHeight,
+            expandedItemsHeight: expandedItemsHeight,
+            totalResumeHeight: resumeSectionHeight,
+            contactStart: contactStart,
+            contactEnd: contactEnd,
+            phase3T: phase3T,
+            ease3: ease3
+          });
+        }
+        
+        if (phase3T > 0) {
+          currentR = Math.round(r3 + (r4-r3)*ease3);
+          currentG = Math.round(g3 + (g4-g3)*ease3);
+          currentB = Math.round(b3 + (b4-b3)*ease3);
+          console.log('📍 PHASE 3: Contact transition - RGB:', currentR, currentG, currentB, 'phase3T:', phase3T, 'ease3:', ease3);
+          
+          // Force full white when transition is complete
+          if (phase3T >= 1) {
+            currentR = 255;
+            currentG = 255;
+            currentB = 255;
+            console.log('📍 PHASE 3: Forced full white - RGB:', currentR, currentG, currentB);
+          }
+        }
+        
+        // Additional fallback: force white when in contact section
+        if (scrollY >= contactSection.offsetTop) {
+          currentR = 255;
+          currentG = 255;
+          currentB = 255;
+          console.log('📍 FALLBACK: Contact section detected - forced white RGB:', currentR, currentG, currentB);
+        }
+      }
+    }
+    
+    // Aggressive fallback: check if we're near the bottom of the page
+    var documentHeight = Math.max(document.body.scrollHeight, document.body.offsetHeight, 
+                                  document.documentElement.clientHeight, document.documentElement.scrollHeight, 
+                                  document.documentElement.offsetHeight);
+    var windowHeight = window.innerHeight;
+    
+    // Only force white when actually at the very bottom (last 50px)
+    if (scrollY + windowHeight >= documentHeight - 50) {
+      currentR = 255;
+      currentG = 255;
+      currentB = 255;
+      console.log('📍 BOTTOM FALLBACK: Forcing white - at very bottom of page RGB:', currentR, currentG, currentB);
+    }
+    
+    // Update background color
+    document.body.style.background = 'rgb(' + currentR + ',' + currentG + ',' + currentB + ')';
+    
+    // Debug the final color
+    if (Math.floor(Date.now() / 1000) % 3 === 0) {
+      console.log('Final background color:', `rgb(${currentR}, ${currentG}, ${currentB})`);
+    }
+    
+    // Update text colors based on actual background RGB values
+    var textColor, subtitleColor;
+    
+    // If background is more white than black, use black text
+    var backgroundBrightness = (currentR + currentG + currentB) / 3;
+    
+    // DEBUG: Enhanced brightness calculation logging
+    console.log('=== BACKGROUND BRIGHTNESS DEBUG ===');
+    console.log('💡 backgroundBrightness:', backgroundBrightness, 'RGB:', currentR, currentG, currentB);
+    console.log('🧮 Brightness calculation: (', currentR, '+', currentG, '+', currentB, ') / 3 =', backgroundBrightness);
+    console.log('🎯 Threshold comparison: backgroundBrightness >', 127, '=', backgroundBrightness > 127);
+    console.log('🌈 Current body background from computed style:', window.getComputedStyle(document.body).backgroundColor);
+    console.log('🌈 Current body background from style:', document.body.style.background);
+    
+    // TEMPORARY DEBUG: Test with forced brightness values
+    // Change forceTestBrightness to true and set testBrightness to test:
+    const forceTestBrightness = false; // Set to true to enable testing
+    const testBrightness = 200; // 200 = force white detection, 50 = force dark detection
+    if (forceTestBrightness) {
+      console.log('🔧 TESTING with forced brightness:', testBrightness, '(original was:', backgroundBrightness, ')');
+      backgroundBrightness = testBrightness;
+    }
+    
+    console.log('===================================');
+    
+    // Background detection using brightness threshold
+    const effectiveThreshold = 127;
+    const isLightBackground = backgroundBrightness > effectiveThreshold;
+    
+    console.log('🎚️ Using threshold:', effectiveThreshold, '| isLightBackground:', isLightBackground);
+    
+    if (isLightBackground) {
+      // Light background - use black text
+      textColor = 'rgba(0,0,0,1)';
+      subtitleColor = 'rgba(0,0,0,1)'; // Keep hero sub full opacity
+      console.log('🔆 Light background detected - using dark text');
+    } else {
+      // Dark background - use white text
+      textColor = 'rgba(255,255,255,1)';
+      subtitleColor = 'rgba(255,255,255,1)'; // Keep hero sub full opacity
+      console.log('🌙 Dark background detected - using light text');
+    }
+    
+    document.body.style.color = textColor;
+    
+    // Update hero elements
+    var heroTitle = document.querySelector('.hero-title');
+    var heroSub = document.querySelector('.hero-sub');
+    
+    if (heroTitle) heroTitle.style.color = textColor;
+    if (heroSub) heroSub.style.color = subtitleColor;
+    
+    // Update contact elements
+    var socialIcons = document.querySelectorAll('.social-icon img');
+    var contactTitle = document.querySelector('.contact-title');
+    var contactSubtitle = document.querySelector('.contact-subtitle');
+    
+    // Social icons are already white in SVG, no filter needed
+    if (contactTitle) {
+      contactTitle.style.color = isLightBackground ? '#000000' : '#ffffff';
+    }
+    if (contactSubtitle) {
+      contactSubtitle.style.color = isLightBackground ? '#000000' : '#ffffff';
+      // Set opacity to 0.5 as requested for white text
+      const targetOpacity = isLightBackground ? 0.5 : 0.5;
+      console.log('📞 contact-subtitle found, setting opacity to:', targetOpacity);
+      
+      // Try multiple methods to ensure opacity is applied
+      // gsap.set(contactSubtitle, { opacity: targetOpacity });
+      // contactSubtitle.style.setProperty('opacity', targetOpacity.toString(), 'important');
+      
+      // AGGRESSIVE: Kill any active tweens and force override
+      // gsap.killTweensOf(contactSubtitle);
+      // gsap.set(contactSubtitle, { opacity: targetOpacity, overwrite: true });
+      
+      // Double-check after a delay to override any conflicting animations
+      // setTimeout(() => {
+      //   gsap.set(contactSubtitle, { opacity: targetOpacity, overwrite: true });
+      //   contactSubtitle.style.setProperty('opacity', targetOpacity.toString(), 'important');
+      // }, 500);
+      
+      // Verify the opacity was set
+      setTimeout(() => {
+        const computedOpacity = window.getComputedStyle(contactSubtitle).opacity;
+        console.log('✅ contact-subtitle computed opacity:', computedOpacity);
+      }, 600);
+    } else {
+      console.log('❌ contact-subtitle element not found');
+    }
+    
+    // Update copy button colors based on background
+    var copyButton = document.getElementById('copyButton');
+    if (copyButton) {
+      if (isLightBackground) {
+        // Light background - use black button with white text
+        copyButton.style.backgroundColor = '#000000';
+        copyButton.style.color = '#ffffff';
+      } else {
+        // Dark background - use white button with black text
+        copyButton.style.backgroundColor = '#ffffff';
+        copyButton.style.color = '#000000';
+      }
+      console.log('🔘 Copy button colors updated for', isLightBackground ? 'light' : 'dark', 'background');
+      
+      // Update hover states dynamically
+      copyButton.onmouseenter = function() {
+        if (isLightBackground) {
+          // Light background - darker hover state for black button
+          this.style.backgroundColor = '#333333';
+          this.style.color = '#ffffff';
+        } else {
+          // Dark background - darker hover state for white button  
+          this.style.backgroundColor = '#e0e0e0';
+          this.style.color = '#000000';
+        }
+        this.style.transform = 'translateY(-2px)';
+      };
+      
+      copyButton.onmouseleave = function() {
+        if (isLightBackground) {
+          // Light background - restore black button
+          this.style.backgroundColor = '#000000';
+          this.style.color = '#ffffff';
+        } else {
+          // Dark background - restore white button
+          this.style.backgroundColor = '#ffffff';
+          this.style.color = '#000000';
+        }
+        this.style.transform = 'translateY(0)';
+      };
+    } else {
+      console.log('❌ copy button element not found');
+    }
+    
+    // Update experience section elements
+    var experienceTitle = document.querySelector('.experience-title');
+    var experienceSubtitle = document.querySelector('.experience-subtitle');
+    var experienceCompanies = document.querySelectorAll('.experience-company');
+    var experienceRoles = document.querySelectorAll('.experience-role');
+    var experienceYears = document.querySelectorAll('.experience-years');
+    var experienceButton = document.querySelector('.view-all-button');
+    var experienceItems = document.querySelectorAll('.experience-item, .experience-item-hidden.show');
+    
+    if (experienceTitle) {
+      // FIXED: Force white text for experience section since it's on dark background
+      const experienceTextColor = '#fff'; // Use white color to match other subtitles
+      experienceTitle.style.color = experienceTextColor;
+      experienceTitle.style.setProperty('color', experienceTextColor, 'important');
+      
+      const targetOpacity = 1.0; // Use full opacity for main title visibility
+      console.log('🎯 experience-title found, setting color to:', experienceTextColor, 'opacity to:', targetOpacity);
+      
+      // Try multiple methods to ensure opacity is applied
+      gsap.set(experienceTitle, { opacity: targetOpacity });
+      experienceTitle.style.setProperty('opacity', targetOpacity.toString(), 'important');
+      
+      // AGGRESSIVE: Kill any active tweens and force override
+      gsap.killTweensOf(experienceTitle);
+      gsap.set(experienceTitle, { opacity: targetOpacity, overwrite: true });
+      
+      // Double-check after a delay to override any conflicting animations
+      setTimeout(() => {
+        gsap.set(experienceTitle, { opacity: targetOpacity, overwrite: true });
+        experienceTitle.style.setProperty('opacity', targetOpacity.toString(), 'important');
+      }, 500);
+      
+      // Verify the opacity was set
+      setTimeout(() => {
+        const computedOpacity = window.getComputedStyle(experienceTitle).opacity;
+        console.log('✅ experience-title computed opacity:', computedOpacity);
+      }, 600);
+    } else {
+      console.log('❌ experience-title element not found');
+    }
+    if (experienceSubtitle) {
+      // FIXED: Force gray text for experience subtitle
+      const experienceSubtitleColor = '#A0A2A5';
+      experienceSubtitle.style.color = experienceSubtitleColor;
+      experienceSubtitle.style.setProperty('color', experienceSubtitleColor, 'important');
+      
+      const targetOpacity = 1; // Full opacity
+      console.log('📝 experience-subtitle found, setting color to:', experienceSubtitleColor, 'opacity to:', targetOpacity);
+      
+      // Try multiple methods to ensure opacity is applied
+      gsap.set(experienceSubtitle, { opacity: targetOpacity });
+      experienceSubtitle.style.setProperty('opacity', targetOpacity.toString(), 'important');
+      
+      // AGGRESSIVE: Kill any active tweens and force override
+      gsap.killTweensOf(experienceSubtitle);
+      gsap.set(experienceSubtitle, { opacity: targetOpacity, overwrite: true });
+      
+      // Double-check after a delay to override any conflicting animations
+      setTimeout(() => {
+        gsap.set(experienceSubtitle, { opacity: targetOpacity, overwrite: true });
+        experienceSubtitle.style.setProperty('opacity', targetOpacity.toString(), 'important');
+        // Additional aggressive override
+        experienceSubtitle.style.opacity = '1';
+      }, 500);
+      
+      // Additional check after animations complete
+      setTimeout(() => {
+        experienceSubtitle.style.setProperty('opacity', '1', 'important');
+        experienceSubtitle.style.opacity = '1';
+      }, 2000);
+      
+      // Verify the opacity was set
+      setTimeout(() => {
+        const computedOpacity = window.getComputedStyle(experienceSubtitle).opacity;
+        console.log('✅ experience-subtitle computed opacity:', computedOpacity);
+      }, 600);
+    } else {
+      console.log('❌ experience-subtitle element not found');
+    }
+    if (experienceButton) {
+      // FIXED: Force white text and border for experience button since it's on dark background
+      const buttonColor = '#ffffff';
+      const buttonBorderColor = '#ffffff';
+      experienceButton.style.color = buttonColor;
+      experienceButton.style.setProperty('color', buttonColor, 'important');
+      experienceButton.style.borderColor = buttonBorderColor;
+      experienceButton.style.setProperty('border-color', buttonBorderColor, 'important');
+      experienceButton.style.opacity = '1';
+      experienceButton.style.setProperty('opacity', '1', 'important');
+    }
+    
+    // FIXED: Force light text for experience companies since they're on dark background
+    experienceCompanies.forEach(company => {
+      const companyColor = '#FDF9EE'; // Use cream color to match design
+      company.style.color = companyColor;
+      company.style.setProperty('color', companyColor, 'important');
+    });
+    experienceRoles.forEach((role, index) => {
+      // FIXED: Force gray text for experience roles
+      const experienceRoleColor = '#A0A2A5';
+      role.style.color = experienceRoleColor;
+      role.style.setProperty('color', experienceRoleColor, 'important');
+      
+      const targetOpacity = 1; // Full opacity
+      console.log(`👔 experience-role ${index} found, setting color to:`, experienceRoleColor, 'opacity to:', targetOpacity);
+      
+      // Try multiple methods to ensure opacity is applied
+      gsap.set(role, { opacity: targetOpacity });
+      role.style.setProperty('opacity', targetOpacity.toString(), 'important');
+      
+      // AGGRESSIVE: Kill any active tweens and force override
+      gsap.killTweensOf(role);
+      gsap.set(role, { opacity: targetOpacity, overwrite: true });
+      
+      // Double-check after a delay to override any conflicting animations
+      setTimeout(() => {
+        gsap.set(role, { opacity: targetOpacity, overwrite: true });
+        role.style.setProperty('opacity', targetOpacity.toString(), 'important');
+      }, 500);
+      
+      // Verify the opacity was set (only log first role to avoid spam)
+      if (index === 0) {
+        setTimeout(() => {
+          const computedOpacity = window.getComputedStyle(role).opacity;
+          console.log('✅ experience-role[0] computed opacity:', computedOpacity);
+        }, 600);
+      }
+    });
+    // FIXED: Force gray text for experience years
+    experienceYears.forEach(years => {
+      const yearsColor = '#A0A2A5';
+      years.style.color = yearsColor;
+      years.style.setProperty('color', yearsColor, 'important');
+      years.style.setProperty('opacity', '1', 'important');
+    });
+    
+    
+    // Force dark borders for experience items
+    document.querySelectorAll('.experience-item, .experience-item-hidden').forEach(item => {
+      item.style.setProperty('border-bottom-color', '#222323', 'important');
+    });
+  }
+
+  // Throttled scroll listener for better performance
+  let scrollTimeout;
+  let isScrolling = false;
+  
+  function throttledOnScroll() {
+    if (!isScrolling) {
+      requestAnimationFrame(() => {
+        onScroll();
+        isScrolling = false;
+      });
+      isScrolling = true;
+    }
+  }
+  
+  window.addEventListener('scroll', throttledOnScroll, { passive: true });
+  
+  // Force initial white background
+  document.body.style.background = 'rgb(255,255,255)';
+  onScroll();
+  
+  // AUTO-FIX: Apply emergency visibility fix after initial scroll to ensure text is visible
+  setTimeout(() => {
+    console.log('🔧 Auto-applying emergency visibility fix to ensure text is visible...');
+    if (window.forceVisibility) {
+      window.forceVisibility();
+    }
+  }, 1000); // Wait 1 second for all initial animations to settle
+  
+  // DEBUG: Add manual test function to window for debugging
+  window.testOpacityChanges = function() {
+    console.log('🕵️ Manual opacity test - with fixed colors for dark background sections...');
+    
+    const elements = [
+      { selector: '.experience-title', name: 'experience-title', targetOpacity: 1.0, targetColor: '#fff' },
+      { selector: '.experience-subtitle', name: 'experience-subtitle', targetOpacity: 1, targetColor: '#A0A2A5' },
+      { selector: '.experience-role', name: 'experience-role', targetOpacity: 1, targetColor: '#A0A2A5' },
+      { selector: '.contact-subtitle', name: 'contact-subtitle', targetOpacity: 0.5 }
+    ];
+    
+    elements.forEach(({ selector, name, targetOpacity, targetColor }) => {
+      const element = document.querySelector(selector);
+      if (element) {
+        console.log(`🔧 Testing ${name}...`);
+        
+        // FIXED: Use appropriate color for each section
+        if (targetColor) {
+          element.style.color = targetColor;
+          element.style.setProperty('color', targetColor, 'important');
+          console.log(`  🎨 Setting color to: ${targetColor}`);
+        }
+        
+        // Try multiple opacity methods with aggressive override
+        element.style.setProperty('opacity', targetOpacity.toString(), 'important');
+        gsap.killTweensOf(element);
+        gsap.set(element, { opacity: targetOpacity, overwrite: true });
+        
+        // Double-check after delay
+        setTimeout(() => {
+          gsap.set(element, { opacity: targetOpacity, overwrite: true });
+          element.style.setProperty('opacity', targetOpacity.toString(), 'important');
+          if (targetColor) {
+            element.style.setProperty('color', targetColor, 'important');
+          }
+        }, 300);
+        
+        setTimeout(() => {
+          const computedOpacity = window.getComputedStyle(element).opacity;
+          const computedColor = window.getComputedStyle(element).color;
+          console.log(`✅ ${name} - opacity: ${computedOpacity}, color: ${computedColor}`);
+        }, 500);
+      } else {
+        console.log(`❌ ${name} element not found`);
+      }
+    });
+  };
+  
+  // EMERGENCY FALLBACK: Function to force visibility of problematic elements
+  window.forceVisibility = function() {
+    console.log('🚨 EMERGENCY FALLBACK: Forcing visibility of all text elements...');
+    
+    const fixes = [
+      { selector: '.experience-title', color: '#fff', opacity: '1.0' },
+      { selector: '.experience-subtitle', color: '#A0A2A5', opacity: '1' },
+      { selector: '.experience-role', color: '#A0A2A5', opacity: '1' },
+      { selector: '.experience-company', color: '#FDF9EE', opacity: '1' },
+      { selector: '.experience-years', color: '#A0A2A5', opacity: '1' }
+    ];
+    
+    fixes.forEach(({ selector, color, opacity }) => {
+      const elements = document.querySelectorAll(selector);
+      elements.forEach((el, index) => {
+        console.log(`🔧 Fixing ${selector}[${index}] - color: ${color}, opacity: ${opacity}`);
+        
+        // Force styles with maximum priority
+        el.style.setProperty('color', color, 'important');
+        el.style.setProperty('opacity', opacity, 'important');
+        el.style.setProperty('visibility', 'visible', 'important');
+        el.style.setProperty('display', '', 'important'); // Reset any display:none
+        
+        // Kill any GSAP animations that might be interfering
+        gsap.killTweensOf(el);
+        gsap.set(el, { opacity: parseFloat(opacity), color: color, overwrite: true });
+      });
+    });
+    
+    console.log('✅ Emergency visibility fixes applied. Elements should now be visible.');
+  };
+  
+  // DEBUG: Log scroll event listener attachment
+  console.log('📌 Scroll event listener attached. Use these debug functions:');
+  console.log('   window.testOpacityChanges() - Test opacity changes');  
+  console.log('   window.forceVisibility() - Emergency fix for invisible text');
+}());
+</script>
+
+<script>
+// Scroll buttons removed
+</script>
+
+<script>
+// Infinite scrolling image carousel
+(function() {
+  var wrap = document.getElementById('projectsWrap');
+  var track = document.getElementById('projectsTrack');
+  
+  console.log('=== CAROUSEL SCRIPT STARTING ===');
+  console.log('wrap element found:', !!wrap, wrap);
+  console.log('track element found:', !!track, track);
+  
+  if (!wrap || !track) {
+    console.error('CAROUSEL ERROR: Missing elements!', { wrap, track });
+    return;
+  }
+  
+  console.log('Carousel elements found successfully');
+
+  // Check if mobile for spacing
+  var isMobile = window.innerWidth <= 600;
+  var GAP = isMobile ? 8 : 20;
+  var MOBILE_SCROLL_SENSITIVITY = isMobile ? 2.5 : 1; // Make mobile more sensitive
+  var CARD_WIDTH = 450; // New card width
+  var scrollSpeed = isMobile ? 0.4 : 0.8; // Slower auto-scroll on mobile for better touch interaction
+  var currentX = 0;
+  var singleSetWidth = 0;
+  var userInteracting = false;
+  var autoScrolling = false; // Don't start until cards finish animating
+  var animationFrame;
+
+  function cards() { return track.querySelectorAll('.project-card'); }
+  function originalCardsCount() { return cards().length / 2; } // We have duplicates
+
+  // Calculate width of one set of cards (not including duplicates)
+  function calculateSingleSetWidth() {
+    singleSetWidth = originalCardsCount() * (CARD_WIDTH + GAP);
+  }
+
+  // Continuous animation function with infinite loop
+  let lastFrameTime = 0;
+  function animateScroll(timestamp) {
+    // Throttle to 30fps for smoother and faster animation
+    if (timestamp - lastFrameTime >= 33) {
+      if (autoScrolling && !userInteracting) {
+        currentX -= scrollSpeed;
+        
+        // Debug: occasionally log position to confirm it's moving
+        if (Math.floor(timestamp) % 1000 < 50) {
+          console.log('Auto-scroll position:', currentX, 'autoScrolling:', autoScrolling);
+        }
+        
+        // Reset position when we've scrolled past one complete set
+        if (currentX <= -singleSetWidth) {
+          currentX = 0;
+        }
+        
+        // Use native transform for better performance than GSAP
+        track.style.transform = `translate3d(${currentX}px, 0, 0)`;
+      }
+      lastFrameTime = timestamp;
+    }
+    
+    animationFrame = requestAnimationFrame(animateScroll);
+  }
+
+  function startAutoScroll() {
+    autoScrolling = true;
+    if (!animationFrame) {
+      animateScroll();
+    }
+  }
+
+  function stopAutoScroll() {
+    autoScrolling = false;
+    if (animationFrame) {
+      cancelAnimationFrame(animationFrame);
+      animationFrame = null;
+    }
+  }
+
+  // Trackpad/mouse wheel control
+  var trackpadAccumulator = 0;
+  wrap.addEventListener('wheel', function(e) {
+    // Only handle horizontal scrolling (left/right trackpad gestures)
+    if (Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 0) {
+      e.preventDefault();
+      userInteracting = true;
+      stopAutoScroll();
+      
+      // Use deltaX for horizontal carousel scrolling
+      var scrollDelta = e.deltaX;
+      
+      trackpadAccumulator += scrollDelta;
+      currentX -= scrollDelta;
+      
+      // Handle infinite loop properly for both directions
+      if (currentX > 0) {
+        currentX = -singleSetWidth + currentX;
+      }
+      if (currentX <= -singleSetWidth) {
+        currentX = currentX + singleSetWidth;
+      }
+      
+      track.style.transform = `translate3d(${currentX}px, 0, 0)`;
+      
+      // Resume auto-scroll after user stops
+      clearTimeout(wrap.trackpadTimeout);
+      wrap.trackpadTimeout = setTimeout(() => {
+        userInteracting = false;
+        if (autoScrolling) startAutoScroll();
+      }, 1500);
+    }
+    // Allow vertical scrolling to pass through for page scroll
+  }, { passive: false });
+
+  // Check if carousel is in viewport
+  function checkViewportVisibility() {
+    setTimeout(() => {
+      var rect = wrap.getBoundingClientRect();
+      var viewportHeight = window.innerHeight;
+      var visibleHeight = Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0);
+      var visibilityRatio = visibleHeight / rect.height;
+      
+      // Always allow auto-scroll when carousel is visible
+      autoScrolling = true;
+      
+      // Resume auto-scroll if not currently being interacted with
+      if (!userInteracting && visibilityRatio > 0.3) {
+        startAutoScroll();
+      }
+    }, 100);
+  }
+
+  // Mouse drag for desktop
+  var dragStartX = 0, dragStartCurrentX = 0, dragging = false;
+  
+  wrap.addEventListener('mousedown', function(e) {
+    dragging = true;
+    dragStartX = e.clientX;
+    dragStartCurrentX = currentX;
+    userInteracting = true;
+    stopAutoScroll();
+    e.preventDefault();
+  });
+
+  window.addEventListener('mousemove', function(e) {
+    if (!dragging) return;
+    var deltaX = e.clientX - dragStartX;
+    currentX = dragStartCurrentX + deltaX;
+    
+    // Keep within bounds for infinite loop
+    if (currentX > 0) {
+      currentX = -singleSetWidth + currentX;
+    }
+    if (currentX <= -singleSetWidth) {
+      currentX = currentX + singleSetWidth;
+    }
+    
+    gsap.set(track, { x: currentX });
+  });
+
+  window.addEventListener('mouseup', function(e) {
+    if (!dragging) return;
+    dragging = false;
+    userInteracting = false;
+    
+    // Resume auto-scroll after brief delay
+    setTimeout(() => {
+      if (!userInteracting && autoScrolling) startAutoScroll();
+    }, 1000);
+  });
+
+  // Touch events for mobile
+  var touchStartX = 0, touchStartCurrentX = 0;
+  wrap.addEventListener('touchstart', function(e) {
+    touchStartX = e.touches[0].clientX;
+    touchStartCurrentX = currentX;
+    userInteracting = true;
+    stopAutoScroll();
+  }, { passive: true });
+
+  wrap.addEventListener('touchmove', function(e) {
+    var deltaX = (e.touches[0].clientX - touchStartX) * MOBILE_SCROLL_SENSITIVITY;
+    currentX = touchStartCurrentX + deltaX;
+    
+    // Keep within bounds for infinite loop
+    if (currentX > 0) {
+      currentX = -singleSetWidth + currentX;
+    }
+    if (currentX <= -singleSetWidth) {
+      currentX = currentX + singleSetWidth;
+    }
+    
+    gsap.set(track, { x: currentX });
+  }, { passive: true });
+
+  wrap.addEventListener('touchend', function(e) {
+    userInteracting = false;
+    setTimeout(() => {
+      if (!userInteracting && autoScrolling) startAutoScroll();
+    }, 1000);
+  });
+
+  // Hover pause
+  wrap.addEventListener('mouseenter', () => {
+    userInteracting = true;
+    stopAutoScroll();
+  });
+  
+  wrap.addEventListener('mouseleave', () => {
+    userInteracting = false;
+    
+    // Always check if carousel is in viewport and resume if it is
+    function attemptResume() {
+      if (userInteracting) return; // Don't resume if user started interacting again
+      
+      var rect = wrap.getBoundingClientRect();
+      var viewportHeight = window.innerHeight;
+      var visibleHeight = Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0);
+      var visibilityRatio = visibleHeight / rect.height;
+      
+      // If carousel is mostly visible (more than 30% in viewport), resume auto-scroll
+      // Lower threshold to ensure it works on initial page load
+      if (visibilityRatio > 0.3) {
+        autoScrolling = true; // Ensure autoScrolling is enabled
+        startAutoScroll();
+      }
+    }
+    
+    // Short delay then attempt resume
+    setTimeout(attemptResume, 200);
+  });
+
+  // Global callback for starting autoscroll after cards animate
+  window.carouselReady = function() {
+    console.log('=== CAROUSEL READY CALLBACK ===');
+    
+    // Ensure carousel is properly initialized
+    if (singleSetWidth === 0) {
+      calculateSingleSetWidth();
+    }
+    
+    autoScrolling = true;
+    startAutoScroll();
+    console.log('Autoscroll started with 200ms delay');
+  };
+
+  // Manual test function for debugging
+  window.testAutoscroll = function() {
+    console.log('=== MANUAL AUTOSCROLL TEST ===');
+    console.log('wrap:', wrap);
+    console.log('track:', track);
+    console.log('track element exists:', !!track);
+    console.log('GSAP available:', typeof gsap);
+    
+    // Test if GSAP can move the track manually with visual confirmation
+    if (track) {
+      console.log('Testing manual GSAP movement...');
+      console.log('Track class:', track.className);
+      console.log('Track id:', track.id);
+      console.log('Track initial position:', track.style.transform);
+      
+      // Try GSAP to method instead of set
+      console.log('Trying gsap.to() instead of gsap.set()...');
+      gsap.to(track, { 
+        x: -100, 
+        duration: 0.5,
+        ease: "none",
+        onComplete: () => console.log('GSAP to() completed'),
+        onUpdate: () => console.log('GSAP to() updating, x:', gsap.getProperty(track, "x"))
+      });
+      
+      // Try direct style manipulation as backup
+      setTimeout(() => {
+        console.log('Testing direct style manipulation...');
+        track.style.transform = 'translateX(-200px)';
+        console.log('Direct style applied:', track.style.transform);
+        setTimeout(() => {
+          track.style.transform = 'translateX(0px)';
+          console.log('Direct style reset');
+        }, 1000);
+      }, 2000);
+    }
+    
+    autoScrolling = true;
+    userInteracting = false;
+    startAutoScroll();
+  };
+
+  // Initialize immediately when DOM is ready
+  function initializeCarousel() {
+    console.log('=== CAROUSEL INITIALIZATION ===');
+    calculateSingleSetWidth();
+    console.log('Calculated singleSetWidth:', singleSetWidth);
+    currentX = 0;
+    track.style.transform = `translate3d(${currentX}px, 0, 0)`;
+    console.log('Carousel initialized - ready for autoscroll');
+    
+    // Start the animation loop immediately (will only animate when autoScrolling is true)
+    animationFrame = requestAnimationFrame(animateScroll);
+    
+    // Check viewport on scroll
+    window.addEventListener('scroll', checkViewportVisibility, { passive: true });
+  }
+
+  // Initialize as soon as DOM is ready, don't wait for full page load
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', initializeCarousel);
+  } else {
+    initializeCarousel();
+  }
+
+  window.addEventListener('resize', function() {
+    calculateSingleSetWidth();
+  });
+
+  // Case study navigation
+  document.querySelectorAll('.project-card').forEach(card => {
+    card.addEventListener('click', function() {
+      const caseStudy = this.dataset.caseStudy;
+      window.location.href = `case-studies/${caseStudy}/${caseStudy}.html`;
+    });
+  });
+}());
+</script>
+
+<script>
+// Enhanced Words section with GSAP
+(function() {
+  var items = Array.from(document.querySelectorAll('#wordsList li'));
+  var descEl = document.getElementById('wordsDescText');
+  var pathEl = document.getElementById('connectorPath');
+
+  var data = [
+    {
+      word: 'Research',
+      desc: 'Deep discovery to understand the problem space — user interviews, competitive analysis, and data synthesis to build a clear foundation before any solution is defined.'
+    },
+    {
+      word: 'Design',
+      desc: 'Translating insight into craft — interaction models, visual systems, and prototypes that are both beautiful and rigorously functional.'
+    },
+    {
+      word: 'Testing',
+      desc: 'Validating assumptions early and often — usability studies, A/B tests, and real-world feedback loops that sharpen the work before it ships.'
+    },
+    {
+      word: 'Planning',
+      desc: 'Mapping the path from concept to launch — scoping, sequencing, and aligning cross-functional teams so the best ideas actually reach users.'
+    }
+  ];
+
+  var paths = [
+    'M 0,100 C 60,95 90,70 140,80 C 175,88 200,110 240,100 C 265,93 285,100 300,100',
+    'M 0,100 C 50,100 80,120 130,105 C 165,94 195,85 240,95 C 268,102 285,98 300,100',
+    'M 0,100 C 70,100 95,85 145,90 C 178,93 205,115 245,105 C 268,99 285,97 300,100',
+    'M 0,100 C 55,100 85,110 135,102 C 168,97 198,88 242,96 C 267,100 285,99 300,100'
+  ];
+
+  var activeIdx = 0;
+
+  function activate(idx) {
+    if (idx === activeIdx) return;
+    activeIdx = idx;
+
+    // Animate word selection
+    items.forEach(function(li, i) {
+      if (i === idx) {
+        gsap.to(li, { 
+          color: '#FDF9EE', 
+          opacity: 1,
+          duration: 0.3,
+          ease: 'power2.out'
+        });
+        li.classList.add('active');
+      } else {
+        gsap.to(li, { 
+          color: 'rgba(253,249,238,0.45)', 
+          opacity: 0.6,
+          duration: 0.3,
+          ease: 'power2.out'
+        });
+        li.classList.remove('active');
+      }
+    });
+
+    // Animate description change
+    gsap.to(descEl, {
+      opacity: 0,
+      y: 8,
+      duration: 0.15,
+      ease: 'power2.in',
+      onComplete: () => {
+        descEl.textContent = data[idx].desc;
+        gsap.to(descEl, {
+          opacity: 1,
+          y: 0,
+          duration: 0.3,
+          ease: 'power2.out'
+        });
+      }
+    });
+
+    // Animate SVG path
+    pathEl.setAttribute('d', paths[idx]);
+    gsap.set(pathEl, { strokeDashoffset: 1000 });
+    gsap.to(pathEl, {
+      strokeDashoffset: 0,
+      duration: 0.8,
+      ease: 'power2.out'
+    });
+  }
+
+  items.forEach(function(li, i) {
+    li.addEventListener('mouseenter', function() { activate(i); });
+    
+    // Add hover effect
+    li.addEventListener('mouseenter', function() {
+      if (i !== activeIdx) {
+        gsap.to(li, { 
+          opacity: 1,
+          color: '#FDF9EE',
+          duration: 0.2,
+          ease: 'power2.out'
+        });
+      }
+    });
+    
+    li.addEventListener('mouseleave', function() {
+      if (i !== activeIdx) {
+        gsap.to(li, { 
+          opacity: 0.6,
+          color: 'rgba(253,249,238,0.45)',
+          duration: 0.2,
+          ease: 'power2.out'
+        });
+      }
+    });
+  });
+
+  // Initialize
+  activate(0);
+}());
+</script>
+
+<script>
+// Enhanced hover - handles both videos and GIFs
+document.addEventListener('DOMContentLoaded', () => {
+  // Preload all hover media immediately
+  const allHoverMedia = document.querySelectorAll('.hover-gif');
+  allHoverMedia.forEach(media => {
+    if (media.tagName === 'IMG') {
+      const preloader = new Image();
+      preloader.src = media.src;
+    } else if (media.tagName === 'VIDEO') {
+      // Better preloading for videos
+      media.load();
+      // Set first frame as poster for immediate display
+      media.addEventListener('loadeddata', () => {
+        media.currentTime = 0;
+      });
+    }
+  });
+  
+  const cards = document.querySelectorAll('.project-card');
+  
+  cards.forEach(card => {
+    const hoverMedia = card.querySelector('.hover-gif');
+    const staticMedia = card.querySelector('.static-image');
+    
+    // Clear any inline opacity styles to let CSS take control
+    if (hoverMedia) hoverMedia.style.opacity = '';
+    if (staticMedia) staticMedia.style.opacity = '';
+    
+    if (hoverMedia && staticMedia) {
+      let isHovering = false;
+      
+      // Initialize static video to show first frame
+      if (staticMedia.tagName === 'VIDEO') {
+        staticMedia.addEventListener('loadeddata', () => {
+          staticMedia.currentTime = 0;
+        });
+      }
+      
+      // Simple video hover - let CSS handle opacity, JS handles playback
+      const video = card.querySelector('.hover-gif');
+      
+      if (video && video.tagName === 'VIDEO') {
+        let videoReady = false;
+        
+        // Ensure video is fully loaded before allowing playback
+        video.addEventListener('canplaythrough', () => {
+          videoReady = true;
+        });
+        
+        card.addEventListener('mouseenter', () => {
+          // Hide static image immediately
+          const staticImage = card.querySelector('.static-image');
+          if (staticImage) staticImage.style.opacity = '0';
+          
+          // Start video playback - poster will show until video plays
+          if (videoReady || video.readyState >= 3) {
+            video.currentTime = 0;
+            video.play().catch(() => {});
+          } else {
+            video.addEventListener('canplaythrough', () => {
+              video.currentTime = 0;
+              video.play().catch(() => {});
+            }, { once: true });
+          }
+        });
+        
+        card.addEventListener('mouseleave', () => {
+          video.pause();
+          video.currentTime = 0;
+          
+          // Show static image again
+          const staticImage = card.querySelector('.static-image');
+          if (staticImage) staticImage.style.opacity = '1';
+        });
+      }
+    }
+  });
+});
+</script>
+
+<script>
+// Custom cursor - OPTIMIZED VERSION
+document.addEventListener('DOMContentLoaded', function() {
+  // Check if device is mobile/touch
+  const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
+                   (navigator.maxTouchPoints > 0 && window.matchMedia('(hover: none)').matches);
+  
+  // Don't initialize cursor on mobile devices
+  if (isMobile) return;
+  
+  const cursor = document.getElementById('customCursor');
+  if (!cursor) return;
+  const carouselWrap = document.getElementById('projectsWrap');
+  let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
+  let isHoveringCard = false;
+  
+  if (!cursor) return;
+  
+  // Force cursor to be visible immediately
+  cursor.style.cssText = `
+    position: fixed;
+    left: ${mouseX}px;
+    top: ${mouseY}px;
+    width: 20px;
+    height: 20px;
+    border-radius: 50%;
+    background: #000000;
+    pointer-events: none;
+    z-index: 9999;
+    transform: translate(-50%, -50%);
+    opacity: 1 !important;
+    display: block !important;
+    transition: background-color 0.3s ease, transform 0.1s ease;
+  `;
+  
+  // Lightweight mouse tracking - throttled to reduce performance impact
+  let lastUpdate = 0;
+  document.addEventListener('mousemove', (e) => {
+    const now = Date.now();
+    if (now - lastUpdate < 16) return; // Throttle to ~60fps max
+    
+    mouseX = e.clientX;
+    mouseY = e.clientY;
+    
+    // Update cursor position
+    cursor.style.left = mouseX + 'px';
+    cursor.style.top = mouseY + 'px';
+    lastUpdate = now;
+  });
+  
+  
+  
+  
+  // Change cursor to black when hovering over project cards
+  const projectCards = document.querySelectorAll('.project-card');
+  
+  projectCards.forEach(card => {
+    card.addEventListener('mouseenter', () => {
+      isHoveringCard = true;
+      cursor.classList.remove('white');
+      cursor.style.setProperty('background-color', '#000000', 'important');
+      cursor.style.setProperty('background', '#000000', 'important');
+    });
+    
+    card.addEventListener('mouseleave', () => {
+      isHoveringCard = false;
+      // Restore original color based on background
+      setTimeout(() => {
+        if (!isHoveringCard) {
+          cursor.style.removeProperty('background-color');
+          cursor.style.removeProperty('background');
+          updateCursorColor();
+        }
+      }, 50);
+    });
+  });
+  
+  // View more functionality
+  const viewMoreLink = document.getElementById('viewMoreLink');
+  const hiddenItems = document.querySelectorAll('.experience-item-hidden');
+  let isExpanded = false;
+  
+  // Global function for inline onclick
+  window.expandExperienceItems = function() {
+    console.log('Global expand function called');
+    const hiddenItems = document.querySelectorAll('.experience-item-hidden');
+    const viewMoreLink = document.getElementById('viewMoreLink');
+    
+    if (!hiddenItems.length || !viewMoreLink) {
+      console.log('Missing elements for expansion');
+      return;
+    }
+    
+    // Show hidden items immediately
+    hiddenItems.forEach((item, index) => {
+      setTimeout(() => {
+        item.style.display = 'flex';
+        item.classList.add('show');
+        item.style.borderBottomColor = 'rgba(255,255,255,0.25)';
+      }, index * 100);
+    });
+    
+    // Hide the button
+    setTimeout(() => {
+      viewMoreLink.style.display = 'none';
+    }, hiddenItems.length * 100);
+    
+    console.log('Experience items expanded');
+  };
+  
+  function expandExperience(e) {
+    e && e.preventDefault();
+    if (isExpanded) return;
+      
+      if (!isExpanded) {
+        // Show hidden items with staggered animation
+        hiddenItems.forEach((item, index) => {
+          setTimeout(() => {
+            item.classList.add('show');
+            
+            // Update divider color based on current background
+            const currentBg = getComputedStyle(document.body).backgroundColor;
+            const rgbMatch = currentBg.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
+            if (rgbMatch) {
+              const r = parseInt(rgbMatch[1]);
+              const g = parseInt(rgbMatch[2]);
+              const b = parseInt(rgbMatch[3]);
+              const backgroundBrightness = (r + g + b) / 3;
+              
+              const dividerColor = 'rgba(255,255,255,0.25)'; // FORCED: Always use white dividers with 0.25 opacity
+                
+              item.style.borderBottomColor = dividerColor;
+            }
+          }, index * 100);
+        });
+        
+        // Hide the "View more" button
+        setTimeout(() => {
+          viewMoreLink.style.opacity = '0';
+          viewMoreLink.style.transform = 'translateY(-10px)';
+          setTimeout(() => {
+            viewMoreLink.style.display = 'none';
+          }, 300);
+        }, hiddenItems.length * 100);
+        
+        // Refresh ScrollTrigger after all items are shown and animations complete
+        setTimeout(() => {
+          console.log('🔄 Refreshing ScrollTrigger after experience list expansion...');
+          
+          // Force layout recalculation by accessing offsetHeight
+          const experienceSection = document.getElementById('words');
+          if (experienceSection) {
+            const forceReflow = experienceSection.offsetHeight;
+            console.log('📐 Forced layout recalculation, new section height:', forceReflow);
+          }
+          
+          // Refresh ScrollTrigger instances
+          if (window.ScrollTrigger) {
+            ScrollTrigger.refresh();
+          }
+          
+          // Force a scroll event to recalculate background transitions
+          window.dispatchEvent(new Event('scroll'));
+          
+          // Additional scroll trigger to ensure all background calculations update
+          setTimeout(() => {
+            window.dispatchEvent(new Event('scroll'));
+            console.log('✅ Experience expansion layout updates complete');
+          }, 100);
+        }, hiddenItems.length * 100 + 500); // Wait for all animations plus buffer
+        
+        isExpanded = true;
+      }
+  }
+  
+  if (viewMoreLink) {
+    console.log('View more button found:', viewMoreLink);
+    
+    // Detect if mobile device
+    const isMobileDevice = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent);
+    
+    if (isMobileDevice) {
+      // For mobile devices, use touchstart for immediate response
+      viewMoreLink.addEventListener('touchstart', function(e) {
+        console.log('Mobile touch triggered');
+        e.preventDefault();
+        e.stopPropagation();
+        expandExperience(e);
+      }, { passive: false });
+    } else {
+      // For desktop, use click
+      viewMoreLink.addEventListener('click', function(e) {
+        console.log('Desktop click triggered');
+        expandExperience(e);
+      });
+    }
+    
+    console.log('View more button event listeners added for:', isMobileDevice ? 'mobile' : 'desktop');
+  } else {
+    console.log('View more button NOT found');
+  }
+  
+  // Function to update cursor color based on background
+  function updateCursorColor() {
+    // Don't change color if we're hovering over a card
+    if (isHoveringCard) return;
+    
+    // Get current background color from both inline style and computed style
+    const inlineStyle = document.body.style.background || document.body.style.backgroundColor;
+    const computedStyle = getComputedStyle(document.body).backgroundColor;
+    
+    let bgColor = inlineStyle || computedStyle;
+    
+    // Parse RGB values from both rgb() and rgba() formats
+    const rgbMatch = bgColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
+    if (rgbMatch) {
+      const r = parseInt(rgbMatch[1]);
+      const g = parseInt(rgbMatch[2]);
+      const b = parseInt(rgbMatch[3]);
+      
+      // Calculate brightness
+      const brightness = (r + g + b) / 3;
+      
+      // Switch cursor color based on background brightness
+      if (brightness > 127) {
+        // Light background - black cursor
+        cursor.style.backgroundColor = '#000000';
+        cursor.classList.remove('white');
+      } else {
+        // Dark background - white cursor  
+        cursor.style.backgroundColor = '#ffffff';
+        cursor.classList.add('white');
+      }
+    }
+  }
+  
+  // Update cursor color on background changes
+  const observer = new MutationObserver(() => {
+    if (!isHoveringCard) {
+      updateCursorColor();
+    }
+  });
+  
+  observer.observe(document.body, {
+    attributes: true,
+    attributeFilter: ['style']
+  });
+  
+  // Initial cursor color
+  updateCursorColor();
+  
+  // Also listen for scroll events to catch background changes
+  window.addEventListener('scroll', () => {
+    if (!isHoveringCard) {
+      updateCursorColor();
+      setTimeout(() => {
+        if (!isHoveringCard) updateCursorColor();
+      }, 50);
+      setTimeout(() => {
+        if (!isHoveringCard) updateCursorColor();
+      }, 100);
+    }
+  }, { passive: true });
+  
+  // Also check on window resize
+  window.addEventListener('resize', updateCursorColor);
+  
+  // Frequent checks during page interactions - DISABLED FOR PERFORMANCE
+  // setInterval(updateCursorColor, 500);
+  
+  // Copy email functionality with toast
+  const copyButton = document.getElementById('copyButton');
+  if (copyButton) {
+    copyButton.addEventListener('click', () => {
+      const email = 'michael.mazur00@gmail.com';
+      
+      function showToast() {
+        // Create toast if it doesn't exist
+        let toast = document.getElementById('copyToast');
+        if (!toast) {
+          toast = document.createElement('div');
+          toast.id = 'copyToast';
+          toast.className = 'toast';
+          toast.textContent = 'Email copied to clipboard';
+          document.body.appendChild(toast);
+        }
+        
+        // Show toast
+        toast.classList.add('show');
+        
+        // Hide toast after 2 seconds
+        setTimeout(() => {
+          toast.classList.remove('show');
+        }, 2000);
+      }
+      
+      navigator.clipboard.writeText(email).then(() => {
+        showToast();
+      }).catch(() => {
+        // Fallback for older browsers
+        const textArea = document.createElement('textarea');
+        textArea.value = email;
+        document.body.appendChild(textArea);
+        textArea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textArea);
+        showToast();
+      });
+    });
+  }
+  
+});
+</script>
+
+</body>
+</html>

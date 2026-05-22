@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Freight Marketplace - Michael Mazur</title>
+  <link rel="icon" href="../../favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;800&display=swap" rel="stylesheet" />
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.12.2/gsap.min.js"></script>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --brown:  #615B55;
+      --cream:  #FDF9EE;
+      --muted:  rgba(253,249,238,0.45);
+      --mono:   'Inter', sans-serif;
+    }
+
+    body {
+      font-family: var(--mono);
+      font-size: 16px;
+      font-weight: 300;
+      line-height: 1.6;
+      background: #ffffff;
+      color: #000000;
+    }
+
+    .container {
+      max-width: 1080px;
+      margin: 0 auto;
+      padding: 80px 40px 160px;
+    }
+
+    .back-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      color: #000000;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 12px;
+      margin-bottom: 16px;
+      transition: color 0.3s ease;
+    }
+    .back-btn:hover { color: rgba(0,0,0,0.8); }
+
+    .case-study-header {
+      margin-bottom: 40px;
+    }
+
+    .case-study-meta {
+      font-size: 12px;
+      letter-spacing: 0.15em;
+      text-transform: uppercase;
+      color: var(--muted);
+      margin-bottom: 20px;
+    }
+
+    .case-study-title {
+      font-size: 64px;
+      font-weight: 700;
+      line-height: 72px;
+      letter-spacing: -0.0375em;
+      color: #000000;
+      margin-bottom: 16px;
+    }
+
+    .case-study-desc,
+    .subtitle {
+      font-size: 24px;
+      font-weight: 700;
+      color: #000000;
+      line-height: 32px;
+      letter-spacing: -0.02em;
+      max-width: 800px;
+      margin-bottom: 32px;
+    }
+
+    .case-study-body {
+      font-size: 16px;
+      font-weight: 300;
+      color: rgba(0,0,0,0.65);
+      line-height: 1.6;
+      max-width: 1000px;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+    }
+
+    /* Override margin for iteration subtitles */
+    .subtitle.iteration-subtitle {
+      margin-bottom: 16px !important;
+    }
+
+    @media (max-width: 768px) {
+      .case-study-body {
+        grid-template-columns: 1fr;
+        gap: 20px;
+      }
+    }
+
+    /* Image Grid Styles */
+    .image-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 24px;
+      margin-top: 60px;
+    }
+
+    .image-item {
+      background: rgba(0,0,0,0.05);
+      border-radius: 12px;
+      overflow: hidden;
+      aspect-ratio: 4/3;
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+
+    .image-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+    .image-item img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    /* Responsive grid adjustments */
+    @media (min-width: 768px) {
+      .image-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (min-width: 1024px) {
+      .image-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    /* Large featured images */
+    .image-item.large {
+      grid-column: span 2;
+      aspect-ratio: 16/9;
+    }
+
+    /* Tall images */
+    .image-item.tall {
+      aspect-ratio: 3/4;
+    }
+
+    /* Full width image */
+    .full-width-image {
+      width: 100%;
+      margin-top: 40px;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .full-width-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    /* Side by side images */
+    .side-by-side-images {
+      display: flex;
+      gap: 16px;
+      margin-top: 40px;
+    }
+
+    .side-by-side-images .half-width-image {
+      flex: 1;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+
+    .side-by-side-images .half-width-image img {
+      width: 100%;
+      height: auto;
+      display: block;
+    }
+
+    @media (max-width: 768px) {
+      .side-by-side-images {
+        flex-direction: column;
+        gap: 16px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <a href="../../index.html" class="back-btn">
+    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
+      <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+    </svg>
+    Back
+  </a>
+
+  <div class="case-study-header">
+    <h1 class="case-study-title">Freight marketplace</h1>
+    <p class="case-study-desc">A 0→1 multi-broker freight marketplace for Uber Freight — and why we killed it pre-launch</p>
+    <div class="case-study-body">
+      <p>Working with the Uber Freight team, I led a 0→1 project to build a first-of-its-kind multi-broker marketplace — a platform where drivers and brokers could book and manage loads in one place. No other company had built a public marketplace of this kind. We designed a mobile experience optimized for booking on the go, paired with a more robust desktop experience for creating and managing loads at scale.</p>
+      
+      <p>The project never made it to launch. Weeks before release, a competitor beat us to market — and the industry's leading pricing data provider, wary of the public brokerage model, pulled their data contracts in response. Facing the same business risk, we made the difficult decision to sunset the project before it cost us our own access to critical pricing data.</p>
+    </div>
+  </div>
+
+  <div class="full-width-image">
+    <img src="1.png" alt="Load execution overview" />
+  </div>
+  
+  <div style="margin-top: 120px;">
+    <h2 class="subtitle iteration-subtitle">Desktop</h2>
+    <div class="case-study-body">
+      <p>The freight industry was overdue for a modern product experience. Drawing from the evolution of consumer-facing design, we set out to bring that same clarity and intuitiveness to a space that had long been underserved. Uber Freight's muted branding was used intentionally — creating a neutral canvas that let partner brokerages shine and gave the marketplace the feel of a trusted, multi-brand platform.</p>
+      
+      <p>The desktop experience was built around speed and efficiency. Whether users were creating loads from scratch or building templates to streamline repeat work, the flow was designed to be fast and frictionless. Pricing, servicing, and bulk load management were treated as first-class interactions — powerful without ever feeling complex.</p>
+    </div>
+  </div>
+  
+  <div class="full-width-image">
+    <img src="2.png" alt="Desktop view overview" loading="lazy" />
+  </div>
+  
+  <div class="full-width-image" style="margin-top: 16px;">
+    <img src="3.png" alt="Desktop view details" loading="lazy" />
+  </div>
+  
+  <div class="full-width-image" style="margin-top: 16px;">
+    <img src="4.png" alt="Desktop functionality" loading="lazy" />
+  </div>
+  
+  <div style="margin-top: 120px;">
+    <h2 class="subtitle iteration-subtitle">Mobile</h2>
+    <div class="case-study-body">
+      <p>The desktop experience centered on load creation, giving brokers the tools to post and manage freight. The mobile app was scoped exclusively for drivers — a focused booking experience that surfaced available loads while making the originating brokerage visible at every step. Because our platform aggregated loads from multiple brokerages, drivers needed to understand they were accepting work from third parties, not directly from Uber Freight.</p>
+      
+      <p>To reinforce that transparency, we introduced brokerage profile pages and a ratings system. Each brokerage had a branded presence on the platform — their own identity, not a generic listing — so drivers could evaluate who they were booking with before committing. Drivers could leave reviews after completing a job, creating accountability and giving brokerages an incentive to build reputation across the platform.</p>
+    </div>
+  </div>
+  
+  <div class="side-by-side-images">
+    <div class="half-width-image">
+      <img src="5.png" alt="Mobile view 1" loading="lazy" />
+    </div>
+    <div class="half-width-image">
+      <img src="6.png" alt="Mobile view 2" loading="lazy" />
+    </div>
+  </div>
+  
+  <div class="full-width-image" style="margin-top: 16px;">
+    <img src="7.png" alt="Mobile flow overview" loading="lazy" />
+  </div>
+  
+  <div class="side-by-side-images" style="margin-top: 16px;">
+    <div class="half-width-image">
+      <img src="8.png" alt="Mobile detail 1" loading="lazy" />
+    </div>
+    <div class="half-width-image">
+      <img src="9.png" alt="Mobile detail 2" loading="lazy" />
+    </div>
+  </div>
+</div>
+
+<script>
+gsap.from('.container > *', {
+  y: 30,
+  opacity: 0,
+  duration: 0.8,
+  stagger: 0.1,
+  ease: 'power3.out',
+  delay: 0.3
+});
+</script>
+
+</body>
+</html>
