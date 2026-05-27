@@ -684,6 +684,7 @@
       justify-content: center;
       text-align: center;
       z-index: 2;
+      transform: translateY(-40px);
     }
 
     .creative-lab-title,
@@ -705,22 +706,21 @@
       font-size: clamp(16px, 1.4vw, 20px);
       font-weight: 300;
       color: #A0A2A5;
-      margin: 0 0 32px;
+      margin: 0 0 80px;
       letter-spacing: -0.01em;
     }
 
     .creative-lab-cta {
       display: inline-flex;
       align-items: center;
-      gap: 10px;
     }
 
     .creative-lab-view {
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      height: 68px;
-      padding: 0 32px;
+      gap: 8px;
+      padding: 16px 32px;
       background: transparent;
       color: #ffffff;
       border: 1px solid #ffffff;
@@ -729,31 +729,13 @@
       font-weight: 500;
       font-family: var(--mono);
       text-decoration: none;
+      cursor: pointer;
       transition: all 0.3s ease;
     }
 
     .creative-lab-view:hover {
       background: rgba(253,249,238,0.05);
       border-color: rgba(253,249,238,0.3);
-      transform: translateY(-2px);
-    }
-
-    .creative-lab-arrow {
-      width: 68px;
-      height: 68px;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      border: 1px solid #ffffff;
-      border-radius: 50%;
-      color: #ffffff;
-      text-decoration: none;
-      transition: all 0.3s ease;
-    }
-
-    .creative-lab-arrow:hover {
-      background: rgba(253,249,238,0.06);
-      border-color: rgba(253,249,238,0.6);
       transform: translateY(-2px);
     }
 
@@ -765,8 +747,24 @@
       .creative-card-wrap-4 { width: 483px; bottom: 340px; }
       .creative-card-wrap-5 { width: 380px; bottom: 250px; }
       .creative-lab-subtitle { font-size: 24px; }
-      .creative-lab-view { font-size: 18px; padding: 0 40px; height: 68px; }
-      .creative-lab-arrow { width: 68px; height: 68px; }
+    }
+
+    @media (min-width: 1400px) {
+      .creative-lab-view {
+        font-size: 24px;
+        height: 80px;
+        padding: 0 48px;
+      }
+      .creative-lab-view svg {
+        width: 20px;
+        height: 20px;
+      }
+    }
+
+    @media (min-width: 1400px) and (max-width: 1599px) {
+      .creative-lab-section {
+        padding-bottom: 160px;
+      }
     }
 
     @media (max-width: 900px) {
@@ -1836,9 +1834,9 @@
       <img class="creative-lab-title" src="images/creativelab.svg" alt="Creative Lab" />
       <p class="creative-lab-subtitle">Design &amp; development side projects.</p>
       <div class="creative-lab-cta">
-        <a href="#" class="creative-lab-view">View</a>
-        <a href="#" class="creative-lab-arrow" aria-label="View creative lab projects">
-          <svg width="24" height="24" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <a href="labs.html" target="_blank" rel="noopener" class="creative-lab-view" aria-label="View creative lab projects">
+          View labs
+          <svg width="16" height="16" viewBox="0 0 14 14" fill="none" xmlns="http://www.w3.org/2000/svg">
             <path d="M3.5 10.5L10.5 3.5M10.5 3.5H4.5M10.5 3.5V9.5" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
           </svg>
         </a>

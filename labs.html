@@ -1,0 +1,369 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Creative Lab — Michael Mazur</title>
+  <link rel="icon" type="image/svg+xml" href="favicon.svg" />
+  <link rel="icon" href="favicon.ico" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;800&display=swap" rel="stylesheet" />
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --bg:          #000000;
+      --frame:       #292929;
+      --text-muted:  rgba(255,255,255,0.5);
+    }
+
+    html, body {
+      background: var(--bg);
+      color: #ffffff;
+      font-family: 'Inter', sans-serif;
+      font-weight: 300;
+      line-height: 1.6;
+      min-height: 100%;
+    }
+
+    body {
+      padding: 186px 24px 120px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    @keyframes labsFadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(30px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .labs-title,
+    .labs-subtitle,
+    .labs-frame {
+      opacity: 0;
+      transform: translateY(30px);
+      animation: labsFadeInUp 0.8s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    }
+
+    .labs-title    { animation-delay: 0.15s; }
+    .labs-subtitle { animation-delay: 0.35s; }
+    .labs-frame    { animation-delay: 0.55s; }
+
+    .labs-title {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 80px;
+      max-width: 92vw;
+      margin-bottom: 32px;
+    }
+
+    .labs-title img {
+      height: auto;
+      display: block;
+    }
+
+    .labs-title .creative { width: 478px; max-width: 60vw; }
+    .labs-title .lab      { width: 175px; max-width: 22vw; }
+
+    .labs-subtitle {
+      font-size: 24px;
+      line-height: 1.5;
+      color: var(--text-muted);
+      text-align: center;
+      max-width: 630px;
+      margin-bottom: 100px;
+    }
+
+    .labs-frame {
+      width: 646px;
+      max-width: 92vw;
+      aspect-ratio: 646 / 759;
+      border: 2px solid var(--frame);
+      border-radius: 40px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 20px;
+    }
+
+    /* ─── Phone case ─────────────────────────── */
+    .phone-container {
+      position: relative;
+      width: 245px;
+      aspect-ratio: 9 / 19.5;
+      max-width: 100%;
+      border-radius: 42px;
+      padding: 8px;
+      background:
+        linear-gradient(160deg, #2a2a2c 0%, #0a0a0b 40%, #1a1a1c 100%);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.06),
+        0 24px 48px rgba(0,0,0,0.45),
+        0 8px 16px rgba(0,0,0,0.35);
+      cursor: pointer;
+      transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                  box-shadow 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+      will-change: transform;
+    }
+
+    .phone-container:hover {
+      transform: scale(1.04);
+      box-shadow:
+        inset 0 0 0 1px rgba(255,255,255,0.08),
+        0 40px 80px rgba(0,0,0,0.55),
+        0 16px 32px rgba(0,0,0,0.4);
+    }
+
+    .phone-screen {
+      position: relative;
+      width: 100%;
+      height: 100%;
+      border-radius: 34px;
+      overflow: hidden;
+      background: #000;
+    }
+
+    .phone-screen video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      display: block;
+    }
+
+    .phone-island {
+      position: absolute;
+      top: 14px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 72px;
+      height: 22px;
+      background: #000;
+      border-radius: 20px;
+      z-index: 2;
+    }
+
+    @media (max-width: 720px) {
+      body { padding: 168px 16px 80px; }
+      .labs-title { gap: 32px; margin-bottom: 24px; }
+      .labs-subtitle { font-size: 16px; margin-bottom: 56px; max-width: 90vw; }
+      .labs-frame {
+        width: 100%;
+        aspect-ratio: auto;
+        padding: 24px 12px;
+        border-radius: 28px;
+      }
+      .phone-container {
+        height: auto;
+        width: min(72vw, 320px);
+        aspect-ratio: 9 / 19.5;
+        border-radius: 40px;
+        padding: 7px;
+      }
+      .phone-screen { border-radius: 33px; }
+      .phone-island { width: 76px; height: 22px; top: 12px; }
+    }
+
+    @media (min-width: 1600px) {
+      .labs-title .creative { width: 540px; }
+      .labs-title .lab      { width: 198px; }
+      .labs-subtitle { font-size: 26px; max-width: 720px; }
+      .labs-frame { width: 720px; }
+    }
+
+    /* ─── Modal ─────────────────────────── */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(10, 10, 12, 0.7);
+      backdrop-filter: blur(16px);
+      -webkit-backdrop-filter: blur(16px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 40px 24px;
+      opacity: 0;
+      visibility: hidden;
+      transition: opacity 0.35s ease, visibility 0.35s ease;
+      z-index: 1000;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      visibility: visible;
+    }
+
+    .modal-content {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 32px;
+      transform: scale(0.92) translateY(20px);
+      opacity: 0;
+      transition: transform 0.45s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.35s ease;
+    }
+
+    .modal-overlay.open .modal-content {
+      transform: scale(1) translateY(0);
+      opacity: 1;
+    }
+
+    .modal-close {
+      position: fixed;
+      top: 24px;
+      right: 24px;
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.08);
+      border: 1px solid rgba(255,255,255,0.12);
+      color: #ffffff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: background 0.2s ease, transform 0.2s ease;
+      z-index: 1001;
+    }
+
+    .modal-close:hover {
+      background: rgba(255,255,255,0.16);
+      transform: scale(1.05);
+    }
+
+    .modal-phone {
+      width: 340px;
+      max-width: min(92vw, 340px);
+    }
+
+    .modal-caption {
+      text-align: center;
+      max-width: 420px;
+    }
+
+    .modal-title {
+      font-size: 22px;
+      font-weight: 500;
+      color: #ffffff;
+      margin-bottom: 6px;
+      letter-spacing: -0.01em;
+    }
+
+    .modal-desc {
+      font-size: 15px;
+      color: var(--text-muted);
+      line-height: 1.5;
+    }
+
+    @media (max-height: 760px) {
+      .modal-phone { width: 280px; }
+      .modal-content { gap: 20px; }
+    }
+
+    @media (max-width: 720px) {
+      .modal-phone { width: min(70vw, 280px); }
+      .modal-close { top: 16px; right: 16px; width: 40px; height: 40px; }
+    }
+
+    body.modal-open { overflow: hidden; }
+  </style>
+</head>
+<body>
+  <div class="labs-title">
+    <img class="creative" src="images/creative.svg" alt="Creative" />
+    <img class="lab"      src="images/lab.svg"      alt="Lab" />
+  </div>
+
+  <p class="labs-subtitle">Design and development side projects. A working notebook, not a finished gallery.</p>
+
+  <div class="labs-frame">
+    <div class="phone-container" id="phoneTrigger" role="button" tabindex="0" aria-label="Open interval timer preview">
+      <div class="phone-island"></div>
+      <div class="phone-screen">
+        <video autoplay muted loop playsinline preload="auto">
+          <source src="case-studies/interval-timer/Interaction-model-1.MP4" type="video/mp4" />
+        </video>
+      </div>
+    </div>
+  </div>
+
+  <div class="modal-overlay" id="modalOverlay" aria-hidden="true">
+    <button class="modal-close" id="modalClose" aria-label="Close">
+      <svg width="16" height="16" viewBox="0 0 16 16" fill="none" xmlns="http://www.w3.org/2000/svg">
+        <path d="M3 3L13 13M13 3L3 13" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"/>
+      </svg>
+    </button>
+    <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="phone-container modal-phone">
+        <div class="phone-island"></div>
+        <div class="phone-screen">
+          <video id="modalVideo" muted loop playsinline preload="none">
+            <source data-src="case-studies/interval-timer/Interaction-model-1.MP4" type="video/mp4" />
+          </video>
+        </div>
+      </div>
+      <div class="modal-caption">
+        <h2 class="modal-title" id="modalTitle">Interval Timer</h2>
+        <p class="modal-desc">A working Swift prototype exploring an interaction model for an interval timer app.</p>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    (function () {
+      var trigger  = document.getElementById('phoneTrigger');
+      var overlay  = document.getElementById('modalOverlay');
+      var closeBtn = document.getElementById('modalClose');
+      var video    = document.getElementById('modalVideo');
+
+      var videoLoaded = false;
+      function openModal() {
+        overlay.classList.add('open');
+        overlay.setAttribute('aria-hidden', 'false');
+        document.body.classList.add('modal-open');
+        if (video) {
+          if (!videoLoaded) {
+            var src = video.querySelector('source');
+            if (src && src.dataset.src) {
+              src.src = src.dataset.src;
+              video.load();
+            }
+            videoLoaded = true;
+          }
+          try { video.currentTime = 0; video.play(); } catch (e) {}
+        }
+      }
+
+      function closeModal() {
+        overlay.classList.remove('open');
+        overlay.setAttribute('aria-hidden', 'true');
+        document.body.classList.remove('modal-open');
+        if (video) { try { video.pause(); } catch (e) {} }
+      }
+
+      trigger.addEventListener('click', openModal);
+      trigger.addEventListener('keydown', function (e) {
+        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(); }
+      });
+
+      closeBtn.addEventListener('click', closeModal);
+      overlay.addEventListener('click', function (e) {
+        if (e.target === overlay) closeModal();
+      });
+      document.addEventListener('keydown', function (e) {
+        if (e.key === 'Escape' && overlay.classList.contains('open')) closeModal();
+      });
+    })();
+  </script>
+</body>
+</html>
