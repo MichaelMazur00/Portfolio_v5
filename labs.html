@@ -172,10 +172,11 @@
       .phone-island { width: 76px; height: 22px; top: 12px; }
     }
 
+
     @media (min-width: 1600px) {
       .labs-title .creative { width: 540px; }
       .labs-title .lab      { width: 198px; }
-      .labs-subtitle { font-size: 26px; max-width: 720px; }
+      .labs-subtitle { font-size: 28px; max-width: 720px; }
       .labs-frame { width: 720px; }
     }
 
@@ -242,8 +243,8 @@
     }
 
     .modal-phone {
-      width: 340px;
-      max-width: min(92vw, 340px);
+      width: 289px;
+      max-width: min(92vw, 289px);
     }
 
     .modal-caption {
@@ -266,12 +267,12 @@
     }
 
     @media (max-height: 760px) {
-      .modal-phone { width: 280px; }
+      .modal-phone { width: 238px; }
       .modal-content { gap: 20px; }
     }
 
     @media (max-width: 720px) {
-      .modal-phone { width: min(70vw, 280px); }
+      .modal-phone { width: min(70vw, 238px); }
       .modal-close { top: 16px; right: 16px; width: 40px; height: 40px; }
     }
 
@@ -304,6 +305,10 @@
       </svg>
     </button>
     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+      <div class="modal-caption">
+        <h2 class="modal-title" id="modalTitle">Set time</h2>
+        <p class="modal-desc">A working Swift prototype exploring an interaction model for an interval timer app.</p>
+      </div>
       <div class="phone-container modal-phone">
         <div class="phone-island"></div>
         <div class="phone-screen">
@@ -311,10 +316,6 @@
             <source data-src="case-studies/interval-timer/Interaction-model-1.MP4" type="video/mp4" />
           </video>
         </div>
-      </div>
-      <div class="modal-caption">
-        <h2 class="modal-title" id="modalTitle">Interval Timer</h2>
-        <p class="modal-desc">A working Swift prototype exploring an interaction model for an interval timer app.</p>
       </div>
     </div>
   </div>
