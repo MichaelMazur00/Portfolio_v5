@@ -363,9 +363,10 @@
       border-radius: 16px;
       overflow: hidden;
       position: relative;
-      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), 
+      transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
                   box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
       opacity: 1;
+      box-shadow: 0 12px 32px rgba(255, 255, 255, 0.08), 0 4px 12px rgba(255, 255, 255, 0.05);
     }
     
     .project-card:hover {
@@ -623,7 +624,7 @@
       height: auto;
       opacity: 0;
       transform: translateY(40px);
-      filter: drop-shadow(0 18px 40px rgba(0, 0, 0, 0.45));
+      filter: drop-shadow(0 12px 32px rgba(255, 255, 255, 0.08)) drop-shadow(0 4px 12px rgba(255, 255, 255, 0.05));
     }
 
     .creative-card-wrap-1 {
@@ -2596,56 +2597,46 @@ document.addEventListener('DOMContentLoaded', function() {
   // Creative Lab section fade-in
   const creativeLabSection = document.getElementById('creative-lab');
   if (creativeLabSection) {
-    const creativeContent = creativeLabSection.querySelector('.creative-lab-content');
-    const creativeCardWraps = creativeLabSection.querySelectorAll('.creative-card-wrap');
+    const creativeCards = creativeLabSection.querySelectorAll('.creative-card');
 
-    const setCreativeCardStartPositions = () => {
-      const cRect = creativeContent.getBoundingClientRect();
-      const cx = cRect.left + cRect.width / 2;
-      const cy = cRect.top + cRect.height / 2;
-      const travelScale = 0.35;
-      creativeCardWraps.forEach(wrap => {
-        const img = wrap.querySelector('.creative-card');
-        if (!img) return;
-        const r = wrap.getBoundingClientRect();
-        const dx = (cx - (r.left + r.width / 2)) * travelScale;
-        const dy = (cy - (r.top + r.height / 2)) * travelScale;
-        gsap.set(img, { x: dx, y: dy, opacity: 0 });
-      });
-    };
-
-    setCreativeCardStartPositions();
+    gsap.set(creativeCards, { opacity: 0, y: 40, scale: 0.96 });
 
     gsap.set('.creative-lab-title, .creative-lab-subtitle, .creative-lab-cta', {
       opacity: 0,
       y: 30
     });
 
-    const creativeTimeline = gsap.timeline({
+    gsap.timeline({
       scrollTrigger: {
         trigger: '.creative-lab-center',
         start: 'top 95%',
         toggleActions: 'play none none none',
         onEnter: () => creativeLabSection.classList.add('in-view')
       }
-    });
-
-    creativeTimeline
+    })
       .to('.creative-lab-title, .creative-lab-subtitle, .creative-lab-cta', {
         opacity: 1,
         y: 0,
         duration: 0.6,
         stagger: 0.12,
         ease: 'power2.out'
-      })
-      .to('.creative-card', {
-        x: 0,
-        y: 0,
+      });
+
+    creativeCards.forEach(card => {
+      gsap.to(card, {
         opacity: 1,
-        duration: 0.55,
-        stagger: 0.05,
-        ease: 'expo.in'
-      }, '<');
+        y: 0,
+        scale: 1,
+        duration: 0.8,
+        ease: 'expo.out',
+        scrollTrigger: {
+          trigger: card,
+          start: 'top 85%',
+          toggleActions: 'play none none none',
+          once: true
+        }
+      });
+    });
   }
 
   // Set initial states for contact section
