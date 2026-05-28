@@ -592,7 +592,7 @@
       width: 100vw;
       max-width: none;
       margin-left: calc(-50vw + 50%);
-      padding: 160px 0 0;
+      padding: 120px 0 0;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -782,21 +782,40 @@
 
     @media (max-width: 600px) {
       .creative-lab-section {
-        padding: 60px 20px 0;
+        padding: 20px 20px 160px;
+        margin-top: 60px;
       }
       .creative-lab-content {
         height: auto;
         min-height: 280px;
         width: 100%;
+        flex-direction: column;
+        padding-top: 0;
       }
       .creative-card-wrap {
         display: none;
+      }
+      .creative-card-wrap-1 {
+        display: block;
+        position: relative;
+        width: 440px;
+        left: auto;
+        right: auto;
+        top: auto;
+        bottom: auto;
+        margin: 0 0 -58px;
+        align-self: center;
+        rotate: 30deg;
+      }
+      .creative-lab-center {
+        transform: none;
       }
       .creative-lab-title {
         width: clamp(220px, 70vw, 320px);
       }
       .creative-lab-subtitle {
         font-size: 16px;
+        margin-bottom: 40px;
       }
     }
 
@@ -1011,7 +1030,6 @@
     ───────────────────────────── */
     .section.words-section {
       max-width: 1560px !important;
-      margin-top: 40px;
     }
     
     .experience-content {
@@ -1067,13 +1085,82 @@
     }
 
     .experience-item {
-      display: flex;
-      align-items: center;
+      display: block;
       padding: 24px 0;
       border-bottom: 1px solid #222323;
       transition: all 0.3s ease, border-bottom-color 0.8s ease;
       opacity: 1;
       transform: translateY(0);
+    }
+
+    .experience-item-row {
+      display: flex;
+      align-items: center;
+      cursor: pointer;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .experience-item:hover > .experience-item-row,
+    .experience-item-hidden:hover > .experience-item-row {
+      transform: translateX(8px);
+    }
+
+    .experience-toggle {
+      width: 32px;
+      height: 32px;
+      margin-left: 16px;
+      padding: 0;
+      background: transparent;
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      color: #A0A2A5;
+      flex-shrink: 0;
+      transition: color 0.3s ease;
+    }
+
+    .experience-toggle:hover {
+      color: var(--cream);
+    }
+
+    .experience-toggle .chevron {
+      display: block;
+      width: 9px;
+      height: 15px;
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .experience-item.expanded .experience-toggle .chevron,
+    .experience-item-hidden.expanded .experience-toggle .chevron {
+      transform: rotate(90deg);
+    }
+
+    .experience-item-description {
+      max-height: 0;
+      opacity: 0;
+      overflow: hidden;
+      padding-left: 68px;
+      transition: max-height 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+                  opacity 0.25s ease,
+                  padding-top 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    .experience-item.expanded .experience-item-description,
+    .experience-item-hidden.expanded .experience-item-description {
+      max-height: 240px;
+      opacity: 1;
+      padding-top: 16px;
+    }
+
+    .experience-item-description p {
+      margin: 0;
+      max-width: 600px;
+      font-size: 15px;
+      font-weight: 300;
+      line-height: 1.6;
+      color: #A0A2A5;
     }
 
     /* All items should have same opacity by default */
@@ -1148,8 +1235,7 @@
     }
 
     .experience-item-hidden {
-      display: flex;
-      align-items: center;
+      display: block;
       padding: 0;
       border-bottom: 1px solid #222323;
       transition: all 0.4s ease, border-bottom-color 0.8s ease;
@@ -1163,13 +1249,15 @@
       width: 100%;
     }
 
+    .experience-item-hidden.show.expanded {
+      max-height: 500px;
+    }
+
     .experience-item-hidden.show {
       opacity: 1;
       transform: translateY(0);
-      max-height: 120px; /* Increased to accommodate larger content */
+      max-height: 160px;
       padding: 24px 0;
-      /* Force layout recalculation */
-      min-height: 72px;
     }
 
     .experience-item-hidden.clarity-last {
@@ -1216,40 +1304,63 @@
 
     @media (min-width: 1400px) {
       .section.words-section {
-        margin-top: -200px;
+        margin-top: -180px;
       }
       .contact-section {
-        margin-top: 200px;
+        margin-top: 80px;
       }
       .experience-footer {
         margin-top: 80px;
       }
       .experience-list {
-        width: 960px !important;
+        width: 824px !important;
       }
       .experience-item {
-        padding: 24px 0;
+        padding: 20px 0;
       }
       .experience-item-hidden.show {
-        padding: 24px 0;
-        max-height: 200px;
-        min-height: 144px;
+        padding: 20px 0;
+        max-height: 180px;
       }
       .experience-icon {
-        width: 64px;
-        height: 64px;
+        width: 52px;
+        height: 52px;
         margin-right: 16px;
       }
       .experience-company {
-        font-size: 24px;
+        font-size: 20px;
       }
       .experience-role {
-        font-size: 20px;
+        font-size: 16px;
         letter-spacing: -0.02em;
       }
       .experience-years {
-        font-size: 20px;
+        font-size: 16px;
         letter-spacing: -0.02em;
+      }
+      .experience-toggle {
+        width: 32px;
+        height: 32px;
+        margin-left: 16px;
+      }
+      .experience-toggle .chevron {
+        width: 9px;
+        height: 14px;
+      }
+      .experience-item-description {
+        padding-left: 68px;
+      }
+      .experience-item.expanded .experience-item-description,
+      .experience-item-hidden.expanded .experience-item-description {
+        max-height: 280px;
+        padding-top: 20px;
+      }
+      .experience-item-description p {
+        font-size: 18px;
+        max-width: 680px;
+      }
+      .experience-item-hidden.show.expanded {
+        max-height: 560px;
       }
     }
 
@@ -1286,22 +1397,25 @@
       .experience-content {
         padding: 0 20px;
       }
-      
+
       .experience-list {
         max-width: 100%;
       }
-      
+
       .experience-item {
-        flex-direction: column;
-        align-items: flex-start;
         padding: 20px 0;
       }
-      
+
+      .experience-item-row {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
       .experience-icon {
         margin-right: 0;
         margin-bottom: 16px;
       }
-      
+
       .experience-years {
         margin-top: 8px;
       }
@@ -1515,8 +1629,9 @@
     @media (max-width: 700px) {
       .contact-section {
         padding: 42px 20px 30px 20px;
+        margin-top: 120px;
       }
-      
+
       .copy-button {
         width: 280px;
       }
@@ -1558,14 +1673,16 @@
       }
       
       .projects-section {
-        margin-top: -176px !important;
+        margin-top: -310px !important;
+        min-height: 0 !important;
+        padding: 40px 0 0 !important;
       }
       .projects-track {
         gap: 8px !important;
       }
-      .project-card { 
-        width: 374px !important;
-        height: 450px !important;
+      .project-card {
+        width: 300px !important;
+        height: 360px !important;
         flex: 0 0 auto;
         margin-right: 16px;
       }
@@ -1573,7 +1690,7 @@
       .project-card.height-2,
       .project-card.height-3,
       .project-card.height-4 {
-        height: 450px !important;
+        height: 360px !important;
       }
       .project-card-media img,
       .project-card-media video {
@@ -1603,6 +1720,15 @@
       .words-list {
         text-align: center;
       }
+      .section.words-section {
+        min-height: 0 !important;
+        justify-content: flex-start;
+        margin-top: -36px;
+      }
+      .words-section {
+        min-height: 0;
+        justify-content: flex-start;
+      }
       .experience-content {
         padding: 0 40px;
         max-width: 100vw;
@@ -1620,11 +1746,17 @@
       .experience-subtitle {
         font-size: 16px !important;
         margin-bottom: 40px;
+        margin-left: -40px;
+        margin-right: -40px;
+        width: 100vw;
+        max-width: 100vw;
       }
       .experience-item {
+        padding: 16px 0;
+      }
+      .experience-item-row {
         flex-direction: row;
         align-items: center;
-        padding: 16px 0;
         position: relative;
       }
       .experience-icon {
@@ -1645,8 +1777,14 @@
         margin-top: 0;
         font-size: 14px;
       }
+      .experience-toggle {
+        display: none;
+      }
+      .experience-item-description {
+        display: none;
+      }
       .words-section {
-        margin-top: -4px !important;
+        margin-top: -36px !important;
         max-width: none !important;
         width: 100% !important;
         margin-left: 0 !important;
@@ -1860,76 +1998,140 @@
 
     <div class="experience-list">
       <div class="experience-item">
-        <div class="experience-icon stripe"></div>
-        <div class="experience-details">
-          <h3 class="experience-company">Stripe</h3>
-          <p class="experience-role">Product designer</p>
+        <div class="experience-item-row">
+          <div class="experience-icon stripe"></div>
+          <div class="experience-details">
+            <h3 class="experience-company">Stripe</h3>
+            <p class="experience-role">Product designer</p>
+          </div>
+          <div class="experience-years">2022 - 2025</div>
+          <button class="experience-toggle" aria-label="Expand details" aria-expanded="false">
+            <img class="chevron" src="images/chevron.svg" alt="" aria-hidden="true" />
+          </button>
         </div>
-        <div class="experience-years">2022 - 2025</div>
+        <div class="experience-item-description">
+          <p>Joined the Connect platform account management team, where I crafted a vision and delivered updated UI that reduced support inquiries, and boosted platform engagement. Later, I redesigned the Connect onboarding experience which led to an increase in conversion by ~60% and go lives by 14%.</p>
+        </div>
       </div>
 
       <div class="experience-item">
-        <div class="experience-icon uber"></div>
-        <div class="experience-details">
-          <h3 class="experience-company">Uber</h3>
-          <p class="experience-role">Product designer</p>
+        <div class="experience-item-row">
+          <div class="experience-icon uber"></div>
+          <div class="experience-details">
+            <h3 class="experience-company">Uber</h3>
+            <p class="experience-role">Product designer</p>
+          </div>
+          <div class="experience-years">2019 - 2022</div>
+          <button class="experience-toggle" aria-label="Expand details" aria-expanded="false">
+            <img class="chevron" src="images/chevron.svg" alt="" aria-hidden="true" />
+          </button>
         </div>
-        <div class="experience-years">2019 - 2022</div>
+        <div class="experience-item-description">
+          <p>Joined the Load Logistics team, designed a system of profiles that automated manual processes and reduced operations cost by 18%. Later, led the design for a new line of business on the Shipper Platform team.</p>
+        </div>
       </div>
 
       <div class="experience-item">
-        <div class="experience-icon huge"></div>
-        <div class="experience-details">
-          <h3 class="experience-company">Huge</h3>
-          <p class="experience-role">Contract product designer</p>
+        <div class="experience-item-row">
+          <div class="experience-icon huge"></div>
+          <div class="experience-details">
+            <h3 class="experience-company">Huge</h3>
+            <p class="experience-role">Contract product designer</p>
+          </div>
+          <div class="experience-years">2019</div>
+          <button class="experience-toggle" aria-label="Expand details" aria-expanded="false">
+            <img class="chevron" src="images/chevron.svg" alt="" aria-hidden="true" />
+          </button>
         </div>
-        <div class="experience-years">2019</div>
+        <div class="experience-item-description">
+          <p>Designed a scalable design system for Vanguard that unified their digital experience and accelerated team velocity. Designed a legal workflow tool for Thomson Reuters that streamlined complex case management, and contributed to Chase's Credit Journey, helping users better understand and improve their financial health.</p>
+        </div>
       </div>
 
       <div class="experience-item">
-        <div class="experience-icon instrument"></div>
-        <div class="experience-details">
-          <h3 class="experience-company">Instrument</h3>
-          <p class="experience-role">Contract product designer</p>
+        <div class="experience-item-row">
+          <div class="experience-icon instrument"></div>
+          <div class="experience-details">
+            <h3 class="experience-company">Instrument</h3>
+            <p class="experience-role">Contract product designer</p>
+          </div>
+          <div class="experience-years">2019</div>
+          <button class="experience-toggle" aria-label="Expand details" aria-expanded="false">
+            <img class="chevron" src="images/chevron.svg" alt="" aria-hidden="true" />
+          </button>
         </div>
-        <div class="experience-years">2019</div>
+        <div class="experience-item-description">
+          <p>Contributed to the redesign of Spartan Race's digital experience, and shaped a phased strategy that self-funded the project by prioritizing the bookings flow first—turning early revenue gains into runway for the broader redesign.</p>
+        </div>
       </div>
-      
+
       <!-- Hidden additional items -->
       <div class="experience-item-hidden">
-        <div class="experience-icon away"></div>
-        <div class="experience-details">
-          <h3 class="experience-company">Away</h3>
-          <p class="experience-role">Contract product designer</p>
+        <div class="experience-item-row">
+          <div class="experience-icon away"></div>
+          <div class="experience-details">
+            <h3 class="experience-company">Away</h3>
+            <p class="experience-role">Contract product designer</p>
+          </div>
+          <div class="experience-years">2017 - 2019</div>
+          <button class="experience-toggle" aria-label="Expand details" aria-expanded="false">
+            <img class="chevron" src="images/chevron.svg" alt="" aria-hidden="true" />
+          </button>
         </div>
-        <div class="experience-years">2017 - 2019</div>
+        <div class="experience-item-description">
+          <p>Joined as the first product design hire at a direct-to-consumer brand where design and aesthetics were central to the business. Owned key e-commerce flows including payment, monogramming, and PLP generation, and designed flexible frameworks for Here, the brand's travel publication.</p>
+        </div>
       </div>
 
       <div class="experience-item-hidden">
-        <div class="experience-icon spring"></div>
-        <div class="experience-details">
-          <h3 class="experience-company">Spring Inc</h3>
-          <p class="experience-role">Contract product designer</p>
+        <div class="experience-item-row">
+          <div class="experience-icon spring"></div>
+          <div class="experience-details">
+            <h3 class="experience-company">Spring Inc</h3>
+            <p class="experience-role">Contract product designer</p>
+          </div>
+          <div class="experience-years">2016 - 2017</div>
+          <button class="experience-toggle" aria-label="Expand details" aria-expanded="false">
+            <img class="chevron" src="images/chevron.svg" alt="" aria-hidden="true" />
+          </button>
         </div>
-        <div class="experience-years">2016 - 2017</div>
+        <div class="experience-item-description">
+          <p>Focused on the web shopping experience, designing curated shopping experiences and leading a navigation redesign that helped users discover and browse products more intuitively.</p>
+        </div>
       </div>
 
       <div class="experience-item-hidden">
-        <div class="experience-icon chartbeat"></div>
-        <div class="experience-details">
-          <h3 class="experience-company">Chartbeat</h3>
-          <p class="experience-role">Contract product designer</p>
+        <div class="experience-item-row">
+          <div class="experience-icon chartbeat"></div>
+          <div class="experience-details">
+            <h3 class="experience-company">Chartbeat</h3>
+            <p class="experience-role">Contract product designer</p>
+          </div>
+          <div class="experience-years">2015 - 2016</div>
+          <button class="experience-toggle" aria-label="Expand details" aria-expanded="false">
+            <img class="chevron" src="images/chevron.svg" alt="" aria-hidden="true" />
+          </button>
         </div>
-        <div class="experience-years">2015 - 2016</div>
+        <div class="experience-item-description">
+          <p>Designed real-time analytics dashboards for editorial teams, including the HUD display that surfaced headline engagement performance at a glance, and contributed to the design system that scaled consistency across the platform.</p>
+        </div>
       </div>
 
       <div class="experience-item-hidden clarity-last">
-        <div class="experience-icon clarity"></div>
-        <div class="experience-details">
-          <h3 class="experience-company">Clarity consulting</h3>
-          <p class="experience-role">Product designer</p>
+        <div class="experience-item-row">
+          <div class="experience-icon clarity"></div>
+          <div class="experience-details">
+            <h3 class="experience-company">Clarity consulting</h3>
+            <p class="experience-role">Product designer</p>
+          </div>
+          <div class="experience-years">2013 - 2015</div>
+          <button class="experience-toggle" aria-label="Expand details" aria-expanded="false">
+            <img class="chevron" src="images/chevron.svg" alt="" aria-hidden="true" />
+          </button>
         </div>
-        <div class="experience-years">2013 - 2015</div>
+        <div class="experience-item-description">
+          <p>Got my start designing consumer-facing interfaces for major brands, including the first build-your-own-burger kiosk for McDonald's and connected vending machine experiences for Mondelez and Kraft.</p>
+        </div>
       </div>
     </div>
 
@@ -1939,7 +2141,7 @@
         var items = document.querySelectorAll('.experience-item-hidden');
         var btn = this;
         for(var i = 0; i < items.length; i++) {
-          items[i].style.display = 'flex';
+          items[i].style.display = 'block';
           items[i].classList.add('show');
         }
         btn.style.display = 'none';
@@ -2286,6 +2488,27 @@ document.addEventListener('DOMContentLoaded', function() {
   gsap.set('.experience-item', {
     opacity: 0,
     y: 10, // Small distance for list items
+  });
+
+  // Experience accordion toggle — click anywhere on the row
+  document.querySelectorAll('.experience-list .experience-item-row').forEach(function(row) {
+    row.addEventListener('click', function() {
+      var item = row.closest('.experience-item, .experience-item-hidden');
+      if (!item) return;
+      var willExpand = !item.classList.contains('expanded');
+      document.querySelectorAll('.experience-list .experience-item.expanded, .experience-list .experience-item-hidden.expanded').forEach(function(other) {
+        if (other === item) return;
+        other.classList.remove('expanded');
+        var otherBtn = other.querySelector('.experience-toggle');
+        if (otherBtn) otherBtn.setAttribute('aria-expanded', 'false');
+      });
+      item.classList.toggle('expanded', willExpand);
+      var btn = row.querySelector('.experience-toggle');
+      if (btn) btn.setAttribute('aria-expanded', willExpand ? 'true' : 'false');
+      if (window.ScrollTrigger && ScrollTrigger.refresh) {
+        setTimeout(function() { ScrollTrigger.refresh(); }, 450);
+      }
+    });
   });
 
   // Experience section animation - OPTIMIZED FOR SPEED
