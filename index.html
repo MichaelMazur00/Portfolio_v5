@@ -1,6 +1,18 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
+  <script>
+    // Tag the document as touch vs mouse BEFORE first paint so hover effects
+    // (card grow + hover video) can be gated reliably, independent of flaky
+    // (hover)/(pointer) media-query reporting on some phones/tablets.
+    (function () {
+      var isTouch = ('ontouchstart' in window) ||
+                    (navigator.maxTouchPoints > 0) ||
+                    (navigator.msMaxTouchPoints > 0) ||
+                    window.matchMedia('(pointer: coarse)').matches;
+      document.documentElement.classList.add(isTouch ? 'is-touch' : 'no-touch');
+    })();
+  </script>
   <link rel="stylesheet" href="styles.css" />
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -369,7 +381,7 @@
       box-shadow: 0 12px 32px rgba(255, 255, 255, 0.08), 0 4px 12px rgba(255, 255, 255, 0.05);
     }
     
-    .project-card:hover {
+    html.no-touch .project-card:hover {
       transform: scale(1.015) !important;
       transform-origin: center center;
       transition: transform 0.3s ease-out !important;
@@ -415,7 +427,7 @@
       align-self: center;
     }
 
-    .project-card:hover {
+    html.no-touch .project-card:hover {
       transform: translateY(-8px);
       box-shadow: 0 25px 50px rgba(0,0,0,0.15);
     }
@@ -541,7 +553,7 @@
       box-shadow: 0 4px 20px rgba(0,0,0,0.3);
       transition: transform 0.3s ease;
     }
-    .project-card:hover .project-card-phones img {
+    html.no-touch .project-card:hover .project-card-phones img {
       transform: translateY(-3px);
     }
 
@@ -804,7 +816,7 @@
         right: auto;
         top: auto;
         bottom: auto;
-        margin: 0 0 -58px;
+        margin: 0 0 -48px;
         align-self: center;
         rotate: 30deg;
       }
@@ -1905,28 +1917,28 @@
       <div class="project-card page-animate-media height-4" data-case-study="personalization">
         <div class="project-card-media">
           <img src="images/personalization-cover.jpg" alt="Personalization" class="static-image" />
-          <video src="images/personalization.mp4?v=2" poster="images/personalization-cover.jpg" alt="Personalization animation" class="hover-gif" muted playsinline preload="metadata" loading="lazy"></video>
+          <video src="images/personalization.mp4?v=2" poster="images/personalization-cover.jpg" alt="Personalization animation" class="hover-gif" muted playsinline preload="none"></video>
         </div>
       </div>
 
       <div class="project-card page-animate-media height-1" data-case-study="platform-experience">
         <div class="project-card-media">
           <img src="images/platform-experience-cover.jpg" alt="Platform experience" class="static-image" />
-          <video src="images/platformexperience.mp4" poster="images/platform-experience-cover.jpg" alt="Payment platform animation" class="hover-gif" muted playsinline preload="metadata" loading="lazy"></video>
+          <video src="images/platformexperience.mp4" poster="images/platform-experience-cover.jpg" alt="Payment platform animation" class="hover-gif" muted playsinline preload="none"></video>
         </div>
       </div>
 
       <div class="project-card page-animate-media height-2" data-case-study="onboarding">
         <div class="project-card-media">
           <img src="images/onboarding-cover.jpg" alt="Onboarding" class="static-image" />
-          <video src="images/onboarding.mp4" poster="images/onboarding-cover.jpg" alt="Onboarding animation" class="hover-gif" muted playsinline preload="metadata" loading="lazy"></video>
+          <video src="images/onboarding.mp4" poster="images/onboarding-cover.jpg" alt="Onboarding animation" class="hover-gif" muted playsinline preload="none"></video>
         </div>
       </div>
 
       <div class="project-card page-animate-media height-3" data-case-study="freight-marketplace">
         <div class="project-card-media">
           <img src="images/freight-marketplace-cover.jpg" alt="Freight marketplace" class="static-image" />
-          <video src="images/freightmarketplace.mp4" poster="images/freight-marketplace-cover.jpg" alt="Freight marketplace animation" class="hover-gif" muted playsinline preload="metadata" loading="lazy"></video>
+          <video src="images/freightmarketplace.mp4" poster="images/freight-marketplace-cover.jpg" alt="Freight marketplace animation" class="hover-gif" muted playsinline preload="none"></video>
         </div>
       </div>
 
@@ -1934,28 +1946,28 @@
       <div class="project-card page-animate-media height-4" data-case-study="personalization">
         <div class="project-card-media">
           <img src="images/personalization-cover.jpg" alt="Personalization" class="static-image" />
-          <video src="images/personalization.mp4?v=2" poster="images/personalization-cover.jpg" alt="Personalization animation" class="hover-gif" muted playsinline preload="metadata" loading="lazy"></video>
+          <video src="images/personalization.mp4?v=2" poster="images/personalization-cover.jpg" alt="Personalization animation" class="hover-gif" muted playsinline preload="none"></video>
         </div>
       </div>
 
       <div class="project-card page-animate-media height-1" data-case-study="platform-experience">
         <div class="project-card-media">
           <img src="images/platform-experience-cover.jpg" alt="Platform experience" class="static-image" />
-          <video src="images/platformexperience.mp4" poster="images/platform-experience-cover.jpg" alt="Payment platform animation" class="hover-gif" muted playsinline preload="metadata" loading="lazy"></video>
+          <video src="images/platformexperience.mp4" poster="images/platform-experience-cover.jpg" alt="Payment platform animation" class="hover-gif" muted playsinline preload="none"></video>
         </div>
       </div>
 
       <div class="project-card page-animate-media height-2" data-case-study="onboarding">
         <div class="project-card-media">
           <img src="images/onboarding-cover.jpg" alt="Onboarding" class="static-image" />
-          <video src="images/onboarding.mp4" poster="images/onboarding-cover.jpg" alt="Onboarding animation" class="hover-gif" muted playsinline preload="metadata" loading="lazy"></video>
+          <video src="images/onboarding.mp4" poster="images/onboarding-cover.jpg" alt="Onboarding animation" class="hover-gif" muted playsinline preload="none"></video>
         </div>
       </div>
 
       <div class="project-card page-animate-media height-3" data-case-study="freight-marketplace">
         <div class="project-card-media">
           <img src="images/freight-marketplace-cover.jpg" alt="Freight marketplace" class="static-image" />
-          <video src="images/freightmarketplace.mp4" poster="images/freight-marketplace-cover.jpg" alt="Freight marketplace animation" class="hover-gif" muted playsinline preload="metadata" loading="lazy"></video>
+          <video src="images/freightmarketplace.mp4" poster="images/freight-marketplace-cover.jpg" alt="Freight marketplace animation" class="hover-gif" muted playsinline preload="none"></video>
         </div>
       </div>
 
@@ -2204,22 +2216,6 @@
 // Initialize GSAP
 gsap.registerPlugin(ScrollTrigger);
 
-// Smart video preloading function - called after animations complete
-window.preloadHoverVideos = function() {
-  // Delay video preloading to not block initial page load
-  setTimeout(() => {
-    console.log('Preloading hover videos with delay...');
-    const allHoverVideos = document.querySelectorAll('.hover-gif[src*=".mp4"]');
-    
-    allHoverVideos.forEach((video, index) => {
-      setTimeout(() => {
-        video.preload = 'auto';
-        video.load();
-      }, index * 500); // Much longer delay between videos
-    });
-  }, 2000); // Wait 2 seconds before starting preload
-};
-
 
 // Inject logo SVG
 (function() {
@@ -2416,10 +2412,7 @@ document.addEventListener('DOMContentLoaded', function() {
       ease: 'power2.out', // Lighter easing
       onComplete: () => {
         console.log('Cards animation completed - starting carousel');
-        
-        // Start preloading videos after animation
-        window.preloadHoverVideos();
-        
+
         // Start carousel with multiple attempts
         setTimeout(() => {
           console.log('Attempting to start carousel...');
@@ -3763,86 +3756,42 @@ document.addEventListener('DOMContentLoaded', function() {
 }());
 </script>
 
+
 <script>
-// Enhanced hover - handles both videos and GIFs
+// Play project-card videos on hover — mouse-driven (desktop) devices only.
+// On touch devices the cards stay as static cover images with no hover state.
 document.addEventListener('DOMContentLoaded', () => {
-  // Preload all hover media immediately
-  const allHoverMedia = document.querySelectorAll('.hover-gif');
-  allHoverMedia.forEach(media => {
-    if (media.tagName === 'IMG') {
-      const preloader = new Image();
-      preloader.src = media.src;
-    } else if (media.tagName === 'VIDEO') {
-      // Better preloading for videos
-      media.load();
-      // Set first frame as poster for immediate display
-      media.addEventListener('loadeddata', () => {
-        media.currentTime = 0;
-      });
-    }
-  });
-  
+  // Gate on the same deterministic touch detection used for CSS hover (set on
+  // <html> before paint). Touch devices keep static cover images, no playback.
+  const isMouseDevice = () => document.documentElement.classList.contains('no-touch');
+
+  if (!isMouseDevice()) return; // Mobile/touch: leave cards static
+
   const cards = document.querySelectorAll('.project-card');
-  
+
   cards.forEach(card => {
-    const hoverMedia = card.querySelector('.hover-gif');
-    const staticMedia = card.querySelector('.static-image');
-    
-    // Clear any inline opacity styles to let CSS take control
-    if (hoverMedia) hoverMedia.style.opacity = '';
-    if (staticMedia) staticMedia.style.opacity = '';
-    
-    if (hoverMedia && staticMedia) {
-      let isHovering = false;
-      
-      // Initialize static video to show first frame
-      if (staticMedia.tagName === 'VIDEO') {
-        staticMedia.addEventListener('loadeddata', () => {
-          staticMedia.currentTime = 0;
-        });
-      }
-      
-      // Simple video hover - let CSS handle opacity, JS handles playback
-      const video = card.querySelector('.hover-gif');
-      
-      if (video && video.tagName === 'VIDEO') {
-        let videoReady = false;
-        
-        // Ensure video is fully loaded before allowing playback
-        video.addEventListener('canplaythrough', () => {
-          videoReady = true;
-        });
-        
-        card.addEventListener('mouseenter', () => {
-          // Hide static image immediately
-          const staticImage = card.querySelector('.static-image');
-          if (staticImage) staticImage.style.opacity = '0';
-          
-          // Start video playback - poster will show until video plays
-          if (videoReady || video.readyState >= 3) {
-            video.currentTime = 0;
-            video.play().catch(() => {});
-          } else {
-            video.addEventListener('canplaythrough', () => {
-              video.currentTime = 0;
-              video.play().catch(() => {});
-            }, { once: true });
-          }
-        });
-        
-        card.addEventListener('mouseleave', () => {
-          video.pause();
-          video.currentTime = 0;
-          
-          // Show static image again
-          const staticImage = card.querySelector('.static-image');
-          if (staticImage) staticImage.style.opacity = '1';
-        });
-      }
-    }
+    const video = card.querySelector('.hover-gif');
+    const staticImage = card.querySelector('.static-image');
+    if (!video || video.tagName !== 'VIDEO' || !staticImage) return;
+
+    card.addEventListener('mouseenter', () => {
+      if (!isMouseDevice()) return; // re-check live, in case input mode changed
+      staticImage.style.opacity = '0';
+      // Call play() directly — the browser buffers and starts on its own.
+      // (Waiting on canplaythrough stalls large videos, which never start.)
+      const playback = video.play();
+      if (playback && playback.catch) playback.catch(() => {});
+    });
+
+    card.addEventListener('mouseleave', () => {
+      video.pause();
+      video.currentTime = 0;
+      staticImage.style.opacity = '1';
+    });
   });
 });
 </script>
+
 
 <script>
 // Custom cursor - OPTIMIZED VERSION
