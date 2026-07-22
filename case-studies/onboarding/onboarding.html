@@ -40,7 +40,7 @@
       gap: 8px;
       color: #000000;
       text-decoration: none;
-      font-weight: 600;
+      font-weight: 500;
       font-size: 12px;
       margin-bottom: 16px;
       transition: color 0.3s ease;
@@ -61,7 +61,7 @@
 
     .case-study-title {
       font-size: 64px;
-      font-weight: 700;
+      font-weight: 500;
       line-height: 72px;
       letter-spacing: -0.0375em;
       color: #000000;
@@ -71,7 +71,7 @@
     .case-study-desc,
     .subtitle {
       font-size: 24px;
-      font-weight: 700;
+      font-weight: 500;
       color: #000000;
       line-height: 32px;
       letter-spacing: -0.02em;
@@ -167,29 +167,46 @@
       height: auto;
       display: block;
     }
+  
+    /* ===== Example-style landing header ===== */
+    .back-btn { font-size: 15px; font-weight: 700; gap: 4px; margin-bottom: 40px; }
+    .case-study-header { margin-bottom: 0; }
+    .case-study-title { font-size: clamp(40px, 7vw, 64px); font-weight: 800; line-height: 1.02; letter-spacing: -0.045em; margin-bottom: 24px; }
+    .header-cols { display: flex; justify-content: space-between; align-items: flex-start; gap: 80px; }
+    .header-cols .case-study-desc { font-size: 20px; font-weight: 400; color: #4a4a4a; line-height: 32px; letter-spacing: -0.01em; max-width: 622px; margin-bottom: 0; }
+    .meta-table { width: 340px; flex-shrink: 0; }
+    .meta-row { display: flex; gap: 24px; padding: 12px 0; border-bottom: 1px solid #e6e6e6; }
+    .meta-row:last-child { border-bottom: none; }
+    .meta-label { font-size: 14px; font-weight: 700; color: #000; width: 96px; flex-shrink: 0; }
+    .meta-value { font-size: 14px; font-weight: 400; color: #4a4a4a; }
+    .full-width-image.hero-card { margin-top: 40px; background: #f6f6f4; border-radius: 24px; padding: 56px 56px 0; overflow: hidden; }
+    .full-width-image.hero-card img { border-radius: 8px 8px 0 0; }
+    @media (max-width: 768px) {
+      .header-cols { flex-direction: column; gap: 32px; }
+      .header-cols .case-study-desc { font-size: 20px; }
+      .meta-table { width: 100%; }
+      .full-width-image.hero-card { padding: 20px 20px 0; border-radius: 16px; }
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <a href="../../index.html" class="back-btn">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    Back
-  </a>
+  <a href="../../index.html" class="back-btn">&lt; Back</a>
 
   <div class="case-study-header">
-    <h1 class="case-study-title">Platform onboarding</h1>
-    <p class="case-study-desc">Two major iterations of the sign-up activation flow over one year drove a ~60% increase in conversion and a 16% lift in go-lives.</p>
-    <div class="case-study-body">
-      <p>Stripe's edge in the platform and marketplace space was built on self-serve onboarding — no sales calls, no friction, just a fast path from sign-up to live. Strong developer documentation and a perceived reduction in complexity meant startups could move quickly, and that speed became a meaningful competitive differentiator.</p>
-      
-      <p>I joined the first iteration mid-stream and saw the team was maxing out a direction that wasn't going to work. The second iteration was a reset: I partnered with a senior staff designer and led the Connect side end-to-end. Result: ~60% conversion lift, 16% lift in self-serve go-lives.</p>
+    <h1 class="case-study-title">Onboarding for payments</h1>
+    <div class="header-cols">
+      <p class="case-study-desc">Led redesign of Stripe Connect's onboarding flow, helping platforms and marketplaces go from sign-up to live. Changes drove a ~60% lift in conversion and 16% more self-serve activations.</p>
+      <div class="meta-table">
+        <div class="meta-row"><span class="meta-label">Role</span><span class="meta-value">Product Designer</span></div>
+        <div class="meta-row"><span class="meta-label">Timeline</span><span class="meta-value">2024-2025</span></div>
+        <div class="meta-row"><span class="meta-label">Team(s)</span><span class="meta-value">Platform activation, and patterns</span></div>
+      </div>
     </div>
   </div>
 
-  <div class="full-width-image" style="margin-top: 80px;">
+  <div class="full-width-image">
     <img src="4.png" alt="Second iteration overview" loading="lazy" />
   </div>
   

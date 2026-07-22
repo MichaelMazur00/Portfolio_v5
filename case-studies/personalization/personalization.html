@@ -40,7 +40,7 @@
       gap: 8px;
       color: #000000;
       text-decoration: none;
-      font-weight: 600;
+      font-weight: 500;
       font-size: 12px;
       margin-bottom: 16px;
       transition: color 0.3s ease;
@@ -61,7 +61,7 @@
 
     .case-study-title {
       font-size: 64px;
-      font-weight: 700;
+      font-weight: 500;
       line-height: 72px;
       letter-spacing: -0.0375em;
       color: #000000;
@@ -71,7 +71,7 @@
     .case-study-desc,
     .subtitle {
       font-size: 24px;
-      font-weight: 700;
+      font-weight: 500;
       color: #000000;
       line-height: 32px;
       letter-spacing: -0.02em;
@@ -99,6 +99,11 @@
       .case-study-body {
         grid-template-columns: 1fr;
         gap: 20px;
+      }
+      .case-study-title {
+        font-size: 40px;
+        line-height: 48px;
+        white-space: nowrap;
       }
     }
 
@@ -193,31 +198,45 @@
         gap: 16px;
       }
     }
+  
+    /* ===== Example-style landing header ===== */
+    .back-btn { font-size: 15px; font-weight: 700; gap: 4px; margin-bottom: 40px; }
+    .case-study-header { margin-bottom: 0; }
+    .case-study-title { font-size: clamp(40px, 7vw, 64px); font-weight: 800; line-height: 1.02; letter-spacing: -0.045em; margin-bottom: 24px; }
+    .header-cols { display: flex; justify-content: space-between; align-items: flex-start; gap: 80px; }
+    .header-cols .case-study-desc { font-size: 20px; font-weight: 400; color: #4a4a4a; line-height: 32px; letter-spacing: -0.01em; max-width: 622px; margin-bottom: 0; }
+    .meta-table { width: 340px; flex-shrink: 0; }
+    .meta-row { display: flex; gap: 24px; padding: 12px 0; border-bottom: 1px solid #e6e6e6; }
+    .meta-row:last-child { border-bottom: none; }
+    .meta-label { font-size: 14px; font-weight: 700; color: #000; width: 96px; flex-shrink: 0; }
+    .meta-value { font-size: 14px; font-weight: 400; color: #4a4a4a; }
+    .full-width-image.hero-card { margin-top: 40px; background: #f6f6f4; border-radius: 24px; padding: 56px 56px 0; overflow: hidden; }
+    .full-width-image.hero-card img { border-radius: 8px 8px 0 0; }
+    @media (max-width: 768px) {
+      .header-cols { flex-direction: column; gap: 32px; }
+      .header-cols .case-study-desc { font-size: 20px; }
+      .meta-table { width: 100%; }
+      .full-width-image.hero-card { padding: 20px 20px 0; border-radius: 16px; }
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <a href="../../index.html" class="back-btn">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    Back
-  </a>
+  <a href="../../index.html" class="back-btn">&lt; Back</a>
 
   <div class="case-study-header">
-    <h1 class="case-study-title">Personalization</h1>
-    <p class="case-study-desc">Away's first personalization experience — adopted on ~20% of luggage and handbag orders, then shut down when production couldn't keep up.</p>
-  </div>
-  
-  <div style="margin-top: 40px;">
-    <div class="case-study-body">
-      <p>Away sold luggage and travel goods as fixed products with no way to make them your own. Personalization — monogramming, engraving, custom colors — was a known purchase driver in the category, but the capability didn't exist. I was brought in as the sole designer to build it.</p>
-      
-      <p>I defined the experience model, designed the PDP entry point, and shipped a configurator across desktop and mobile. After launch, personalization was adopted on ~20% of luggage and bag orders. Demand outpaced Away's production capacity, and we had to pause the feature when operations couldn't keep up.</p>
+    <h1 class="case-study-title">Monogramming goods</h1>
+    <div class="header-cols">
+      <p class="case-study-desc">Designed Away’s personalization experience. Designed PDP entry point, cart entry point, and configurator across desktop and mobile. Adopted on ~20% of luggage and bag orders at launch; demand outpaced production capacity.</p>
+      <div class="meta-table">
+        <div class="meta-row"><span class="meta-label">Role</span><span class="meta-value">Product Designer</span></div>
+        <div class="meta-row"><span class="meta-label">Timeline</span><span class="meta-value">2019</span></div>
+        <div class="meta-row"><span class="meta-label">Team(s)</span><span class="meta-value">Away, and Praesons</span></div>
+      </div>
     </div>
   </div>
-  
+
   <div class="full-width-image">
     <img src="1.png" alt="Personalization opportunity" />
   </div>
@@ -234,16 +253,7 @@
     <img src="4.png" alt="Personalization opportunity" loading="lazy" />
   </div>
   
-  <div style="margin-top: 120px;">
-    <h2 class="subtitle iteration-subtitle">Mobile</h2>
-    <div class="case-study-body">
-      <p>Mobile also became an opportunity to push the brand expression further. I focused on crafting transitions and micro-animations that made each customization choice feel considered — color selections that bled in with purpose, monogram characters that settled into place rather than just appearing.</p>
-      
-      <p>Away's visual identity has a lot of restrained confidence to it, and the motion language was a way to carry that through into an interactive context. The mobile experience carried the same interaction model but adapted the layout for a single-column, thumb-friendly context.</p>
-    </div>
-  </div>
-  
-  <div class="side-by-side-images">
+  <div class="side-by-side-images" style="margin-top: 16px;">
     <div class="half-width-image">
       <img src="5.png" alt="Personalization solution" loading="lazy" />
     </div>

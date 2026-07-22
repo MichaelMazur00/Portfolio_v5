@@ -40,7 +40,7 @@
       gap: 8px;
       color: #000000;
       text-decoration: none;
-      font-weight: 600;
+      font-weight: 500;
       font-size: 12px;
       margin-bottom: 16px;
       transition: color 0.3s ease;
@@ -61,7 +61,7 @@
 
     .case-study-title {
       font-size: 64px;
-      font-weight: 700;
+      font-weight: 500;
       line-height: 72px;
       letter-spacing: -0.0375em;
       color: #000000;
@@ -71,7 +71,7 @@
     .case-study-desc,
     .subtitle {
       font-size: 24px;
-      font-weight: 700;
+      font-weight: 500;
       color: #000000;
       line-height: 32px;
       letter-spacing: -0.02em;
@@ -193,25 +193,42 @@
         gap: 16px;
       }
     }
+  
+    /* ===== Example-style landing header ===== */
+    .back-btn { font-size: 15px; font-weight: 700; gap: 4px; margin-bottom: 40px; }
+    .case-study-header { margin-bottom: 0; }
+    .case-study-title { font-size: clamp(40px, 7vw, 64px); font-weight: 800; line-height: 1.02; letter-spacing: -0.045em; margin-bottom: 24px; }
+    .header-cols { display: flex; justify-content: space-between; align-items: flex-start; gap: 80px; }
+    .header-cols .case-study-desc { font-size: 20px; font-weight: 400; color: #4a4a4a; line-height: 32px; letter-spacing: -0.01em; max-width: 622px; margin-bottom: 0; }
+    .meta-table { width: 340px; flex-shrink: 0; }
+    .meta-row { display: flex; gap: 24px; padding: 12px 0; border-bottom: 1px solid #e6e6e6; }
+    .meta-row:last-child { border-bottom: none; }
+    .meta-label { font-size: 14px; font-weight: 700; color: #000; width: 96px; flex-shrink: 0; }
+    .meta-value { font-size: 14px; font-weight: 400; color: #4a4a4a; }
+    .full-width-image.hero-card { margin-top: 40px; background: #f6f6f4; border-radius: 24px; padding: 56px 56px 0; overflow: hidden; }
+    .full-width-image.hero-card img { border-radius: 8px 8px 0 0; }
+    @media (max-width: 768px) {
+      .header-cols { flex-direction: column; gap: 32px; }
+      .header-cols .case-study-desc { font-size: 20px; }
+      .meta-table { width: 100%; }
+      .full-width-image.hero-card { padding: 20px 20px 0; border-radius: 16px; }
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <a href="../../index.html" class="back-btn">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    Back
-  </a>
+  <a href="../../index.html" class="back-btn">&lt; Back</a>
 
   <div class="case-study-header">
-    <h1 class="case-study-title">Freight marketplace</h1>
-    <p class="case-study-desc">A 0→1 multi-broker freight marketplace for Uber Freight — and why we killed it pre-launch</p>
-    <div class="case-study-body">
-      <p>Working with the Uber Freight team, I led a 0→1 project to build a first-of-its-kind multi-broker marketplace — a platform where drivers and brokers could book and manage loads in one place. No other company had built a public marketplace of this kind. We designed a mobile experience optimized for booking on the go, paired with a more robust desktop experience for creating and managing loads at scale.</p>
-      
-      <p>The project never made it to launch. Weeks before release, a competitor beat us to market — and the industry's leading pricing data provider, wary of the public brokerage model, pulled their data contracts in response. Facing the same business risk, we made the difficult decision to sunset the project before it cost us our own access to critical pricing data.</p>
+    <h1 class="case-study-title">Matching drivers and brokerages</h1>
+    <div class="header-cols">
+      <p class="case-study-desc">Led 0→1 design for Uber Freight's multi-broker marketplace. The mobile experience was for drivers to book loads on the go, desktop for shippers to manage loads at scale. Weeks before launch, we pulled the plug.</p>
+      <div class="meta-table">
+        <div class="meta-row"><span class="meta-label">Role</span><span class="meta-value">Product Designer</span></div>
+        <div class="meta-row"><span class="meta-label">Timeline</span><span class="meta-value">2021-2022</span></div>
+        <div class="meta-row"><span class="meta-label">Team(s)</span><span class="meta-value">Shipper platform</span></div>
+      </div>
     </div>
   </div>
 
@@ -219,16 +236,7 @@
     <img src="1.png" alt="Load execution overview" />
   </div>
   
-  <div style="margin-top: 120px;">
-    <h2 class="subtitle iteration-subtitle">Desktop</h2>
-    <div class="case-study-body">
-      <p>The freight industry was overdue for a modern product experience. Drawing from the evolution of consumer-facing design, we set out to bring that same clarity and intuitiveness to a space that had long been underserved. Uber Freight's muted branding was used intentionally — creating a neutral canvas that let partner brokerages shine and gave the marketplace the feel of a trusted, multi-brand platform.</p>
-      
-      <p>The desktop experience was built around speed and efficiency. Whether users were creating loads from scratch or building templates to streamline repeat work, the flow was designed to be fast and frictionless. Pricing, servicing, and bulk load management were treated as first-class interactions — powerful without ever feeling complex.</p>
-    </div>
-  </div>
-  
-  <div class="full-width-image">
+  <div class="full-width-image" style="margin-top: 16px;">
     <img src="2.png" alt="Desktop view overview" loading="lazy" />
   </div>
   
@@ -240,16 +248,7 @@
     <img src="4.png" alt="Desktop functionality" loading="lazy" />
   </div>
   
-  <div style="margin-top: 120px;">
-    <h2 class="subtitle iteration-subtitle">Mobile</h2>
-    <div class="case-study-body">
-      <p>The desktop experience centered on load creation, giving brokers the tools to post and manage freight. The mobile app was scoped exclusively for drivers — a focused booking experience that surfaced available loads while making the originating brokerage visible at every step. Because our platform aggregated loads from multiple brokerages, drivers needed to understand they were accepting work from third parties, not directly from Uber Freight.</p>
-      
-      <p>To reinforce that transparency, we introduced brokerage profile pages and a ratings system. Each brokerage had a branded presence on the platform — their own identity, not a generic listing — so drivers could evaluate who they were booking with before committing. Drivers could leave reviews after completing a job, creating accountability and giving brokerages an incentive to build reputation across the platform.</p>
-    </div>
-  </div>
-  
-  <div class="side-by-side-images">
+  <div class="side-by-side-images" style="margin-top: 16px;">
     <div class="half-width-image">
       <img src="5.png" alt="Mobile view 1" loading="lazy" />
     </div>

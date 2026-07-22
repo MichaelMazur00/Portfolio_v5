@@ -28,7 +28,7 @@
     }
 
     body {
-      padding: 186px 24px 120px;
+      padding: 186px clamp(24px, 8vw, 124px) 120px;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -83,16 +83,21 @@
       margin-bottom: 100px;
     }
 
+    .labs-grid {
+      width: 100%;
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 32px;
+    }
+
     .labs-frame {
-      width: 646px;
-      max-width: 92vw;
-      aspect-ratio: 646 / 759;
+      width: 100%;
       border: 2px solid var(--frame);
       border-radius: 40px;
       display: flex;
       align-items: center;
       justify-content: center;
-      padding: 40px 20px;
+      padding: 48px 20px;
     }
 
     /* ─── Phone case ─────────────────────────── */
@@ -155,10 +160,13 @@
       body { padding: 168px 16px 80px; }
       .labs-title { gap: 32px; margin-bottom: 24px; }
       .labs-subtitle { font-size: 16px; margin-bottom: 56px; max-width: 90vw; }
+      .labs-grid {
+        grid-template-columns: 1fr;
+        gap: 24px;
+      }
       .labs-frame {
         width: 100%;
-        aspect-ratio: auto;
-        padding: 24px 12px;
+        padding: 32px 12px;
         border-radius: 28px;
       }
       .phone-container {
@@ -177,7 +185,6 @@
       .labs-title .creative { width: 540px; }
       .labs-title .lab      { width: 198px; }
       .labs-subtitle { font-size: 28px; max-width: 720px; }
-      .labs-frame { width: 720px; }
     }
 
     /* ─── Modal ─────────────────────────── */
@@ -287,13 +294,33 @@
 
   <p class="labs-subtitle">Design and development side projects. A working notebook, not a finished gallery.</p>
 
-  <div class="labs-frame">
-    <div class="phone-container" id="phoneTrigger" role="button" tabindex="0" aria-label="Open interval timer preview">
-      <div class="phone-island"></div>
-      <div class="phone-screen">
-        <video autoplay muted loop playsinline preload="auto">
-          <source src="case-studies/interval-timer/Interaction-model-1.MP4" type="video/mp4" />
-        </video>
+  <div class="labs-grid">
+    <div class="labs-frame">
+      <div class="phone-container lab-trigger" role="button" tabindex="0"
+           aria-label="Open interval timer preview"
+           data-video="case-studies/interval-timer/Interaction-model-1.MP4"
+           data-title="Set time"
+           data-desc="A working Swift prototype exploring an interaction model for an interval timer app.">
+        <div class="phone-island"></div>
+        <div class="phone-screen">
+          <video autoplay muted loop playsinline preload="auto">
+            <source src="case-studies/interval-timer/Interaction-model-1.MP4" type="video/mp4" />
+          </video>
+        </div>
+      </div>
+    </div>
+    <div class="labs-frame">
+      <div class="phone-container lab-trigger" role="button" tabindex="0"
+           aria-label="Open interval timer preview"
+           data-video="case-studies/interval-timer/interaction-model-2.MP4"
+           data-title="Run timer"
+           data-desc="A working Swift prototype exploring an interaction model for an interval timer app.">
+        <div class="phone-island"></div>
+        <div class="phone-screen">
+          <video autoplay muted loop playsinline preload="auto">
+            <source src="case-studies/interval-timer/interaction-model-2.MP4" type="video/mp4" />
+          </video>
+        </div>
       </div>
     </div>
   </div>
@@ -306,14 +333,14 @@
     </button>
     <div class="modal-content" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
       <div class="modal-caption">
-        <h2 class="modal-title" id="modalTitle">Set time</h2>
-        <p class="modal-desc">A working Swift prototype exploring an interaction model for an interval timer app.</p>
+        <h2 class="modal-title" id="modalTitle"></h2>
+        <p class="modal-desc" id="modalDesc"></p>
       </div>
       <div class="phone-container modal-phone">
         <div class="phone-island"></div>
         <div class="phone-screen">
           <video id="modalVideo" muted loop playsinline preload="none">
-            <source data-src="case-studies/interval-timer/Interaction-model-1.MP4" type="video/mp4" />
+            <source type="video/mp4" />
           </video>
         </div>
       </div>
@@ -322,27 +349,25 @@
 
   <script>
     (function () {
-      var trigger  = document.getElementById('phoneTrigger');
+      var triggers = document.querySelectorAll('.lab-trigger');
       var overlay  = document.getElementById('modalOverlay');
       var closeBtn = document.getElementById('modalClose');
       var video    = document.getElementById('modalVideo');
+      var titleEl  = document.getElementById('modalTitle');
+      var descEl   = document.getElementById('modalDesc');
+      var source   = video ? video.querySelector('source') : null;
 
-      var videoLoaded = false;
-      function openModal() {
+      function openModal(trigger) {
+        if (video && source) {
+          source.src = trigger.dataset.video;
+          video.load();
+        }
+        if (titleEl) titleEl.textContent = trigger.dataset.title || '';
+        if (descEl)  descEl.textContent  = trigger.dataset.desc  || '';
         overlay.classList.add('open');
         overlay.setAttribute('aria-hidden', 'false');
         document.body.classList.add('modal-open');
-        if (video) {
-          if (!videoLoaded) {
-            var src = video.querySelector('source');
-            if (src && src.dataset.src) {
-              src.src = src.dataset.src;
-              video.load();
-            }
-            videoLoaded = true;
-          }
-          try { video.currentTime = 0; video.play(); } catch (e) {}
-        }
+        if (video) { try { video.currentTime = 0; video.play(); } catch (e) {} }
       }
 
       function closeModal() {
@@ -352,9 +377,11 @@
         if (video) { try { video.pause(); } catch (e) {} }
       }
 
-      trigger.addEventListener('click', openModal);
-      trigger.addEventListener('keydown', function (e) {
-        if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(); }
+      triggers.forEach(function (trigger) {
+        trigger.addEventListener('click', function () { openModal(trigger); });
+        trigger.addEventListener('keydown', function (e) {
+          if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); openModal(trigger); }
+        });
       });
 
       closeBtn.addEventListener('click', closeModal);

@@ -40,7 +40,7 @@
       gap: 8px;
       color: #000000;
       text-decoration: none;
-      font-weight: 600;
+      font-weight: 500;
       font-size: 12px;
       margin-bottom: 16px;
       transition: color 0.3s ease;
@@ -61,7 +61,7 @@
 
     .case-study-title {
       font-size: 64px;
-      font-weight: 700;
+      font-weight: 500;
       line-height: 72px;
       letter-spacing: -0.0375em;
       color: #000000;
@@ -71,7 +71,7 @@
     .case-study-desc,
     .subtitle {
       font-size: 24px;
-      font-weight: 700;
+      font-weight: 500;
       color: #000000;
       line-height: 32px;
       letter-spacing: -0.02em;
@@ -170,32 +170,46 @@
       display: block;
       border-radius: 8px;
     }
+  
+    /* ===== Example-style landing header ===== */
+    .back-btn { font-size: 15px; font-weight: 700; gap: 4px; margin-bottom: 40px; }
+    .case-study-header { margin-bottom: 0; }
+    .case-study-title { font-size: clamp(40px, 7vw, 64px); font-weight: 800; line-height: 1.02; letter-spacing: -0.045em; margin-bottom: 24px; }
+    .header-cols { display: flex; justify-content: space-between; align-items: flex-start; gap: 80px; }
+    .header-cols .case-study-desc { font-size: 20px; font-weight: 400; color: #4a4a4a; line-height: 32px; letter-spacing: -0.01em; max-width: 622px; margin-bottom: 0; }
+    .meta-table { width: 340px; flex-shrink: 0; }
+    .meta-row { display: flex; gap: 24px; padding: 12px 0; border-bottom: 1px solid #e6e6e6; }
+    .meta-row:last-child { border-bottom: none; }
+    .meta-label { font-size: 14px; font-weight: 700; color: #000; width: 96px; flex-shrink: 0; }
+    .meta-value { font-size: 14px; font-weight: 400; color: #4a4a4a; }
+    .full-width-image.hero-card { margin-top: 40px; background: #f6f6f4; border-radius: 24px; padding: 56px 56px 0; overflow: hidden; }
+    .full-width-image.hero-card img { border-radius: 8px 8px 0 0; }
+    @media (max-width: 768px) {
+      .header-cols { flex-direction: column; gap: 32px; }
+      .header-cols .case-study-desc { font-size: 20px; }
+      .meta-table { width: 100%; }
+      .full-width-image.hero-card { padding: 20px 20px 0; border-radius: 16px; }
+    }
   </style>
 </head>
 <body>
 
 <div class="container">
-  <a href="../../index.html" class="back-btn">
-    <svg width="16" height="16" viewBox="0 0 16 16" fill="none">
-      <path d="M10 12L6 8L10 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-    </svg>
-    Back
-  </a>
+  <a href="../../index.html" class="back-btn">&lt; Back</a>
 
   <div class="case-study-header">
-    <h1 class="case-study-title">Platform experience</h1>
-    <p class="case-study-desc">Leading the redesign of a payments platform — driving a 93% lift in customer engagement and a 21% drop in Connected account-related support contacts.</p>
-  </div>
-  
-  <div style="margin-top: 40px;">
-    <div class="case-study-body">
-      <p>The Stripe platform dashboard is the daily home for enterprise customers managing payments at scale — but it was failing them. Accounts showed "working" while unable to process. Restricted accounts gave no reason or path to fix. Execs, growth, and compliance leadership had no tooling at all. Remediators had a UI but called it busted. A banking sponsor change spotlit these gaps and fast-tracked the work.</p>
-      
-      <p>As solo designer, I led the year-long redesign — setting vision and roadmap, presenting through to executive review. The work rebuilt the information architecture around real user workflows, introduced first-time tooling for execs, growth, and compliance leadership, and overhauled the busted remediator UI. Result: 93% engagement lift (3+ logins per week), 21% drop in account support contacts.</p>
+    <h1 class="case-study-title">Managing payments at scale</h1>
+    <div class="header-cols">
+      <p class="case-study-desc">Redesigned Stripe Connect's core dashboard experience. Designed a new IA, key metrics, and overhauled account management. Changes resulted in a 93% lift in engagement and 21% drop in support contacts.</p>
+      <div class="meta-table">
+        <div class="meta-row"><span class="meta-label">Role</span><span class="meta-value">Product Designer</span></div>
+        <div class="meta-row"><span class="meta-label">Timeline</span><span class="meta-value">2022-2024</span></div>
+        <div class="meta-row"><span class="meta-label">Team(s)</span><span class="meta-value">Platform XP, Code Orange</span></div>
+      </div>
     </div>
   </div>
-  
-  <div class="full-width-image">
+
+  <div class="full-width-image hero-card">
     <img src="1.png" alt="Vision overview" />
   </div>
   
