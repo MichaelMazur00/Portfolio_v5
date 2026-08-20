@@ -1548,19 +1548,65 @@
       .experience-details {
         flex: 1;
       }
-      .experience-years {
-        position: absolute;
-        right: 0;
-        top: 50%;
-        transform: translateY(-50%);
-        margin-top: 0;
-        font-size: 14px;
+      .experience-details {
+        flex: 1;
+        min-width: 0;
       }
+      /* Years sits in the flow so it can't collide with the chevron */
+      .experience-years {
+        position: static;
+        transform: none;
+        margin-top: 0;
+        margin-left: 8px;
+        font-size: 13px;
+        flex-shrink: 0;
+      }
+
+      /* Accordion is tappable on mobile: chevron + expanding description */
       .experience-toggle {
-        display: none;
+        display: flex;
+        width: 24px;
+        height: 24px;
+        margin-left: 8px;
+      }
+      .experience-toggle .chevron {
+        width: 8px;
+        height: 13px;
+      }
+      .experience-item-row {
+        -webkit-tap-highlight-color: transparent;
       }
       .experience-item-description {
-        display: none;
+        display: block;
+        padding-left: 52px;
+      }
+      .experience-item.expanded .experience-item-description,
+      .experience-item-hidden.expanded .experience-item-description {
+        max-height: 520px;
+        padding-top: 12px;
+      }
+      .experience-item-description p {
+        font-size: 14px;
+      }
+      /* "View all" rows need headroom for an open description */
+      .experience-item-hidden.show {
+        max-height: 140px;
+        padding: 16px 0;
+      }
+      .experience-item-hidden.show.expanded {
+        max-height: 600px;
+      }
+
+      /* Hover states stick after a tap on touch — neutralize them here */
+      .experience-item:hover > .experience-item-row,
+      .experience-item-hidden:hover > .experience-item-row {
+        transform: none;
+      }
+      .experience-list:hover .experience-item,
+      .experience-list:hover .experience-item-hidden.show,
+      .experience-list:hover .experience-item:hover,
+      .experience-list:hover .experience-item-hidden.show:hover {
+        opacity: 1 !important;
       }
       .words-section {
         margin-top: 164px !important;
@@ -1598,6 +1644,83 @@
         font-size: 16px !important;
       }
     }
+
+    /* ─────────────────────────────
+       MOBILE: PROJECTS STACK
+       Cards drop out of the carousel and stack vertically
+       in the page flow so you scroll through them.
+    ───────────────────────────── */
+    @media (max-width: 600px) {
+      .projects-section {
+        overflow: visible !important;
+        padding: 104px 0 0 !important;
+      }
+
+      .projects-track-wrap {
+        overflow: visible !important;
+        width: 100%;
+        cursor: default;
+        user-select: auto;
+      }
+      .projects-track-wrap:active { cursor: default; }
+
+      .projects-track {
+        flex-direction: column;
+        align-items: center;
+        width: 100% !important;
+        gap: 40px !important;
+        padding: 0 20px;
+        box-sizing: border-box;
+        transform: none !important;
+      }
+
+      /* Hide the duplicate set that only exists for the infinite loop */
+      .projects-track .project-card:nth-child(n+5) {
+        display: none !important;
+      }
+
+      .project-card,
+      .project-card.height-1,
+      .project-card.height-2,
+      .project-card.height-3,
+      .project-card.height-4 {
+        width: calc(100vw - 40px) !important;
+        height: calc((100vw - 40px) * 1.2) !important;
+        margin-right: 0 !important;
+        align-self: center;
+      }
+
+      /* No hover state on mobile — cards are a plain static image.
+         Repeats the html.no-touch selector so it also wins on a desktop
+         browser narrowed to phone width. */
+      .project-card,
+      .project-card:hover,
+      .project-card:active,
+      .project-card:focus,
+      html.no-touch .project-card:hover,
+      html.no-touch .project-card:active {
+        transform: none !important;
+        transition: none !important;
+        box-shadow: none !important;
+        z-index: auto !important;
+        cursor: default;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .project-card .hover-gif {
+        display: none !important;
+      }
+
+      .project-card .static-image {
+        opacity: 1 !important;
+      }
+
+      .project-card:hover .project-card-phones img,
+      html.no-touch .project-card:hover .project-card-phones img {
+        transform: none !important;
+      }
+    }
+
   </style>
 </head>
 <body>
@@ -1991,6 +2114,16 @@ gsap.registerPlugin(ScrollTrigger);
         .logo-letters-hide .m {
           transform: translateX(40px);
         }
+
+        /* Mobile: rest the M 5px further right.
+           These are SVG user units inside .logo-container (scale 1.9125),
+           and the 380-unit viewBox renders 138px wide at this size, so
+           1 unit = 0.695px on screen — 5px = 7.2 units. */
+        @media (max-width: 600px) {
+          .logo-letters-hide .m {
+            transform: translateX(47.2px);
+          }
+        }
         
         /* Hover states */
         .logo-letters-hide:hover .m {
@@ -2293,17 +2426,21 @@ document.addEventListener('DOMContentLoaded', function() {
   
 
   
-  // Fade out carousel completely as the experience section comes into focus
-  gsap.to('#projectsWrap', {
-    opacity: 0,
-    scrollTrigger: {
-      trigger: '#words',
-      start: 'top 80%',
-      end: 'top 20%',
-      scrub: 0.5, // Smooth scrubbing with reduced intensity
-      toggleActions: 'play none none reverse'
-    }
-  });
+  // Fade out carousel completely as the experience section comes into focus.
+  // Skipped on mobile, where the cards are stacked in the page flow and should
+  // stay fully visible while you scroll past them.
+  if (window.innerWidth > 600) {
+    gsap.to('#projectsWrap', {
+      opacity: 0,
+      scrollTrigger: {
+        trigger: '#words',
+        start: 'top 80%',
+        end: 'top 20%',
+        scrub: 0.5, // Smooth scrubbing with reduced intensity
+        toggleActions: 'play none none reverse'
+      }
+    });
+  }
 
   // Fade experience content out/in as contact section enters or exits view
   gsap.fromTo('.experience-content', { opacity: 1 }, {
@@ -2950,6 +3087,21 @@ document.addEventListener('DOMContentLoaded', function() {
   }
   
   console.log('Carousel elements found successfully');
+
+  // Mobile: cards are stacked vertically in the page flow, so skip every bit of
+  // carousel behaviour (auto-scroll, drag, wheel, touch) and just wire up navigation.
+  if (window.innerWidth <= 600) {
+    console.log('Mobile breakpoint - carousel disabled, cards stacked vertically');
+    track.style.transform = '';
+    document.querySelectorAll('.project-card').forEach(function(card) {
+      card.addEventListener('click', function() {
+        var caseStudy = this.dataset.caseStudy;
+        window.location.href = 'case-studies/' + caseStudy + '/' + caseStudy + '.html';
+      });
+    });
+    window.carouselReady = function() {};
+    return;
+  }
 
   // Check if mobile for spacing
   var isMobile = window.innerWidth <= 600;
