@@ -2110,9 +2110,11 @@ gsap.registerPlugin(ScrollTrigger);
           transition: transform 0.5s cubic-bezier(0.25, 0.46, 0.45, 0.94);
         }
         
-        /* After letters hide, M moves to center */
+        /* After letters hide, M moves to center.
+           47.6 rather than 40 units centers the glyph optically — the M's
+           bbox sat ~8px left of centre at the 207px desktop logo size. */
         .logo-letters-hide .m {
-          transform: translateX(40px);
+          transform: translateX(47.6px);
         }
 
         /* Mobile: rest the M 5px further right.
