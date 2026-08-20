@@ -1442,7 +1442,7 @@
         white-space: pre;
       }
       .hero-sub { 
-        font-size: 16px !important;
+        font-size: 20px !important;
         white-space: normal;
         margin-top: 16px;
         opacity: 0.5 !important;
@@ -1523,7 +1523,7 @@
         font-size: 38px !important;
       }
       .experience-subtitle {
-        font-size: 16px !important;
+        font-size: 20px !important;
         margin-bottom: 40px;
         margin-left: -40px;
         margin-right: -40px;
@@ -1641,7 +1641,7 @@
         font-size: 38px !important;
       }
       .contact-subtitle {
-        font-size: 16px !important;
+        font-size: 20px !important;
       }
     }
 
@@ -1678,6 +1678,12 @@
       .projects-track .project-card:nth-child(n+5) {
         display: none !important;
       }
+
+      /* Mobile card order: onboarding, platform experience, Away, Uber */
+      .projects-track .project-card:nth-child(3) { order: 1; }
+      .projects-track .project-card:nth-child(2) { order: 2; }
+      .projects-track .project-card:nth-child(1) { order: 3; }
+      .projects-track .project-card:nth-child(4) { order: 4; }
 
       .project-card,
       .project-card.height-1,
