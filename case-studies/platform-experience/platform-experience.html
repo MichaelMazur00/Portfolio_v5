@@ -234,13 +234,40 @@
   </div>
 
   <div class="full-width-video">
-    <video src="preview.mp4" autoplay loop muted playsinline preload="metadata"></video>
+    <video src="1.mp4" class="lazy-video" loop muted playsinline preload="none"></video>
   </div>
-    
-  
+
+  <div class="full-width-video">
+    <video src="2.mp4" class="lazy-video" loop muted playsinline preload="none"></video>
+  </div>
+
+  <div class="full-width-video">
+    <video src="3.mp4" class="lazy-video" loop muted playsinline preload="none"></video>
+  </div>
+
 </div>
 
 <script>
+// Only load and play the walkthrough videos once they scroll into view
+(function () {
+  var videos = document.querySelectorAll('.lazy-video');
+  if (!('IntersectionObserver' in window)) {
+    videos.forEach(function (v) { v.setAttribute('preload', 'metadata'); v.play().catch(function () {}); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      var v = entry.target;
+      if (entry.isIntersecting) {
+        v.play().catch(function () {});
+      } else {
+        v.pause();
+      }
+    });
+  }, { rootMargin: '200px 0px', threshold: 0.25 });
+  videos.forEach(function (v) { io.observe(v); });
+})();
+
 gsap.from('.container > *', {
   y: 30,
   opacity: 0,
