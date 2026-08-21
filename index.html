@@ -1043,6 +1043,12 @@
       border-bottom: none;
     }
 
+    /* Collapsed list: the last visible row sits right above "View all", so it
+       drops its divider. Expanding restores it — .clarity-last takes over. */
+    .experience-item:has(+ .experience-item-hidden:not(.show)) {
+      border-bottom: none;
+    }
+
 
     .experience-details {
       flex: 1;
@@ -1240,6 +1246,11 @@
       margin-bottom: 80px;
       line-height: 1.7;
       transition: color 0.8s ease;
+    }
+
+    /* Mobile gets its own, shorter contact line (see the 600px block below). */
+    .contact-subtitle-mobile {
+      display: none;
     }
 
     @media (min-width: 1400px) {
@@ -1448,7 +1459,15 @@
         opacity: 0.5 !important;
       }
       .hero-text-content {
-        top: 140px !important;
+        /* The intro timeline animates `y` to 0 and writes `translate: none`,
+           which kills the -50% centering in the base transform — so `top`
+           lands the element's TOP edge, not its middle. Instead, stretch the
+           element across the whole band between the logo's bottom edge (83px)
+           and the first card's top (80vh hero - 310px pull-up + 144px padding)
+           and center the copy inside it with flexbox. No transform involved. */
+        top: 83px !important;
+        height: calc(80vh - 249px);
+        justify-content: center;
       }
       
       .projects-section {
@@ -1509,7 +1528,7 @@
         justify-content: flex-start;
       }
       .experience-content {
-        padding: 0 40px;
+        padding: 0 20px;
         max-width: 100vw;
         width: 100vw;
         box-sizing: border-box;
@@ -1523,12 +1542,7 @@
         font-size: 38px !important;
       }
       .experience-subtitle {
-        font-size: 20px !important;
-        margin-bottom: 40px;
-        margin-left: -40px;
-        margin-right: -40px;
-        width: 100vw;
-        max-width: 100vw;
+        display: none !important;
       }
       .experience-item {
         padding: 16px 0;
@@ -1609,13 +1623,19 @@
         opacity: 1 !important;
       }
       .words-section {
-        margin-top: 164px !important;
+        margin-top: 148px !important; /* 164px, pulled up 16px */
         max-width: none !important;
         width: 100% !important;
         margin-left: 0 !important;
         margin-right: 0 !important;
         padding-left: 0 !important;
         padding-right: 0 !important;
+      }
+      .contact-section {
+        margin-top: 136px; /* 120px + 16px more air below the experience list */
+      }
+      .experience-footer {
+        margin-top: 44px; /* 60px base, pulled 16px closer to the last row */
       }
       .view-all-button {
         touch-action: manipulation !important;
@@ -1631,7 +1651,7 @@
         min-width: 44px !important;
       }
       .experience-content {
-        padding: 0 40px !important;
+        padding: 0 20px !important;
         max-width: none !important;
         width: 100% !important;
         box-sizing: border-box !important;
@@ -1643,6 +1663,12 @@
       .contact-subtitle {
         font-size: 20px !important;
       }
+      .contact-subtitle-desktop {
+        display: none !important;
+      }
+      .contact-subtitle-mobile {
+        display: inline !important;
+      }
     }
 
     /* ─────────────────────────────
@@ -1653,7 +1679,7 @@
     @media (max-width: 600px) {
       .projects-section {
         overflow: visible !important;
-        padding: 104px 0 0 !important;
+        padding: 144px 0 0 !important;
       }
 
       .projects-track-wrap {
@@ -1875,9 +1901,7 @@
 <section class="section words-section" id="words">
   <div class="experience-content">
     <h2 class="experience-title">Experience</h2>
-    <p class="experience-subtitle">12 years across agencies, and product teams.
-
-</p>
+    <p class="experience-subtitle">12 years across agencies, and product teams.</p>
 
     <div class="experience-list">
       <div class="experience-item">
@@ -2049,7 +2073,7 @@
       </a>
     </div>
     <h2 class="contact-title">Let's talk</h2>
-    <p class="contact-subtitle">If you are interested in learning more or <br/> a partnering on a project, reach out.</p>
+    <p class="contact-subtitle"><span class="contact-subtitle-desktop">If you are interested in learning more or <br/> a partnering on a project, reach out.</span><span class="contact-subtitle-mobile">If your interested in learning more or partnering on a project, reach out.</span></p>
     
     <div class="contact-actions">
       <button class="copy-button" id="copyButton" onclick="

@@ -167,11 +167,35 @@
       height: auto;
       display: block;
     }
+
+    /* Full width video */
+    .full-width-video {
+      width: 100%;
+      margin-top: 40px;
+      border-radius: 12px;
+      background: #f6f6f4;
+      padding: 80px;
+    }
+
+    .full-width-video video {
+      width: 100%;
+      height: auto;
+      display: block;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.1);
+    }
+
+    @media (max-width: 768px) {
+      .full-width-video { padding: 20px; border-radius: 16px; }
+      .full-width-video video { box-shadow: 0 10px 24px rgba(0,0,0,0.1); }
+    }
   
     /* ===== Example-style landing header ===== */
     .back-btn { font-size: 15px; font-weight: 700; gap: 4px; margin-bottom: 40px; }
     .case-study-header { margin-bottom: 0; }
     .case-study-title { font-size: clamp(40px, 7vw, 64px); font-weight: 800; line-height: 1.02; letter-spacing: -0.045em; margin-bottom: 24px; }
+    /* Only breaks the title onto two lines on mobile (see the 768px block). */
+    .title-break { display: none; }
     .header-cols { display: flex; justify-content: space-between; align-items: flex-start; gap: 80px; }
     .header-cols .case-study-desc { font-size: 20px; font-weight: 300; color: #4a4a4a; line-height: 32px; letter-spacing: -0.01em; max-width: 622px; margin-bottom: 0; }
     .meta-table { width: 340px; flex-shrink: 0; }
@@ -186,8 +210,12 @@
       .header-cols .case-study-desc { font-size: 20px; }
       .meta-table { width: 100%; }
       .full-width-image.hero-card { padding: 20px 20px 0; border-radius: 16px; }
-      .container { padding: 80px 20px 160px; }
+      /* 24px less air above "< Back" ... */
+      .container { padding: 56px 20px 160px; }
+      /* ...and the title sits 24px closer to it */
+      .back-btn { margin-bottom: 16px; }
       .case-study-title { font-size: 48px; line-height: 1.05; white-space: normal; }
+      .title-break { display: inline; }
     }
   </style>
 </head>
@@ -197,7 +225,7 @@
   <a href="../../index.html" class="back-btn">&lt; Back</a>
 
   <div class="case-study-header">
-    <h1 class="case-study-title">Onboarding for payments</h1>
+    <h1 class="case-study-title">Onboarding<br class="title-break" /> for payments</h1>
     <div class="header-cols">
       <p class="case-study-desc">Led redesign of Stripe Connect's onboarding flow, helping platforms and marketplaces go from sign-up to live. Changes drove a ~60% lift in conversion and 16% more self-serve activations.</p>
       <div class="meta-table">
@@ -208,24 +236,36 @@
     </div>
   </div>
 
-  <div class="full-width-image">
-    <img src="4.png" alt="Second iteration overview" loading="lazy" />
+  <div class="full-width-video">
+    <video src="1.mp4" class="lazy-video" loop muted playsinline preload="none"></video>
   </div>
-  
-  <div class="full-width-image" style="margin-top: 16px;">
-    <img src="5.png" alt="Second iteration step 2" loading="lazy" />
-  </div>
-  
-  <div class="full-width-image" style="margin-top: 16px;">
-    <img src="6.png" alt="Second iteration step 3" loading="lazy" />
-  </div>
-  
-  <div class="full-width-image" style="margin-top: 16px;">
-    <img src="7.png" alt="Second iteration final" loading="lazy" />
+
+  <div class="full-width-video">
+    <video src="2.mp4" class="lazy-video" loop muted playsinline preload="none"></video>
   </div>
 </div>
 
 <script>
+// Only load and play the walkthrough videos once they scroll into view
+(function () {
+  var videos = document.querySelectorAll('.lazy-video');
+  if (!('IntersectionObserver' in window)) {
+    videos.forEach(function (v) { v.setAttribute('preload', 'metadata'); v.play().catch(function () {}); });
+    return;
+  }
+  var io = new IntersectionObserver(function (entries) {
+    entries.forEach(function (entry) {
+      var v = entry.target;
+      if (entry.isIntersecting) {
+        v.play().catch(function () {});
+      } else {
+        v.pause();
+      }
+    });
+  }, { rootMargin: '200px 0px', threshold: 0.25 });
+  videos.forEach(function (v) { io.observe(v); });
+})();
+
 gsap.from('.container > *', {
   y: 30,
   opacity: 0,
