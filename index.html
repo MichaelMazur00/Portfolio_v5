@@ -1397,23 +1397,69 @@
       top: 30px;
       left: 50%;
       transform: translateX(-50%);
-      background: #10B981;
-      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      width: max-content;
+      max-width: calc(100vw - 32px);
+      background: #0f7a36;
+      color: #fff;
       padding: 12px 24px;
-      border-radius: 8px;
-      font-size: 14px;
+      border-radius: 25px;
+      font-size: 16px;
+      line-height: 1.2;
       font-weight: 500;
+      white-space: nowrap;
       opacity: 0;
       visibility: hidden;
-      transition: all 0.3s ease;
+      transition: opacity 0.3s ease, visibility 0.3s ease, transform 0.3s ease;
       z-index: 10000;
-      box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .toast-icon {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      flex: 0 0 20px;
+      width: 20px;
+      height: 20px;
+      box-sizing: border-box;
+      border-radius: 50%;
+      border: 1.5px solid #fff;
+      color: #fff;
+      font-size: 11px;
+      font-weight: 700;
+      line-height: 1;
+    }
+
+    .toast-text {
+      white-space: nowrap;
     }
 
     .toast.show {
       opacity: 1;
       visibility: visible;
       transform: translateX(-50%) translateY(10px);
+    }
+
+    /* Mobile: full-bleed toast that lines up with the 20px content gutter */
+    @media (max-width: 700px) {
+      .toast {
+        top: 20px;
+        left: 20px;
+        right: 20px;
+        width: auto;
+        max-width: none;
+        transform: none;
+        padding: 14px 20px;
+        font-size: 15px;
+      }
+
+      .toast.show {
+        transform: translateY(10px);
+      }
     }
 
     @media (max-width: 700px) {
@@ -2076,26 +2122,7 @@
     <p class="contact-subtitle"><span class="contact-subtitle-desktop">If you are interested in learning more or <br/> a partnering on a project, reach out.</span><span class="contact-subtitle-mobile">If your interested in learning more or partnering on a project, reach out.</span></p>
     
     <div class="contact-actions">
-      <button class="copy-button" id="copyButton" onclick="
-        var email = 'michael.mazur00@gmail.com';
-        navigator.clipboard.writeText(email).then(function() {
-          var toast = document.createElement('div');
-          toast.id = 'copyToast';
-          var icon = document.createElement('span');
-          icon.textContent = '✓';
-          icon.style.cssText = 'display:inline-flex;align-items:center;justify-content:center;width:20px;height:20px;border-radius:50%;background:transparent;border:1.5px solid #fff;color:#fff;font-weight:700;font-size:11px;line-height:1;';
-          var text = document.createElement('span');
-          text.textContent = 'Email copied to clipboard!';
-          toast.appendChild(icon);
-          toast.appendChild(text);
-          toast.style.cssText = 'position: fixed; top: 20px; left: 50%; transform: translateX(-50%); background: #0f7a36; color: #fff; padding: 12px 24px; border-radius: 25px; font-size: 16px; font-family: Inter, sans-serif; z-index: 10000; display: inline-flex; align-items: center; gap: 10px; box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);';
-          document.body.appendChild(toast);
-          setTimeout(function() { document.body.removeChild(toast); }, 2000);
-        }).catch(function() {
-          alert('Email: ' + email);
-        });
-        return false;
-      ">
+      <button class="copy-button" id="copyButton" type="button">
         <span>E-mail</span>
         <svg width="12" height="13" viewBox="0 0 30 32" fill="none" xmlns="http://www.w3.org/2000/svg">
           <path fill-rule="evenodd" clip-rule="evenodd" d="M6.81818 6.80556H3.40909C2.50425 6.80556 1.63778 7.16427 0.998582 7.80229C0.359382 8.44031 0 9.30517 0 10.2083V28.3565C0 29.2596 0.359375 30.1245 0.998582 30.7625C1.63778 31.4005 2.50425 31.7593 3.40909 31.7593H19.3182C20.223 31.7593 21.0895 31.4006 21.7287 30.7625C22.3679 30.1245 22.7273 29.2596 22.7273 28.3565V24.9537H26.1364C27.0412 24.9537 27.9077 24.595 28.5469 23.957C29.1861 23.319 29.5455 22.4541 29.5455 21.5509V3.40278C29.5455 2.49962 29.1861 1.63475 28.5469 0.996733C27.9077 0.358717 27.0412 0 26.1364 0H10.2273C8.34375 0 6.81818 1.52274 6.81818 3.40278V6.80556ZM20.4545 10.2083V28.3565C20.4545 28.6571 20.3352 28.9463 20.1222 29.159C19.9091 29.3716 19.6193 29.4907 19.3182 29.4907H3.40911C3.10797 29.4907 2.8182 29.3716 2.60514 29.159C2.39207 28.9463 2.27276 28.6571 2.27276 28.3565V10.2083C2.27276 9.90776 2.39207 9.61852 2.60514 9.40586C2.81821 9.19319 3.10798 9.07409 3.40911 9.07409H19.3182C19.6193 9.07409 19.9091 9.19319 20.1222 9.40586C20.3352 9.61853 20.4545 9.90776 20.4545 10.2083ZM22.7273 22.6852H26.1364C26.4375 22.6852 26.7273 22.5661 26.9403 22.3534C27.1534 22.1407 27.2727 21.8515 27.2727 21.5509V3.40279C27.2727 3.10222 27.1534 2.81298 26.9403 2.60032C26.7273 2.38764 26.4375 2.26855 26.1364 2.26855H10.2273C9.59942 2.26855 9.09091 2.77612 9.09091 3.40281V6.80559H19.3182C20.223 6.80559 21.0895 7.16429 21.7287 7.80232C22.3679 8.44033 22.7273 9.3052 22.7273 10.2084V22.6852Z" fill="currentColor"/>
@@ -3882,7 +3909,17 @@ document.addEventListener('DOMContentLoaded', function() {
           toast = document.createElement('div');
           toast.id = 'copyToast';
           toast.className = 'toast';
-          toast.textContent = 'Email copied to clipboard';
+
+          const icon = document.createElement('span');
+          icon.className = 'toast-icon';
+          icon.textContent = '\u2713';
+
+          const label = document.createElement('span');
+          label.className = 'toast-text';
+          label.textContent = 'Email copied to clipboard!';
+
+          toast.appendChild(icon);
+          toast.appendChild(label);
           document.body.appendChild(toast);
         }
         
