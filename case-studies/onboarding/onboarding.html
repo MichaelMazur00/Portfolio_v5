@@ -185,6 +185,27 @@
       box-shadow: 0 20px 40px rgba(0,0,0,0.1);
     }
 
+    /* Video block: grey card + caption below */
+    .video-block {
+      margin-top: 40px;
+    }
+
+    .video-block + .video-block {
+      margin-top: 64px;
+    }
+
+    .video-block .full-width-video {
+      margin-top: 0;
+    }
+
+    .video-caption {
+      font-size: 14px;
+      font-weight: 300;
+      line-height: 1.6;
+      color: rgba(0,0,0,0.65);
+      margin-top: 12px;
+    }
+
     @media (max-width: 768px) {
       .full-width-video { padding: 20px; border-radius: 16px; }
       .full-width-video video { box-shadow: 0 10px 24px rgba(0,0,0,0.1); }
@@ -234,13 +255,19 @@
     </div>
   </div>
 
-  <div class="full-width-video">
-    <video src="1.mp4" class="lazy-video" loop muted playsinline preload="none"></video>
-  </div>
+  <figure class="video-block">
+    <div class="full-width-video">
+      <video src="1.mp4" class="lazy-video" loop muted playsinline preload="none"></video>
+    </div>
+    <figcaption class="video-caption">Create an account with instant access to testmode.</figcaption>
+  </figure>
 
-  <div class="full-width-video">
-    <video src="2.mp4" class="lazy-video" loop muted playsinline preload="none"></video>
-  </div>
+  <figure class="video-block">
+    <div class="full-width-video">
+      <video src="2.mp4" class="lazy-video" loop muted playsinline preload="none"></video>
+    </div>
+    <figcaption class="video-caption">Create a test integration in minutes.</figcaption>
+  </figure>
 </div>
 
 <script>
