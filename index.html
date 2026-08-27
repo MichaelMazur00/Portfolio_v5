@@ -3896,58 +3896,110 @@ document.addEventListener('DOMContentLoaded', function() {
   // Frequent checks during page interactions - DISABLED FOR PERFORMANCE
   // setInterval(updateCursorColor, 500);
   
-  // Copy email functionality with toast
-  const copyButton = document.getElementById('copyButton');
-  if (copyButton) {
-    copyButton.addEventListener('click', () => {
-      const email = 'michael.mazur00@gmail.com';
-      
-      function showToast() {
-        // Create toast if it doesn't exist
-        let toast = document.getElementById('copyToast');
-        if (!toast) {
-          toast = document.createElement('div');
-          toast.id = 'copyToast';
-          toast.className = 'toast';
-
-          const icon = document.createElement('span');
-          icon.className = 'toast-icon';
-          icon.textContent = '\u2713';
-
-          const label = document.createElement('span');
-          label.className = 'toast-text';
-          label.textContent = 'Email copied to clipboard!';
-
-          toast.appendChild(icon);
-          toast.appendChild(label);
-          document.body.appendChild(toast);
-        }
-        
-        // Show toast
-        toast.classList.add('show');
-        
-        // Hide toast after 2 seconds
-        setTimeout(() => {
-          toast.classList.remove('show');
-        }, 2000);
-      }
-      
-      navigator.clipboard.writeText(email).then(() => {
-        showToast();
-      }).catch(() => {
-        // Fallback for older browsers
-        const textArea = document.createElement('textarea');
-        textArea.value = email;
-        document.body.appendChild(textArea);
-        textArea.select();
-        document.execCommand('copy');
-        document.body.removeChild(textArea);
-        showToast();
-      });
-    });
-  }
-  
 });
+</script>
+
+<!-- Copy email. Deliberately its own script: the previous handler lived inside a
+     long DOMContentLoaded callback, so any error earlier in that callback stopped
+     it from ever being registered. -->
+<script>
+  (function () {
+    var EMAIL = 'michael.mazur00@gmail.com';
+    var hideTimer;
+
+    function showToast(message) {
+      var toast = document.getElementById('copyToast');
+
+      if (!toast) {
+        toast = document.createElement('div');
+        toast.id = 'copyToast';
+        toast.className = 'toast';
+
+        var icon = document.createElement('span');
+        icon.className = 'toast-icon';
+        icon.textContent = '\u2713';
+
+        var label = document.createElement('span');
+        label.className = 'toast-text';
+
+        toast.appendChild(icon);
+        toast.appendChild(label);
+        document.body.appendChild(toast);
+      }
+
+      toast.querySelector('.toast-text').textContent = message;
+
+      clearTimeout(hideTimer);
+      toast.classList.add('show');
+      hideTimer = setTimeout(function () {
+        toast.classList.remove('show');
+      }, 2000);
+    }
+
+    function legacyCopy(text) {
+      var field = document.createElement('textarea');
+      field.value = text;
+      field.setAttribute('readonly', '');
+      field.contentEditable = 'true';
+      field.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;padding:0;border:0;opacity:0;';
+      document.body.appendChild(field);
+
+      // iOS ignores .select() on a readonly field, so select via a Range too.
+      var range = document.createRange();
+      range.selectNodeContents(field);
+      var selection = window.getSelection();
+      selection.removeAllRanges();
+      selection.addRange(range);
+      field.setSelectionRange(0, text.length);
+
+      var copied = false;
+      try {
+        copied = document.execCommand('copy');
+      } catch (err) {
+        copied = false;
+      }
+
+      selection.removeAllRanges();
+      document.body.removeChild(field);
+      return copied;
+    }
+
+    function copyEmail() {
+      // navigator.clipboard is undefined outside a secure context, so reading
+      // .writeText would throw synchronously and never reach a .catch().
+      var modern = navigator.clipboard && window.isSecureContext;
+
+      if (modern) {
+        navigator.clipboard.writeText(EMAIL).then(
+          function () { showToast('Email copied to clipboard!'); },
+          function () { fallback(); }
+        );
+      } else {
+        fallback();
+      }
+    }
+
+    function fallback() {
+      if (legacyCopy(EMAIL)) {
+        showToast('Email copied to clipboard!');
+      } else {
+        showToast(EMAIL);
+      }
+    }
+
+    function bind() {
+      var button = document.getElementById('copyButton');
+      if (!button || button.getAttribute('data-copy-bound')) return;
+      button.setAttribute('data-copy-bound', '1');
+      button.addEventListener('click', copyEmail);
+    }
+
+    if (document.readyState === 'loading') {
+      document.addEventListener('DOMContentLoaded', bind);
+    } else {
+      bind();
+    }
+  })();
 </script>
 
 </body>
