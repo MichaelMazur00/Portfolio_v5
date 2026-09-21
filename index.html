@@ -54,38 +54,8 @@
       color: #000000;
       overflow-x: hidden;
       transition: background-color 0.3s ease;
-      cursor: none !important;
     }
 
-
-    /* Custom cursor */
-    #customCursor {
-      position: fixed;
-      width: 20px;
-      height: 20px;
-      border-radius: 50%;
-      background: #000000;
-      pointer-events: none;
-      z-index: 9999;
-      transition: none;
-      transform: translate(-50%, -50%);
-      opacity: 1 !important;
-      display: block !important;
-      left: 50%;
-      top: 50%;
-    }
-
-    #customCursor.white {
-      background: #ffffff;
-    }
-    
-    /* Hide custom cursor on mobile/touch devices */
-    @media (hover: none) and (pointer: coarse) {
-      #customCursor {
-        display: none !important;
-      }
-    }
-    
 
     /* ─────────────────────────────
        SECTION BASE
@@ -278,7 +248,7 @@
       .hero-title {
         font-size: 88px;
         line-height: 96px;
-        letter-spacing: -0.07em;
+        letter-spacing: -0.06em;
         margin-bottom: 0;
       }
       .hero-sub {
@@ -350,11 +320,10 @@
       user-select: none;
     }
     .projects-track-wrap:active { cursor: grabbing; }
-    .projects-track-wrap #customCursor { display: none; }
 
     .projects-track {
       display: flex;
-      align-items: center;
+      align-items: flex-end;
       gap: 20px;
       padding: 0;
       width: max-content;
@@ -370,21 +339,25 @@
     .project-card {
       flex: 0 0 auto;
       width: 450px !important;
-      height: 480px !important; /* Base height - fixed */
+      height: 600px !important;
+      align-self: flex-end;
       background: transparent;
       border-radius: 16px;
       overflow: hidden;
       position: relative;
       transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
                   box-shadow 0.6s cubic-bezier(0.16, 1, 0.3, 1);
+      /* Hover raises this to 10. Without a z-index here the base value is
+         `auto`, so hover CREATES a stacking context and mouse-off DESTROYS
+         it — Chrome re-composites the card and re-rasterises its rounded
+         overflow clip, which lands the text on different subpixels. That is
+         the flicker on mouse-off. A permanent 0 means hover only reorders. */
+      z-index: 0;
       opacity: 1;
       box-shadow: 0 12px 32px rgba(255, 255, 255, 0.08), 0 4px 12px rgba(255, 255, 255, 0.05);
     }
     
     html.no-touch .project-card:hover {
-      transform: scale(1.015) !important;
-      transform-origin: center center;
-      transition: transform 0.3s ease-out !important;
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.05);
       z-index: 10;
       cursor: pointer;
@@ -397,39 +370,8 @@
       overflow: hidden !important;
     }
     
-    /* Scale down personalization media slightly to give border-radius breathing room */
-    .project-card[data-case-study="personalization"] video,
-    .project-card[data-case-study="personalization"] img {
-      width: 98%;
-      height: 98%;
-      top: 1%;
-      left: 1%;
-    }
-
-    /* Staggered heights with specific classes for consistent sizing */
-    .project-card.height-1 {
-      height: 480px !important;
-      align-self: center;
-    }
-    
-    .project-card.height-2 {
-      height: 520px !important;
-      align-self: center;
-    }
-
-    .project-card.height-3 {
-      height: 500px !important;
-      align-self: center;
-    }
-
-    .project-card.height-4 {
-      height: 550px !important;
-      align-self: center;
-    }
-
-    html.no-touch .project-card:hover {
-      transform: translateY(-8px);
-      box-shadow: 0 25px 50px rgba(0,0,0,0.15);
+    .project-card-media picture {
+      display: contents;
     }
 
     .project-card-media {
@@ -441,8 +383,7 @@
     }
     
     /* Smooth cover image to video transitions with GPU acceleration */
-    .project-card-media img,
-    .project-card-media video {
+    .project-card-media img {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -459,19 +400,7 @@
       transition: opacity 0.1s ease-out;
     }
     
-    .project-card-media video.hover-gif {
-      z-index: 1;
-      opacity: 1;
-      transition: none;
-      visibility: visible;
-    }
-    
-    /* No CSS hover transitions - JavaScript will handle everything */
-    
-    /* Removed CSS hover for video - JavaScript will control visibility */
-
-    .project-card img,
-    .project-card video {
+    .project-card img {
       width: 100%;
       height: 100%;
       object-fit: cover;
@@ -484,28 +413,20 @@
       /* will-change removed for performance */
     }
 
-    /* Onboarding video - normal positioning */
-    [data-case-study="onboarding"] video {
-      width: 100%;
-      height: 100%;
-    }
-
-    /* Fix for marketplace video black line on right side */
-    [data-case-study="freight-marketplace"] video {
-      width: 101%;
-      height: 100%;
-      left: -0.5px;
-    }
-
     .project-card .static-image {
       opacity: 1;
       z-index: 2;
     }
 
-    .project-card .hover-gif {
-      opacity: 0;
-      z-index: 3;
-      transition: opacity 0.25s ease-out;
+    /* Desktop-only hover video; sits under the cover image until hovered. */
+    .project-card-media video.hover-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 1;
     }
 
     .project-overlay {
@@ -1530,12 +1451,6 @@
         flex: 0 0 auto;
         margin-right: 16px;
       }
-      .project-card.height-1,
-      .project-card.height-2,
-      .project-card.height-3,
-      .project-card.height-4 {
-        height: 360px !important;
-      }
       .project-card-media img,
       .project-card-media video {
         object-fit: cover !important;
@@ -1757,11 +1672,8 @@
       .projects-track .project-card:nth-child(1) { order: 3; }
       .projects-track .project-card:nth-child(4) { order: 4; }
 
-      .project-card,
-      .project-card.height-1,
-      .project-card.height-2,
-      .project-card.height-3,
-      .project-card.height-4 {
+      /* Mobile crops are all 1500x1800, so one height covers every card. */
+      .project-card {
         width: calc(100vw - 40px) !important;
         height: calc((100vw - 40px) * 1.2) !important;
         margin-right: 0 !important;
@@ -1785,79 +1697,19 @@
         -webkit-tap-highlight-color: transparent;
       }
 
-      .project-card .hover-gif {
-        display: none !important;
-      }
-
-      .project-card .static-image {
-        opacity: 1 !important;
-      }
-
       .project-card:hover .project-card-phones img,
       html.no-touch .project-card:hover .project-card-phones img {
         transform: none !important;
+      }
+
+      .project-card-media video.hover-video {
+        display: none;
       }
     }
 
   </style>
 </head>
 <body>
-
-<!-- Custom cursor - LIGHTWEIGHT VERSION -->
-<div id="customCursor" style="position: fixed; width: 20px; height: 20px; border-radius: 50%; background: #000000; pointer-events: none; z-index: 9999; transform: translate(-50%, -50%); opacity: 1 !important; display: block !important; left: 50%; top: 50%;"></div>
-
-<script>
-// Hide cursor element on mobile immediately
-(function() {
-  const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                   (navigator.maxTouchPoints > 0 && window.matchMedia('(hover: none)').matches);
-  
-  if (isMobile) {
-    const cursor = document.getElementById('customCursor');
-    if (cursor) {
-      cursor.style.display = 'none';
-    }
-  }
-})();
-
-// Load mobile images on mobile devices
-(function() {
-  const isMobile = window.innerWidth <= 600;
-  
-  if (isMobile) {
-    document.addEventListener('DOMContentLoaded', function() {
-      const mobileImages = {
-        'personalization': 'images/personalization-mobile.png',
-        'platform-experience': 'images/platformexperience-mobile.png',
-        'freight-marketplace': 'images/marketplace-mobile.png',
-        'onboarding': 'images/onboarding-mobile.png'
-      };
-      
-      Object.keys(mobileImages).forEach(caseStudy => {
-        const cards = document.querySelectorAll(`[data-case-study="${caseStudy}"] .static-image`);
-        cards.forEach(img => {
-          img.src = mobileImages[caseStudy];
-        });
-      });
-    });
-  }
-})();
-</script>
-
-<script>
-// Ensure custom cursor is visible immediately (only on desktop)
-(function() {
-  const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
-                   (navigator.maxTouchPoints > 0 && window.matchMedia('(hover: none)').matches);
-  
-  if (isMobile) return;
-  
-  const cursor = document.getElementById('customCursor');
-  if (cursor) {
-    cursor.style.cssText = 'position: fixed !important; width: 20px !important; height: 20px !important; border-radius: 50% !important; background: #000000 !important; pointer-events: none !important; z-index: 9999 !important; transform: translate(-50%, -50%) !important; opacity: 1 !important; display: block !important; left: 50% !important; top: 50% !important;';
-  }
-})();
-</script>
 
 <!-- Background transition element -->
 <div class="bg-transition" id="bgTransition"></div>
@@ -1881,60 +1733,84 @@
     <div class="projects-track" id="projectsTrack">
 
       <!-- Original set -->
-      <div class="project-card page-animate-media height-4" data-case-study="personalization">
+      <div class="project-card page-animate-media" data-case-study="personalization">
         <div class="project-card-media">
-          <img src="images/personalization-cover.jpg" alt="Personalization" class="static-image" />
-          <video src="images/personalization.mp4?v=2" poster="images/personalization-cover.jpg" alt="Personalization animation" class="hover-gif" muted playsinline preload="none"></video>
+          <picture>
+            <source media="(max-width: 600px)" srcset="images/personalization-card-mobile.jpg" />
+            <img src="images/personalization-card-poster.jpg?v=4" alt="Personalization" class="static-image" />
+          </picture>
+          <video src="images/personalization-card.mp4?v=4" poster="images/personalization-card-poster.jpg?v=4" class="hover-video" muted playsinline preload="none" aria-hidden="true"></video>
         </div>
       </div>
 
-      <div class="project-card page-animate-media height-1" data-case-study="platform-experience">
+      <div class="project-card page-animate-media" data-case-study="platform-experience">
         <div class="project-card-media">
-          <img src="images/platform-experience-cover.jpg" alt="Platform experience" class="static-image" />
-          <video src="images/platformexperience.mp4" poster="images/platform-experience-cover.jpg" alt="Payment platform animation" class="hover-gif" muted playsinline preload="none"></video>
+          <picture>
+            <source media="(max-width: 600px)" srcset="images/platform-experience-card-mobile.jpg" />
+            <img src="images/platform-experience-card-poster.jpg?v=4" alt="Platform experience" class="static-image" />
+          </picture>
+          <video src="images/platform-experience-card.mp4?v=4" poster="images/platform-experience-card-poster.jpg?v=4" class="hover-video" muted playsinline preload="none" aria-hidden="true"></video>
         </div>
       </div>
 
-      <div class="project-card page-animate-media height-2" data-case-study="onboarding">
+      <div class="project-card page-animate-media" data-case-study="onboarding">
         <div class="project-card-media">
-          <img src="images/onboarding-cover.jpg" alt="Onboarding" class="static-image" />
-          <video src="images/onboarding.mp4" poster="images/onboarding-cover.jpg" alt="Onboarding animation" class="hover-gif" muted playsinline preload="none"></video>
+          <picture>
+            <source media="(max-width: 600px)" srcset="images/onboarding-card-mobile.jpg" />
+            <img src="images/onboarding-card-poster.jpg?v=2" alt="Onboarding" class="static-image" />
+          </picture>
+          <video src="images/onboarding-card.mp4?v=2" poster="images/onboarding-card-poster.jpg?v=2" class="hover-video" muted playsinline preload="none" aria-hidden="true"></video>
         </div>
       </div>
 
-      <div class="project-card page-animate-media height-3" data-case-study="freight-marketplace">
+      <div class="project-card page-animate-media" data-case-study="freight-marketplace">
         <div class="project-card-media">
-          <img src="images/freight-marketplace-cover.jpg" alt="Freight marketplace" class="static-image" />
-          <video src="images/freightmarketplace.mp4" poster="images/freight-marketplace-cover.jpg" alt="Freight marketplace animation" class="hover-gif" muted playsinline preload="none"></video>
+          <picture>
+            <source media="(max-width: 600px)" srcset="images/freight-marketplace-card-mobile.jpg" />
+            <img src="images/freight-marketplace-card-poster.jpg?v=2" alt="Freight marketplace" class="static-image" />
+          </picture>
+          <video src="images/freight-marketplace-card.mp4?v=2" poster="images/freight-marketplace-card-poster.jpg?v=2" class="hover-video" muted playsinline preload="none" aria-hidden="true"></video>
         </div>
       </div>
 
       <!-- Duplicate set for infinite loop -->
-      <div class="project-card page-animate-media height-4" data-case-study="personalization">
+      <div class="project-card page-animate-media" data-case-study="personalization">
         <div class="project-card-media">
-          <img src="images/personalization-cover.jpg" alt="Personalization" class="static-image" />
-          <video src="images/personalization.mp4?v=2" poster="images/personalization-cover.jpg" alt="Personalization animation" class="hover-gif" muted playsinline preload="none"></video>
+          <picture>
+            <source media="(max-width: 600px)" srcset="images/personalization-card-mobile.jpg" />
+            <img src="images/personalization-card-poster.jpg?v=4" alt="Personalization" class="static-image" />
+          </picture>
+          <video src="images/personalization-card.mp4?v=4" poster="images/personalization-card-poster.jpg?v=4" class="hover-video" muted playsinline preload="none" aria-hidden="true"></video>
         </div>
       </div>
 
-      <div class="project-card page-animate-media height-1" data-case-study="platform-experience">
+      <div class="project-card page-animate-media" data-case-study="platform-experience">
         <div class="project-card-media">
-          <img src="images/platform-experience-cover.jpg" alt="Platform experience" class="static-image" />
-          <video src="images/platformexperience.mp4" poster="images/platform-experience-cover.jpg" alt="Payment platform animation" class="hover-gif" muted playsinline preload="none"></video>
+          <picture>
+            <source media="(max-width: 600px)" srcset="images/platform-experience-card-mobile.jpg" />
+            <img src="images/platform-experience-card-poster.jpg?v=4" alt="Platform experience" class="static-image" />
+          </picture>
+          <video src="images/platform-experience-card.mp4?v=4" poster="images/platform-experience-card-poster.jpg?v=4" class="hover-video" muted playsinline preload="none" aria-hidden="true"></video>
         </div>
       </div>
 
-      <div class="project-card page-animate-media height-2" data-case-study="onboarding">
+      <div class="project-card page-animate-media" data-case-study="onboarding">
         <div class="project-card-media">
-          <img src="images/onboarding-cover.jpg" alt="Onboarding" class="static-image" />
-          <video src="images/onboarding.mp4" poster="images/onboarding-cover.jpg" alt="Onboarding animation" class="hover-gif" muted playsinline preload="none"></video>
+          <picture>
+            <source media="(max-width: 600px)" srcset="images/onboarding-card-mobile.jpg" />
+            <img src="images/onboarding-card-poster.jpg?v=2" alt="Onboarding" class="static-image" />
+          </picture>
+          <video src="images/onboarding-card.mp4?v=2" poster="images/onboarding-card-poster.jpg?v=2" class="hover-video" muted playsinline preload="none" aria-hidden="true"></video>
         </div>
       </div>
 
-      <div class="project-card page-animate-media height-3" data-case-study="freight-marketplace">
+      <div class="project-card page-animate-media" data-case-study="freight-marketplace">
         <div class="project-card-media">
-          <img src="images/freight-marketplace-cover.jpg" alt="Freight marketplace" class="static-image" />
-          <video src="images/freightmarketplace.mp4" poster="images/freight-marketplace-cover.jpg" alt="Freight marketplace animation" class="hover-gif" muted playsinline preload="none"></video>
+          <picture>
+            <source media="(max-width: 600px)" srcset="images/freight-marketplace-card-mobile.jpg" />
+            <img src="images/freight-marketplace-card-poster.jpg?v=2" alt="Freight marketplace" class="static-image" />
+          </picture>
+          <video src="images/freight-marketplace-card.mp4?v=2" poster="images/freight-marketplace-card-poster.jpg?v=2" class="hover-video" muted playsinline preload="none" aria-hidden="true"></video>
         </div>
       </div>
 
@@ -2466,15 +2342,15 @@ document.addEventListener('DOMContentLoaded', function() {
     .to('.experience-subtitle', {
       opacity: 1,
       y: 0,
-      duration: 0.85, // Slower, more pronounced rise
+      duration: 0.64, // Pronounced rise, 25% quicker
       ease: 'power3.out', // Expressive easing
       // force3D removed for performance
     }, '-=0.7') // Trails just behind the title
     .to('.experience-item', {
       opacity: 1,
       y: 0,
-      duration: 0.4, // Much faster
-      stagger: 0.05, // Tighter stagger
+      duration: 0.3, // 25% quicker
+      stagger: 0.0375, // Tighter stagger to match
       ease: 'power2.out', // Snappier easing
       // force3D removed for performance
     }, '-=0.3'); // Better overlap
@@ -2671,10 +2547,11 @@ document.addEventListener('DOMContentLoaded', function() {
     var viewportHeight = window.innerHeight;
     var scrollY = window.scrollY;
     
-    // Phase 1: Abrupt white to black when most cards are in viewport
-    var carouselTop = projectsSection.getBoundingClientRect().top;
-    var carouselVisible = carouselTop <= (viewportHeight * 0.3); // Switch when 70% of cards visible
-    var inCarousel = carouselVisible;
+    // Phase 1: Abrupt white to black once the carousel is well into the viewport.
+    // The section already sits ~0.75vh down at rest, so this is measured as scroll
+    // distance instead of a viewport fraction, with a floor so it never fires on load.
+    var carouselTrigger = Math.max(viewportHeight * 0.15, projectsSection.offsetTop - (viewportHeight * 0.55));
+    var inCarousel = scrollY >= carouselTrigger;
     
     var currentR, currentG, currentB;
     
@@ -3351,6 +3228,11 @@ document.addEventListener('DOMContentLoaded', function() {
   wrap.addEventListener('mouseenter', () => {
     userInteracting = true;
     stopAutoScroll();
+    // Auto-scroll leaves the track on a fractional pixel, which resamples the
+    // hover videos and softens them. Snap to the device-pixel grid while paused.
+    var dpr = window.devicePixelRatio || 1;
+    currentX = Math.round(currentX * dpr) / dpr;
+    track.style.transform = `translate3d(${currentX}px, 0, 0)`;
   });
   
   wrap.addEventListener('mouseleave', () => {
@@ -3590,118 +3472,16 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 
-<script>
-// Play project-card videos on hover — mouse-driven (desktop) devices only.
-// On touch devices the cards stay as static cover images with no hover state.
-document.addEventListener('DOMContentLoaded', () => {
-  // Gate on the same deterministic touch detection used for CSS hover (set on
-  // <html> before paint). Touch devices keep static cover images, no playback.
-  const isMouseDevice = () => document.documentElement.classList.contains('no-touch');
-
-  if (!isMouseDevice()) return; // Mobile/touch: leave cards static
-
-  const cards = document.querySelectorAll('.project-card');
-
-  cards.forEach(card => {
-    const video = card.querySelector('.hover-gif');
-    const staticImage = card.querySelector('.static-image');
-    if (!video || video.tagName !== 'VIDEO' || !staticImage) return;
-
-    card.addEventListener('mouseenter', () => {
-      if (!isMouseDevice()) return; // re-check live, in case input mode changed
-      staticImage.style.opacity = '0';
-      // Call play() directly — the browser buffers and starts on its own.
-      // (Waiting on canplaythrough stalls large videos, which never start.)
-      const playback = video.play();
-      if (playback && playback.catch) playback.catch(() => {});
-    });
-
-    card.addEventListener('mouseleave', () => {
-      video.pause();
-      video.currentTime = 0;
-      staticImage.style.opacity = '1';
-    });
-  });
-});
-</script>
-
 
 <script>
-// Custom cursor - OPTIMIZED VERSION
+// Experience list "view more" wiring
 document.addEventListener('DOMContentLoaded', function() {
   // Check if device is mobile/touch
   const isMobile = /Android|iPhone|iPad|iPod|BlackBerry|IEMobile|Opera Mini/i.test(navigator.userAgent) || 
                    (navigator.maxTouchPoints > 0 && window.matchMedia('(hover: none)').matches);
   
-  // Don't initialize cursor on mobile devices
+  // Desktop only - mobile expands the list through the inline onclick handler
   if (isMobile) return;
-  
-  const cursor = document.getElementById('customCursor');
-  if (!cursor) return;
-  const carouselWrap = document.getElementById('projectsWrap');
-  let mouseX = window.innerWidth / 2, mouseY = window.innerHeight / 2;
-  let isHoveringCard = false;
-  
-  if (!cursor) return;
-  
-  // Force cursor to be visible immediately
-  cursor.style.cssText = `
-    position: fixed;
-    left: ${mouseX}px;
-    top: ${mouseY}px;
-    width: 20px;
-    height: 20px;
-    border-radius: 50%;
-    background: #000000;
-    pointer-events: none;
-    z-index: 9999;
-    transform: translate(-50%, -50%);
-    opacity: 1 !important;
-    display: block !important;
-    transition: background-color 0.3s ease, transform 0.1s ease;
-  `;
-  
-  // Lightweight mouse tracking - throttled to reduce performance impact
-  let lastUpdate = 0;
-  document.addEventListener('mousemove', (e) => {
-    const now = Date.now();
-    if (now - lastUpdate < 16) return; // Throttle to ~60fps max
-    
-    mouseX = e.clientX;
-    mouseY = e.clientY;
-    
-    // Update cursor position
-    cursor.style.left = mouseX + 'px';
-    cursor.style.top = mouseY + 'px';
-    lastUpdate = now;
-  });
-  
-  
-  
-  
-  // Change cursor to black when hovering over project cards
-  const projectCards = document.querySelectorAll('.project-card');
-  
-  projectCards.forEach(card => {
-    card.addEventListener('mouseenter', () => {
-      isHoveringCard = true;
-      cursor.classList.remove('white');
-      cursor.style.setProperty('background-color', '#000000', 'important');
-      cursor.style.setProperty('background', '#000000', 'important');
-    });
-    
-    card.addEventListener('mouseleave', () => {
-      isHoveringCard = false;
-      // Restore original color based on background
-      setTimeout(() => {
-        if (!isHoveringCard) {
-          cursor.style.removeProperty('background-color');
-          cursor.style.removeProperty('background');
-          updateCursorColor();
-        }
-      }, 50);
-    });
-  });
   
   // View more functionality
   const viewMoreLink = document.getElementById('viewMoreLink');
@@ -3828,74 +3608,6 @@ document.addEventListener('DOMContentLoaded', function() {
     console.log('View more button NOT found');
   }
   
-  // Function to update cursor color based on background
-  function updateCursorColor() {
-    // Don't change color if we're hovering over a card
-    if (isHoveringCard) return;
-    
-    // Get current background color from both inline style and computed style
-    const inlineStyle = document.body.style.background || document.body.style.backgroundColor;
-    const computedStyle = getComputedStyle(document.body).backgroundColor;
-    
-    let bgColor = inlineStyle || computedStyle;
-    
-    // Parse RGB values from both rgb() and rgba() formats
-    const rgbMatch = bgColor.match(/rgba?\((\d+),\s*(\d+),\s*(\d+)(?:,\s*[\d.]+)?\)/);
-    if (rgbMatch) {
-      const r = parseInt(rgbMatch[1]);
-      const g = parseInt(rgbMatch[2]);
-      const b = parseInt(rgbMatch[3]);
-      
-      // Calculate brightness
-      const brightness = (r + g + b) / 3;
-      
-      // Switch cursor color based on background brightness
-      if (brightness > 127) {
-        // Light background - black cursor
-        cursor.style.backgroundColor = '#000000';
-        cursor.classList.remove('white');
-      } else {
-        // Dark background - white cursor  
-        cursor.style.backgroundColor = '#ffffff';
-        cursor.classList.add('white');
-      }
-    }
-  }
-  
-  // Update cursor color on background changes
-  const observer = new MutationObserver(() => {
-    if (!isHoveringCard) {
-      updateCursorColor();
-    }
-  });
-  
-  observer.observe(document.body, {
-    attributes: true,
-    attributeFilter: ['style']
-  });
-  
-  // Initial cursor color
-  updateCursorColor();
-  
-  // Also listen for scroll events to catch background changes
-  window.addEventListener('scroll', () => {
-    if (!isHoveringCard) {
-      updateCursorColor();
-      setTimeout(() => {
-        if (!isHoveringCard) updateCursorColor();
-      }, 50);
-      setTimeout(() => {
-        if (!isHoveringCard) updateCursorColor();
-      }, 100);
-    }
-  }, { passive: true });
-  
-  // Also check on window resize
-  window.addEventListener('resize', updateCursorColor);
-  
-  // Frequent checks during page interactions - DISABLED FOR PERFORMANCE
-  // setInterval(updateCursorColor, 500);
-  
 });
 </script>
 
@@ -4000,6 +3712,52 @@ document.addEventListener('DOMContentLoaded', function() {
       bind();
     }
   })();
+</script>
+
+<script>
+// Play project-card videos on hover — mouse-driven desktop only. Touch devices
+// and the mobile breakpoint keep the static cover image.
+document.addEventListener('DOMContentLoaded', () => {
+  const canHover = () =>
+    document.documentElement.classList.contains('no-touch') &&
+    window.matchMedia('(min-width: 601px)').matches;
+
+  document.querySelectorAll('.project-card').forEach(card => {
+    const video = card.querySelector('.hover-video');
+    const staticImage = card.querySelector('.static-image');
+    if (!video || !staticImage) return;
+
+    // Only hide the cover once frames are actually rendering, so the first
+    // hover (before the video has loaded) never flashes an empty card.
+    video.addEventListener('playing', () => {
+      if (!card.matches(':hover')) return;
+      staticImage.style.transition = ''; // quick hide from the CSS rule
+      staticImage.style.opacity = '0';
+    });
+
+    card.addEventListener('mouseenter', () => {
+      if (!canHover()) return;
+      // Rewinding here is safe: the cover is still opaque (it only drops on
+      // 'playing'), so the jump back to frame 0 happens behind it.
+      clearTimeout(video._rewind);
+      if (video.currentTime) video.currentTime = 0;
+      const playback = video.play();
+      if (playback && playback.catch) playback.catch(() => {});
+    });
+
+    card.addEventListener('mouseleave', () => {
+      video.pause();
+      // Crossfade the cover back slowly: at 0.1s, anything that moved during
+      // the video (the Away suitcase, the payments chart) snaps back.
+      staticImage.style.transition = 'opacity 0.3s ease';
+      staticImage.style.opacity = '';
+      // Do NOT rewind yet. Resetting currentTime mid-fade shows the jump to
+      // frame 0 through the half-transparent cover. Wait for it to land.
+      clearTimeout(video._rewind);
+      video._rewind = setTimeout(() => { video.currentTime = 0; }, 350);
+    });
+  });
+});
 </script>
 
 </body>
