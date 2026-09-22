@@ -36,10 +36,14 @@ The website showcases a high-quality, lightweight, and highly-performant fronten
 │   ├── personalization/           # Personalization/Monogramming assets and HTML
 │   └── platform-experience/       # Platform account management assets and HTML
 ├── images/                        # Global assets, company logos, and icons
+├── scripts/                       # Automation and generation scripts
+│   ├── generate-case-study.js    # Case study HTML generator
+│   └── validate-case-studies.js  # Asset and configuration validator
+├── case-studies.json              # Case study configuration and metadata
 ├── index.html                     # Main entry point / Portfolio homepage
-├── labs.html                      # Creative Lab showcase (Swift/mobile interaction designs)
 ├── michaelmazur.pdf               # Downloadable curriculum vitae / resume
 ├── favicon.ico / favicon.svg      # Site favicons
+├── CASE_STUDIES_GUIDE.md          # Case study management documentation
 └── .gitignore                     # Git ignore rules
 ```
 
@@ -63,6 +67,35 @@ Then open [http://localhost:3000](http://localhost:3000) in your web browser.
 
 ### Using Live Server (VS Code Extension)
 Right-click on `index.html` and select **"Open with Live Server"**.
+
+---
+
+## 🎨 Case Study Management
+
+This repository includes a comprehensive case study management system that makes it easy to add, modify, and maintain case studies programmatically.
+
+### Quick Start
+
+```bash
+# Generate all case study HTML pages
+node scripts/generate-case-study.js --all
+
+# Generate a specific case study
+node scripts/generate-case-study.js personalization
+
+# Validate configuration and assets
+node scripts/validate-case-studies.js
+```
+
+### Features
+
+- **Centralized Configuration**: All case study metadata in `case-studies.json`
+- **Automated Generation**: Generate HTML pages from configuration
+- **Validation**: Ensure assets exist and configuration is correct
+- **Consistent Styling**: All case studies use the same design system
+- **Multiple Layout Types**: Support for image galleries, videos, and sectioned content
+
+For detailed documentation on adding and managing case studies, see [CASE_STUDIES_GUIDE.md](CASE_STUDIES_GUIDE.md).
 
 ---
 

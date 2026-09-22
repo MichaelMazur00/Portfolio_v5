@@ -1,0 +1,216 @@
+{
+  "caseStudies": [
+    {
+      "id": "personalization",
+      "title": "Monogramming goods",
+      "description": "Designed Away's personalization experience. Designed PDP entry point, cart entry point, and configurator across desktop and mobile. Adopted on ~20% of luggage and bag orders at launch; demand outpaced production capacity.",
+      "role": "Product Designer",
+      "timeline": "2019",
+      "teams": "Away, and Praesons",
+      "slug": "personalization",
+      "featured": true,
+      "displayOrder": 1,
+      "assets": {
+        "cardPoster": "images/personalization-card-poster.jpg",
+        "cardVideo": "images/personalization-card.mp4",
+        "cardMobile": "images/personalization-card-mobile.jpg",
+        "images": [
+          "1.png",
+          "2.png",
+          "3.png",
+          "4.png",
+          "5.png",
+          "6.png",
+          "7.png"
+        ]
+      },
+      "layout": {
+        "type": "images-only",
+        "imageLayout": [
+          { "src": "1.png", "alt": "Personalization opportunity", "width": "full" },
+          { "src": "2.png", "alt": "Personalization opportunity", "width": "full", "marginTop": "16px" },
+          { "src": "3.png", "alt": "Personalization opportunity", "width": "full", "marginTop": "16px" },
+          { "src": "4.png", "alt": "Personalization opportunity", "width": "full", "marginTop": "16px" },
+          {
+            "layout": "side-by-side",
+            "marginTop": "16px",
+            "images": [
+              { "src": "5.png", "alt": "Personalization solution" },
+              { "src": "6.png", "alt": "Personalization solution" }
+            ]
+          },
+          { "src": "7.png", "alt": "Personalization solution", "width": "full", "marginTop": "16px" }
+        ]
+      }
+    },
+    {
+      "id": "platform-experience",
+      "title": "Managing payments at scale",
+      "description": "Redesigned Stripe Connect's core experience. Designed a new IA, metrics overview, and overhauled account management. Changes resulted in a 93% lift in engagement and 21% drop in support contacts.",
+      "role": "Product Designer",
+      "timeline": "2022-2024",
+      "teams": "Platform XP, Code Orange, Design systems, and Patterns",
+      "slug": "platform-experience",
+      "featured": true,
+      "displayOrder": 2,
+      "assets": {
+        "cardPoster": "images/platform-experience-card-poster.jpg",
+        "cardVideo": "images/platform-experience-card.mp4",
+        "cardMobile": "images/platform-experience-card-mobile.jpg",
+        "videos": [
+          {
+            "src": "1.mp4",
+            "caption": "An overview of business performance, account health, and upcoming requirements changes."
+          },
+          {
+            "src": "2.mp4",
+            "caption": "Tools for platforms to resolve account issues."
+          },
+          {
+            "src": "3.mp4",
+            "caption": "Tools for accounts to resolve issues themselves."
+          }
+        ]
+      },
+      "layout": {
+        "type": "videos-with-captions"
+      }
+    },
+    {
+      "id": "onboarding",
+      "title": "Onboarding",
+      "description": "Redesigned Stripe Connect's onboarding process.",
+      "role": "Product Designer",
+      "timeline": "2020-2021",
+      "teams": "Connect",
+      "slug": "onboarding",
+      "featured": true,
+      "displayOrder": 3,
+      "assets": {
+        "cardPoster": "images/onboarding-card-poster.jpg",
+        "cardVideo": "images/onboarding-card.mp4",
+        "cardMobile": "images/onboarding-card-mobile.jpg",
+        "videos": [
+          "1.mp4",
+          "2.mp4"
+        ]
+      },
+      "layout": {
+        "type": "videos-only"
+      }
+    },
+    {
+      "id": "freight-marketplace",
+      "title": "Matching drivers and brokerages",
+      "description": "Led 0→1 design for Uber Freight's multi-broker marketplace. The mobile experience was for drivers to book loads on the go, desktop for shippers to manage loads at scale.",
+      "role": "Product Designer",
+      "timeline": "2021-2022",
+      "teams": "Shipper platform",
+      "slug": "freight-marketplace",
+      "featured": true,
+      "displayOrder": 4,
+      "assets": {
+        "cardPoster": "images/freight-marketplace-card-poster.jpg",
+        "cardVideo": "images/freight-marketplace-card.mp4",
+        "cardMobile": "images/freight-marketplace-card-mobile.jpg",
+        "images": [
+          "1.png",
+          "2.png",
+          "3.png",
+          "4.png",
+          "5.png",
+          "6.png",
+          "7.png",
+          "8.png",
+          "9.png"
+        ]
+      },
+      "layout": {
+        "type": "images-only",
+        "imageLayout": [
+          { "src": "1.png", "alt": "Load execution overview", "width": "full" },
+          { "src": "2.png", "alt": "Desktop view overview", "width": "full", "marginTop": "16px" },
+          { "src": "3.png", "alt": "Desktop view details", "width": "full", "marginTop": "16px" },
+          { "src": "4.png", "alt": "Desktop functionality", "width": "full", "marginTop": "16px" },
+          {
+            "layout": "side-by-side",
+            "marginTop": "16px",
+            "images": [
+              { "src": "5.png", "alt": "Mobile view 1" },
+              { "src": "6.png", "alt": "Mobile view 2" }
+            ]
+          },
+          { "src": "7.png", "alt": "Mobile flow overview", "width": "full", "marginTop": "16px" },
+          {
+            "layout": "side-by-side",
+            "marginTop": "16px",
+            "images": [
+              { "src": "8.png", "alt": "Mobile detail 1" },
+              { "src": "9.png", "alt": "Mobile detail 2" }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "id": "load-execution",
+      "title": "Onboarding for payments",
+      "description": "Led redesign of Stripe Connect's onboarding flow, helping platforms and marketplaces go from sign-up to live driving a ~60% lift in conversion and 16% more self-serve activations.",
+      "role": "Product Designer",
+      "timeline": "—",
+      "teams": "—",
+      "slug": "load-execution",
+      "featured": false,
+      "displayOrder": 5,
+      "assets": {
+        "gifs": [
+          "1.gif",
+          "2.gif",
+          "4.gif",
+          "5.gif",
+          "6.gif",
+          "7.gif"
+        ],
+        "images": [
+          "3.png"
+        ]
+      },
+      "sections": [
+        {
+          "title": "Automated profiles",
+          "content": [
+            "A significant focus was establishing a unified framework for customer, carrier, and facility profiles — ensuring they worked and felt consistent across the entire ecosystem. What had previously been a manual, error-prone process became the backbone of the platform: automated profiles that reduced the operational overhead of maintaining critical freight data.",
+            "The patterns were designed to handle scale — from high-volume data entry to the transition from handwritten notes to programmable, automatically updated information. Facility hours, compliance rules, and load management became more accurate and less reliant on manual ops teams, ultimately driving down the cost per load and freeing the business to operate more efficiently."
+          ],
+          "asset": { "type": "gif", "src": "2.gif", "alt": "Automated profiles" }
+        },
+        {
+          "title": "Load management",
+          "content": [
+            "Displaying loads required careful thinking around density — brokerages managing thousands of loads a day had fundamentally different needs than SMBs handling a handful each month. After exploring list views, cards, and everything in between, we landed on a moderate-density list view with hover-triggered quick actions, striking the right balance between information richness and visual clarity.",
+            "Filtering presented a similar scaling challenge. A power user juggling thousands of loads might need 5–10 active filters simultaneously, while another user was searching for a single load under one parameter. We designed a sheet-based filtering pattern that could expand or collapse gracefully depending on the use case — powerful when needed, invisible when not."
+          ],
+          "assets": [
+            { "type": "image", "src": "3.png", "alt": "Load management overview" },
+            { "type": "gif", "src": "4.gif", "alt": "Load management details" }
+          ]
+        },
+        {
+          "title": "Taking action",
+          "content": [
+            "Action sheets became the backbone of load servicing — repetitive actions taken across multiple loads at different stages of the lifecycle demanded a pattern that could handle varying levels of complexity. Whether a broker was deep in a high-touch servicing workflow or a shipper completing a straightforward task, the experience needed to flex without breaking.",
+            "We explored quarter sheets before landing on full-page sheets as the primary pattern. Quarter sheets worked well for brief, low-complexity tasks in earlier load stages, but customer operations made clear that denser, more detailed interactions required more room to breathe. For shippers, we adapted the same sheets with more generous spacing and a lighter consumer-facing feel — same pattern, meaningfully different experience."
+          ],
+          "assets": [
+            { "type": "gif", "src": "5.gif", "alt": "Taking action step 1" },
+            { "type": "gif", "src": "6.gif", "alt": "Taking action step 2" },
+            { "type": "gif", "src": "7.gif", "alt": "Taking action step 3" }
+          ]
+        }
+      ],
+      "layout": {
+        "type": "sections-with-content"
+      }
+    }
+  ]
+}
