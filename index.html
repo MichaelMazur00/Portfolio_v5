@@ -1097,7 +1097,7 @@
         margin-top: 80px;
       }
       .experience-footer {
-        margin-top: 80px;
+        margin-top: 64px;
       }
       .experience-list {
         width: 824px !important;
@@ -1155,28 +1155,28 @@
       display: inline-flex;
       align-items: center;
       justify-content: center;
-      padding: 16px 32px;
+      padding: 12px 24px;
       background: transparent;
       color: #ffffff;
-      border: 1px solid #ffffff;
+      border: 1px solid #505050;
       border-radius: 50px;
-      font-size: 16px;
+      font-size: 15px;
       font-weight: 500;
+      letter-spacing: 0.08em;
       font-family: var(--mono);
       cursor: pointer;
       transition: all 0.3s ease;
     }
 
     .view-all-button:hover {
-      background: rgba(253,249,238,0.05);
-      border-color: rgba(253,249,238,0.3);
+      background: transparent;
+      border-color: #505050;
       transform: translateY(-2px);
     }
 
     @media (min-width: 1400px) {
       .view-all-button {
-        font-size: 20px;
-        padding: 19px 38px;
+        padding: 14px 28px;
       }
     }
 
@@ -2844,9 +2844,9 @@ document.addEventListener('DOMContentLoaded', function() {
       experienceSubtitle.style.setProperty('color', '#A0A2A5', 'important');
     }
     if (experienceButton) {
-      // FIXED: Force white text and border for experience button since it's on dark background
+      // Force white text and a dark grey outline for the experience button
       const buttonColor = '#ffffff';
-      const buttonBorderColor = '#ffffff';
+      const buttonBorderColor = '#505050';
       experienceButton.style.color = buttonColor;
       experienceButton.style.setProperty('color', buttonColor, 'important');
       experienceButton.style.borderColor = buttonBorderColor;
