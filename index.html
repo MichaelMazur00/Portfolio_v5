@@ -246,13 +246,14 @@
 
     @media (min-width: 1400px) {
       .hero-title {
-        font-size: 88px;
-        line-height: 96px;
+        font-size: 72px;
+        line-height: 84px;
         letter-spacing: -0.06em;
         margin-bottom: 0;
       }
       .hero-sub {
-        font-size: 32px;
+        font-size: 28px;
+        line-height: 42px;
         margin-top: 32px;
       }
       .hero-text-content {
@@ -316,15 +317,14 @@
     .projects-track-wrap {
       overflow: hidden;
       width: 100%;
-      cursor: grab;
+      cursor: default;
       user-select: none;
     }
-    .projects-track-wrap:active { cursor: grabbing; }
 
     .projects-track {
       display: flex;
       align-items: flex-end;
-      gap: 20px;
+      gap: 24px;
       padding: 0;
       width: max-content;
       /* will-change removed for performance */
@@ -338,11 +338,11 @@
 
     .project-card {
       flex: 0 0 auto;
-      width: 450px !important;
-      height: 600px !important;
+      width: 414px !important;
+      height: 550px !important;
       align-self: flex-end;
       background: transparent;
-      border-radius: 16px;
+      border-radius: 8px;
       overflow: hidden;
       position: relative;
       transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1),
@@ -357,6 +357,14 @@
       box-shadow: 0 12px 32px rgba(255, 255, 255, 0.08), 0 4px 12px rgba(255, 255, 255, 0.05);
     }
     
+    /* Large desktop cards; tablets and phones keep the smaller sizes. */
+    @media (min-width: 1025px) {
+      .project-card {
+        width: 960px !important;
+        height: 570px !important;
+      }
+    }
+
     html.no-touch .project-card:hover {
       box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12), 0 0 0 1px rgba(255, 255, 255, 0.05);
       z-index: 10;
@@ -366,7 +374,7 @@
     
     /* Apply border-radius to the card itself, not just media */
     .project-card {
-      border-radius: 16px !important;
+      border-radius: 8px !important;
       overflow: hidden !important;
     }
     
@@ -374,14 +382,86 @@
       display: contents;
     }
 
+    /* Desktop card animation (card-animations/card-animations.html in embed
+       mode). Click-through so the card still navigates; the page posts
+       'play' to it on hover. Hidden at the mobile breakpoint. */
+    .project-card-media iframe.card-animation {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      border: 0;
+      background: transparent;
+      pointer-events: none;
+    }
+
+    /* Mobile-only card image. Desktop gets a 1x1 placeholder (no download)
+       and keeps it hidden; the 600px block below shows it. */
+    .project-card-media .mobile-card-image img {
+      display: none;
+    }
+
+    /* Placeholder card (no media yet) */
+    .project-card-placeholder {
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end;
+      gap: 8px;
+      padding: 40px;
+      box-sizing: border-box;
+      background: #f6f6f4;
+      color: #000;
+    }
+    .project-card-placeholder .placeholder-title {
+      font-size: 44px;
+      font-weight: 800;
+      letter-spacing: -0.045em;
+      line-height: 1;
+    }
+    .project-card-placeholder .placeholder-sub {
+      font-size: 16px;
+      font-weight: 300;
+      color: #4a4a4a;
+    }
+
     .project-card-media {
       width: 100%;
       height: 100%;
       position: relative;
-      border-radius: 16px;
+      /* Figma 777:7831 — the resting gray every card starts on */
+      background: linear-gradient(180deg, #E5E7E8 0%, #D0D1D5 100%);
+      --card-bg: none;
+      border-radius: 8px;
       overflow: hidden;
+      isolation: isolate; /* keeps the ::before layer behind the card UI */
     }
-    
+
+    /* Each card's own gradient sits on a layer above the gray and below
+       the animation. It stays hidden while the page is white and fades
+       in when the background flips to black as the carousel scrolls in. */
+    .project-card-media::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      z-index: -1;
+      background: var(--card-bg);
+      transition: opacity 0.3s ease; /* matches the body background-color fade */
+    }
+
+    html.cards-dimmed .project-card-media::before {
+      opacity: 0;
+    }
+
+    /* Figma 777:8090 */
+    .project-card[data-case-study="platform-experience"] .project-card-media {
+      --card-bg: linear-gradient(50.6deg, #1A496D 1.69%, #002642 80.17%);
+    }
+
+    /* Figma 777:7906 */
+    .project-card[data-case-study="onboarding"] .project-card-media {
+      --card-bg: linear-gradient(56.56deg, #0D1738 1.51%, #E3CAD3 98.82%);
+    }
+
     /* Smooth cover image to video transitions with GPU acceleration */
     .project-card-media img {
       width: 100%;
@@ -405,7 +485,7 @@
       height: 100%;
       object-fit: cover;
       object-position: center;
-      border-radius: 16px;
+      border-radius: 8px;
       display: block;
       position: absolute;
       top: 0;
@@ -764,12 +844,13 @@
     @media (min-width: 1400px) {
       .experience-title {
         font-size: 72px;
-        line-height: 80px;
+        line-height: 84px;
         letter-spacing: -0.05em;
         margin-bottom: 0;
       }
       .experience-subtitle {
         font-size: 28px;
+        line-height: 42px;
         margin-top: 24px;
         margin-bottom: 40px;
       }
@@ -1180,12 +1261,13 @@
       }
       .contact-title {
         font-size: 72px;
-        line-height: 80px;
+        line-height: 84px;
         letter-spacing: -0.07em;
         margin-bottom: 0;
       }
       .contact-subtitle {
         font-size: 28px;
+        line-height: 42px;
         margin-top: 32px;
       }
     }
@@ -1661,16 +1743,7 @@
         transform: none !important;
       }
 
-      /* Hide the duplicate set that only exists for the infinite loop */
-      .projects-track .project-card:nth-child(n+5) {
-        display: none !important;
-      }
-
-      /* Mobile card order: onboarding, platform experience, Away, Uber */
-      .projects-track .project-card:nth-child(3) { order: 1; }
-      .projects-track .project-card:nth-child(2) { order: 2; }
-      .projects-track .project-card:nth-child(1) { order: 3; }
-      .projects-track .project-card:nth-child(4) { order: 4; }
+      /* Mobile card order follows the HTML: onboarding, platform experience, Away */
 
       /* Mobile crops are all 1500x1800, so one height covers every card. */
       .project-card {
@@ -1705,6 +1778,14 @@
       .project-card-media video.hover-video {
         display: none;
       }
+
+      .project-card-media .mobile-card-image img {
+        display: block;
+      }
+
+      .project-card-media iframe.card-animation {
+        display: none;
+      }
     }
 
   </style>
@@ -1719,9 +1800,7 @@
   <div class="hero-logo page-animate" id="heroLogo"><!-- logo injected by JS --></div>
   <div class="hero-text-content page-animate" id="heroTextContent">
     <h1 class="hero-title" id="heroTitle">Software that makes<br>complex things <em>feel natural.</em></h1>
-    <p class="hero-sub" id="heroSub">Craft, conviction, and clarity.
-
-</p>
+    <p class="hero-sub" id="heroSub">Design, development, and product strategy.</p>
   </div>
 </section>
 
@@ -1732,85 +1811,33 @@
   <div class="projects-track-wrap" id="projectsWrap">
     <div class="projects-track" id="projectsTrack">
 
-      <!-- Original set -->
-      <div class="project-card page-animate-media" data-case-study="personalization">
+      <div class="project-card page-animate-media" data-case-study="onboarding">
         <div class="project-card-media">
-          <picture>
-            <source media="(max-width: 600px)" srcset="images/personalization-card-mobile.jpg" />
-            <img src="images/personalization-card-poster.jpg?v=4" alt="Personalization" class="static-image" />
+          <iframe class="card-animation" src="card-animations/card-animations.html?embed&scene=1" title="Setup guide animation" tabindex="-1" aria-hidden="true"></iframe>
+          <picture class="mobile-card-image">
+            <source media="(max-width: 600px)" srcset="images/onboarding-card-mobile.jpg" />
+            <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="Onboarding" />
           </picture>
-          <video src="images/personalization-card.mp4?v=4" poster="images/personalization-card-poster.jpg?v=4" class="hover-video" muted playsinline preload="none" aria-hidden="true"></video>
         </div>
       </div>
 
       <div class="project-card page-animate-media" data-case-study="platform-experience">
         <div class="project-card-media">
-          <picture>
+          <iframe class="card-animation" src="card-animations/card-animations.html?embed&scene=3" title="Payments animation" tabindex="-1" aria-hidden="true"></iframe>
+          <picture class="mobile-card-image">
             <source media="(max-width: 600px)" srcset="images/platform-experience-card-mobile.jpg" />
-            <img src="images/platform-experience-card-poster.jpg?v=4" alt="Platform experience" class="static-image" />
+            <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="Platform experience" />
           </picture>
-          <video src="images/platform-experience-card.mp4?v=4" poster="images/platform-experience-card-poster.jpg?v=4" class="hover-video" muted playsinline preload="none" aria-hidden="true"></video>
         </div>
       </div>
 
-      <div class="project-card page-animate-media" data-case-study="onboarding">
-        <div class="project-card-media">
-          <picture>
-            <source media="(max-width: 600px)" srcset="images/onboarding-card-mobile.jpg" />
-            <img src="images/onboarding-card-poster.jpg?v=2" alt="Onboarding" class="static-image" />
-          </picture>
-          <video src="images/onboarding-card.mp4?v=2" poster="images/onboarding-card-poster.jpg?v=2" class="hover-video" muted playsinline preload="none" aria-hidden="true"></video>
-        </div>
-      </div>
-
-      <div class="project-card page-animate-media" data-case-study="freight-marketplace">
-        <div class="project-card-media">
-          <picture>
-            <source media="(max-width: 600px)" srcset="images/freight-marketplace-card-mobile.jpg" />
-            <img src="images/freight-marketplace-card-poster.jpg?v=2" alt="Freight marketplace" class="static-image" />
-          </picture>
-          <video src="images/freight-marketplace-card.mp4?v=2" poster="images/freight-marketplace-card-poster.jpg?v=2" class="hover-video" muted playsinline preload="none" aria-hidden="true"></video>
-        </div>
-      </div>
-
-      <!-- Duplicate set for infinite loop -->
       <div class="project-card page-animate-media" data-case-study="personalization">
         <div class="project-card-media">
-          <picture>
+          <iframe class="card-animation" src="card-animations/card-animations.html?embed&scene=2" title="Monogram placement animation" tabindex="-1" aria-hidden="true"></iframe>
+          <picture class="mobile-card-image">
             <source media="(max-width: 600px)" srcset="images/personalization-card-mobile.jpg" />
-            <img src="images/personalization-card-poster.jpg?v=4" alt="Personalization" class="static-image" />
+            <img src="data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==" alt="Personalization" />
           </picture>
-          <video src="images/personalization-card.mp4?v=4" poster="images/personalization-card-poster.jpg?v=4" class="hover-video" muted playsinline preload="none" aria-hidden="true"></video>
-        </div>
-      </div>
-
-      <div class="project-card page-animate-media" data-case-study="platform-experience">
-        <div class="project-card-media">
-          <picture>
-            <source media="(max-width: 600px)" srcset="images/platform-experience-card-mobile.jpg" />
-            <img src="images/platform-experience-card-poster.jpg?v=4" alt="Platform experience" class="static-image" />
-          </picture>
-          <video src="images/platform-experience-card.mp4?v=4" poster="images/platform-experience-card-poster.jpg?v=4" class="hover-video" muted playsinline preload="none" aria-hidden="true"></video>
-        </div>
-      </div>
-
-      <div class="project-card page-animate-media" data-case-study="onboarding">
-        <div class="project-card-media">
-          <picture>
-            <source media="(max-width: 600px)" srcset="images/onboarding-card-mobile.jpg" />
-            <img src="images/onboarding-card-poster.jpg?v=2" alt="Onboarding" class="static-image" />
-          </picture>
-          <video src="images/onboarding-card.mp4?v=2" poster="images/onboarding-card-poster.jpg?v=2" class="hover-video" muted playsinline preload="none" aria-hidden="true"></video>
-        </div>
-      </div>
-
-      <div class="project-card page-animate-media" data-case-study="freight-marketplace">
-        <div class="project-card-media">
-          <picture>
-            <source media="(max-width: 600px)" srcset="images/freight-marketplace-card-mobile.jpg" />
-            <img src="images/freight-marketplace-card-poster.jpg?v=2" alt="Freight marketplace" class="static-image" />
-          </picture>
-          <video src="images/freight-marketplace-card.mp4?v=2" poster="images/freight-marketplace-card-poster.jpg?v=2" class="hover-video" muted playsinline preload="none" aria-hidden="true"></video>
         </div>
       </div>
 
@@ -2000,9 +2027,6 @@
     <div class="contact-actions">
       <button class="copy-button" id="copyButton" type="button">
         <span>E-mail</span>
-        <svg width="12" height="13" viewBox="0 0 30 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <path fill-rule="evenodd" clip-rule="evenodd" d="M6.81818 6.80556H3.40909C2.50425 6.80556 1.63778 7.16427 0.998582 7.80229C0.359382 8.44031 0 9.30517 0 10.2083V28.3565C0 29.2596 0.359375 30.1245 0.998582 30.7625C1.63778 31.4005 2.50425 31.7593 3.40909 31.7593H19.3182C20.223 31.7593 21.0895 31.4006 21.7287 30.7625C22.3679 30.1245 22.7273 29.2596 22.7273 28.3565V24.9537H26.1364C27.0412 24.9537 27.9077 24.595 28.5469 23.957C29.1861 23.319 29.5455 22.4541 29.5455 21.5509V3.40278C29.5455 2.49962 29.1861 1.63475 28.5469 0.996733C27.9077 0.358717 27.0412 0 26.1364 0H10.2273C8.34375 0 6.81818 1.52274 6.81818 3.40278V6.80556ZM20.4545 10.2083V28.3565C20.4545 28.6571 20.3352 28.9463 20.1222 29.159C19.9091 29.3716 19.6193 29.4907 19.3182 29.4907H3.40911C3.10797 29.4907 2.8182 29.3716 2.60514 29.159C2.39207 28.9463 2.27276 28.6571 2.27276 28.3565V10.2083C2.27276 9.90776 2.39207 9.61852 2.60514 9.40586C2.81821 9.19319 3.10798 9.07409 3.40911 9.07409H19.3182C19.6193 9.07409 19.9091 9.19319 20.1222 9.40586C20.3352 9.61853 20.4545 9.90776 20.4545 10.2083ZM22.7273 22.6852H26.1364C26.4375 22.6852 26.7273 22.5661 26.9403 22.3534C27.1534 22.1407 27.2727 21.8515 27.2727 21.5509V3.40279C27.2727 3.10222 27.1534 2.81298 26.9403 2.60032C26.7273 2.38764 26.4375 2.26855 26.1364 2.26855H10.2273C9.59942 2.26855 9.09091 2.77612 9.09091 3.40281V6.80559H19.3182C20.223 6.80559 21.0895 7.16429 21.7287 7.80232C22.3679 8.44033 22.7273 9.3052 22.7273 10.2084V22.6852Z" fill="currentColor"/>
-        </svg>
       </button>
     </div>
   </div>
@@ -2189,27 +2213,20 @@ document.addEventListener('DOMContentLoaded', function() {
         }, 1000);
       }
     }, 0.2)
-    // Hero text content - SIMPLIFIED FOR MOBILE COMPATIBILITY  
-    .to('.hero-text-content.page-animate', {
-      opacity: 1,
-      y: 0,
-      duration: 0.8,
-      ease: 'power2.out'
-    }, 0.3)
-    // Hero title animation
-    .to('.hero-title', {
-      opacity: 1,
-      y: 0,
-      duration: 0.6,
-      ease: 'power2.out'
-    }, 0.4)
-    // Hero subtitle animation
-    .to('.hero-sub', {
-      opacity: 0.5,
-      y: 0,
-      duration: 0.6,
-      ease: 'power2.out'
-    }, 0.5)
+    // Hero text wrapper only fades. It used to tween y too, but GSAP reads its
+    // CSS translate(-50%, -50%) as pixels, so that motion cancelled out the
+    // title's rise and the text drifted down. The rise lives on the h1/sub.
+    .fromTo('.hero-text-content.page-animate',
+      { opacity: 0, xPercent: -50, x: 0, y: 0 },
+      { opacity: 1, duration: 0.6, ease: 'power2.out' }, 0.3)
+    // Hero title rises into place
+    .fromTo('.hero-title',
+      { opacity: 0, y: 48 },
+      { opacity: 1, y: 0, duration: 0.9, ease: 'power3.out' }, 0.35)
+    // Hero subtitle rises just behind it
+    .fromTo('.hero-sub',
+      { opacity: 0, y: 48 },
+      { opacity: 0.5, y: 0, duration: 0.9, ease: 'power3.out' }, 0.5)
   
   mainTimeline
     // Project cards - OPTIMIZED
@@ -2552,7 +2569,8 @@ document.addEventListener('DOMContentLoaded', function() {
     // distance instead of a viewport fraction, with a floor so it never fires on load.
     var carouselTrigger = Math.max(viewportHeight * 0.15, projectsSection.offsetTop - (viewportHeight * 0.55));
     var inCarousel = scrollY >= carouselTrigger;
-    
+    document.documentElement.classList.toggle('cards-dimmed', !inCarousel);
+
     var currentR, currentG, currentB;
     
     if (!inCarousel) {
@@ -2667,7 +2685,7 @@ document.addEventListener('DOMContentLoaded', function() {
     }
     
     // Update background color
-    document.body.style.background = 'rgb(' + currentR + ',' + currentG + ',' + currentB + ')';
+    document.body.style.background ='rgb(' + currentR + ',' + currentG + ',' + currentB + ')';
     
     // Debug the final color
     if (Math.floor(Date.now() / 1000) % 3 === 0) {
@@ -3008,7 +3026,7 @@ document.addEventListener('DOMContentLoaded', function() {
 </script>
 
 <script>
-// Infinite scrolling image carousel
+// Projects: pinned horizontal scroll on desktop, vertical stack on mobile
 (function() {
   var wrap = document.getElementById('projectsWrap');
   var track = document.getElementById('projectsTrack');
@@ -3039,307 +3057,39 @@ document.addEventListener('DOMContentLoaded', function() {
     return;
   }
 
-  // Check if mobile for spacing
-  var isMobile = window.innerWidth <= 600;
-  var GAP = isMobile ? 8 : 20;
-  var MOBILE_SCROLL_SENSITIVITY = isMobile ? 2.5 : 1; // Make mobile more sensitive
-  var CARD_WIDTH = 450; // New card width
-  var scrollSpeed = isMobile ? 0.4 : 0.8; // Slower auto-scroll on mobile for better touch interaction
-  var currentX = 0;
-  var singleSetWidth = 0;
-  var userInteracting = false;
-  var autoScrolling = false; // Don't start until cards finish animating
-  var animationFrame;
+  // Desktop: pin the section and turn vertical scroll into horizontal travel
+  // through the cards. Free scroll, no snapping. Once the last
+  // card is reached the pin releases and the page continues to Experience.
+  window.carouselReady = function() {};
+  wrap.style.cursor = 'default';
 
-  function cards() { return track.querySelectorAll('.project-card'); }
-  function originalCardsCount() { return cards().length / 2; } // We have duplicates
+  var cardEls = Array.prototype.slice.call(track.querySelectorAll('.project-card'));
 
-  // Calculate width of one set of cards (not including duplicates)
-  function calculateSingleSetWidth() {
-    singleSetWidth = originalCardsCount() * (CARD_WIDTH + GAP);
+  function sidePad() {
+    return Math.max(0, (window.innerWidth - cardEls[0].offsetWidth) / 2);
+  }
+  function travel() {
+    return cardEls[cardEls.length - 1].offsetLeft - cardEls[0].offsetLeft;
   }
 
-  // Continuous animation function with infinite loop
-  let lastFrameTime = 0;
-  function animateScroll(timestamp) {
-    // Throttle to 30fps for smoother and faster animation
-    if (timestamp - lastFrameTime >= 33) {
-      if (autoScrolling && !userInteracting) {
-        currentX -= scrollSpeed;
-        
-        // Debug: occasionally log position to confirm it's moving
-        if (Math.floor(timestamp) % 1000 < 50) {
-          console.log('Auto-scroll position:', currentX, 'autoScrolling:', autoScrolling);
-        }
-        
-        // Reset position when we've scrolled past one complete set
-        if (currentX <= -singleSetWidth) {
-          currentX = 0;
-        }
-        
-        // Use native transform for better performance than GSAP
-        track.style.transform = `translate3d(${currentX}px, 0, 0)`;
-      }
-      lastFrameTime = timestamp;
-    }
-    
-    animationFrame = requestAnimationFrame(animateScroll);
-  }
+  track.style.paddingLeft = sidePad() + 'px';
+  track.style.paddingRight = sidePad() + 'px';
 
-  function startAutoScroll() {
-    autoScrolling = true;
-    if (!animationFrame) {
-      animateScroll();
-    }
-  }
-
-  function stopAutoScroll() {
-    autoScrolling = false;
-    if (animationFrame) {
-      cancelAnimationFrame(animationFrame);
-      animationFrame = null;
-    }
-  }
-
-  // Trackpad/mouse wheel control
-  var trackpadAccumulator = 0;
-  wrap.addEventListener('wheel', function(e) {
-    // Only handle horizontal scrolling (left/right trackpad gestures)
-    if (Math.abs(e.deltaX) > Math.abs(e.deltaY) && Math.abs(e.deltaX) > 0) {
-      e.preventDefault();
-      userInteracting = true;
-      stopAutoScroll();
-      
-      // Use deltaX for horizontal carousel scrolling
-      var scrollDelta = e.deltaX;
-      
-      trackpadAccumulator += scrollDelta;
-      currentX -= scrollDelta;
-      
-      // Handle infinite loop properly for both directions
-      if (currentX > 0) {
-        currentX = -singleSetWidth + currentX;
-      }
-      if (currentX <= -singleSetWidth) {
-        currentX = currentX + singleSetWidth;
-      }
-      
-      track.style.transform = `translate3d(${currentX}px, 0, 0)`;
-      
-      // Resume auto-scroll after user stops
-      clearTimeout(wrap.trackpadTimeout);
-      wrap.trackpadTimeout = setTimeout(() => {
-        userInteracting = false;
-        if (autoScrolling) startAutoScroll();
-      }, 1500);
-    }
-    // Allow vertical scrolling to pass through for page scroll
-  }, { passive: false });
-
-  // Check if carousel is in viewport
-  function checkViewportVisibility() {
-    setTimeout(() => {
-      var rect = wrap.getBoundingClientRect();
-      var viewportHeight = window.innerHeight;
-      var visibleHeight = Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0);
-      var visibilityRatio = visibleHeight / rect.height;
-      
-      // Always allow auto-scroll when carousel is visible
-      autoScrolling = true;
-      
-      // Resume auto-scroll if not currently being interacted with
-      if (!userInteracting && visibilityRatio > 0.3) {
-        startAutoScroll();
-      }
-    }, 100);
-  }
-
-  // Mouse drag for desktop
-  var dragStartX = 0, dragStartCurrentX = 0, dragging = false;
-  
-  wrap.addEventListener('mousedown', function(e) {
-    dragging = true;
-    dragStartX = e.clientX;
-    dragStartCurrentX = currentX;
-    userInteracting = true;
-    stopAutoScroll();
-    e.preventDefault();
-  });
-
-  window.addEventListener('mousemove', function(e) {
-    if (!dragging) return;
-    var deltaX = e.clientX - dragStartX;
-    currentX = dragStartCurrentX + deltaX;
-    
-    // Keep within bounds for infinite loop
-    if (currentX > 0) {
-      currentX = -singleSetWidth + currentX;
-    }
-    if (currentX <= -singleSetWidth) {
-      currentX = currentX + singleSetWidth;
-    }
-    
-    gsap.set(track, { x: currentX });
-  });
-
-  window.addEventListener('mouseup', function(e) {
-    if (!dragging) return;
-    dragging = false;
-    userInteracting = false;
-    
-    // Resume auto-scroll after brief delay
-    setTimeout(() => {
-      if (!userInteracting && autoScrolling) startAutoScroll();
-    }, 1000);
-  });
-
-  // Touch events for mobile
-  var touchStartX = 0, touchStartCurrentX = 0;
-  wrap.addEventListener('touchstart', function(e) {
-    touchStartX = e.touches[0].clientX;
-    touchStartCurrentX = currentX;
-    userInteracting = true;
-    stopAutoScroll();
-  }, { passive: true });
-
-  wrap.addEventListener('touchmove', function(e) {
-    var deltaX = (e.touches[0].clientX - touchStartX) * MOBILE_SCROLL_SENSITIVITY;
-    currentX = touchStartCurrentX + deltaX;
-    
-    // Keep within bounds for infinite loop
-    if (currentX > 0) {
-      currentX = -singleSetWidth + currentX;
-    }
-    if (currentX <= -singleSetWidth) {
-      currentX = currentX + singleSetWidth;
-    }
-    
-    gsap.set(track, { x: currentX });
-  }, { passive: true });
-
-  wrap.addEventListener('touchend', function(e) {
-    userInteracting = false;
-    setTimeout(() => {
-      if (!userInteracting && autoScrolling) startAutoScroll();
-    }, 1000);
-  });
-
-  // Hover pause
-  wrap.addEventListener('mouseenter', () => {
-    userInteracting = true;
-    stopAutoScroll();
-    // Auto-scroll leaves the track on a fractional pixel, which resamples the
-    // hover videos and softens them. Snap to the device-pixel grid while paused.
-    var dpr = window.devicePixelRatio || 1;
-    currentX = Math.round(currentX * dpr) / dpr;
-    track.style.transform = `translate3d(${currentX}px, 0, 0)`;
-  });
-  
-  wrap.addEventListener('mouseleave', () => {
-    userInteracting = false;
-    
-    // Always check if carousel is in viewport and resume if it is
-    function attemptResume() {
-      if (userInteracting) return; // Don't resume if user started interacting again
-      
-      var rect = wrap.getBoundingClientRect();
-      var viewportHeight = window.innerHeight;
-      var visibleHeight = Math.min(rect.bottom, viewportHeight) - Math.max(rect.top, 0);
-      var visibilityRatio = visibleHeight / rect.height;
-      
-      // If carousel is mostly visible (more than 30% in viewport), resume auto-scroll
-      // Lower threshold to ensure it works on initial page load
-      if (visibilityRatio > 0.3) {
-        autoScrolling = true; // Ensure autoScrolling is enabled
-        startAutoScroll();
+  gsap.to(track, {
+    x: function() { return -travel(); },
+    ease: 'none',
+    scrollTrigger: {
+      trigger: '#projects',
+      start: 'center center',
+      end: function() { return '+=' + travel(); },
+      pin: true,
+      scrub: 0.6,
+      invalidateOnRefresh: true,
+      onRefreshInit: function() {
+        track.style.paddingLeft = sidePad() + 'px';
+        track.style.paddingRight = sidePad() + 'px';
       }
     }
-    
-    // Short delay then attempt resume
-    setTimeout(attemptResume, 200);
-  });
-
-  // Global callback for starting autoscroll after cards animate
-  window.carouselReady = function() {
-    console.log('=== CAROUSEL READY CALLBACK ===');
-    
-    // Ensure carousel is properly initialized
-    if (singleSetWidth === 0) {
-      calculateSingleSetWidth();
-    }
-    
-    autoScrolling = true;
-    startAutoScroll();
-    console.log('Autoscroll started with 200ms delay');
-  };
-
-  // Manual test function for debugging
-  window.testAutoscroll = function() {
-    console.log('=== MANUAL AUTOSCROLL TEST ===');
-    console.log('wrap:', wrap);
-    console.log('track:', track);
-    console.log('track element exists:', !!track);
-    console.log('GSAP available:', typeof gsap);
-    
-    // Test if GSAP can move the track manually with visual confirmation
-    if (track) {
-      console.log('Testing manual GSAP movement...');
-      console.log('Track class:', track.className);
-      console.log('Track id:', track.id);
-      console.log('Track initial position:', track.style.transform);
-      
-      // Try GSAP to method instead of set
-      console.log('Trying gsap.to() instead of gsap.set()...');
-      gsap.to(track, { 
-        x: -100, 
-        duration: 0.5,
-        ease: "none",
-        onComplete: () => console.log('GSAP to() completed'),
-        onUpdate: () => console.log('GSAP to() updating, x:', gsap.getProperty(track, "x"))
-      });
-      
-      // Try direct style manipulation as backup
-      setTimeout(() => {
-        console.log('Testing direct style manipulation...');
-        track.style.transform = 'translateX(-200px)';
-        console.log('Direct style applied:', track.style.transform);
-        setTimeout(() => {
-          track.style.transform = 'translateX(0px)';
-          console.log('Direct style reset');
-        }, 1000);
-      }, 2000);
-    }
-    
-    autoScrolling = true;
-    userInteracting = false;
-    startAutoScroll();
-  };
-
-  // Initialize immediately when DOM is ready
-  function initializeCarousel() {
-    console.log('=== CAROUSEL INITIALIZATION ===');
-    calculateSingleSetWidth();
-    console.log('Calculated singleSetWidth:', singleSetWidth);
-    currentX = 0;
-    track.style.transform = `translate3d(${currentX}px, 0, 0)`;
-    console.log('Carousel initialized - ready for autoscroll');
-    
-    // Start the animation loop immediately (will only animate when autoScrolling is true)
-    animationFrame = requestAnimationFrame(animateScroll);
-    
-    // Check viewport on scroll
-    window.addEventListener('scroll', checkViewportVisibility, { passive: true });
-  }
-
-  // Initialize as soon as DOM is ready, don't wait for full page load
-  if (document.readyState === 'loading') {
-    document.addEventListener('DOMContentLoaded', initializeCarousel);
-  } else {
-    initializeCarousel();
-  }
-
-  window.addEventListener('resize', function() {
-    calculateSingleSetWidth();
   });
 
   // Case study navigation
@@ -3712,6 +3462,17 @@ document.addEventListener('DOMContentLoaded', function() {
       bind();
     }
   })();
+</script>
+
+<script>
+// Play the card animation once each time the pointer enters a card.
+document.querySelectorAll('.project-card').forEach(card => {
+  const frame = card.querySelector('iframe.card-animation');
+  if (!frame) return;
+  card.addEventListener('mouseenter', () => {
+    if (frame.contentWindow) frame.contentWindow.postMessage('card-animation:play', '*');
+  });
+});
 </script>
 
 <script>

@@ -1,0 +1,1993 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Card Animations</title>
+<style>
+/* ============================================================
+   CARD ANIMATION PROTOTYPE
+   Scene 1: Setup guide — expanded (753:1424) <-> collapsed (761:13808)
+
+   The artboard is 960x570. Each Figma 900x1200 board is scaled by
+   --s2 (.475) to fit its height, centred, with its background
+   extended sideways to fill the frame.
+
+   Geometry is authored at the design's base grid (288px card) and
+   scaled by --s (523/288 * --guide) so it lands on the Figma
+   dimensions, taken down by --guide.
+   --fit is preview zoom only; it never touches the artboard.
+   --k scales every duration (speed control).
+   ============================================================ */
+
+:root{
+  /* artboard */
+  --frame-w: 960px;
+  --frame-h: 570px;
+
+  --guide: 1;              /* setup guide size, against its Figma 523x565 */
+  --s2:  .475;             /* a Figma 900x1200 board fit to the 570px frame height (570/1200) */
+  --awy-dx:      200.196px; /* monogram travel, Figma units — tune these */
+  --awy-dy:      0px;       /* centre top: horizontal only, keeps its height */
+  --awy-rear-dy: 2.53px;    /* centre rear: down onto the back panel */
+  --s:   calc(523 / 288 * var(--guide));  /* .90799 — 288 base -> 261.5 wide */
+  --fit: 1;                /* preview zoom, set by JS to fit the window */
+  --k:   1;                /* speed multiplier (higher = slower) */
+
+  /* Figma styles */
+  --text:        #353A44;
+  --subdued:     #596171;
+  --neutral-300: #99A5B8;
+  --border:      #D8DEE4;
+  --primary:     #675DFF;
+  --link:        #533AFD;
+  --surface:     #FFFFFF;
+  --offset:      #F5F6F8;
+  --icon-subdued:#6C7688;
+  --icon-default:#474E5A;
+  --card-border: rgba(0,39,77,0.08);
+
+  /* easing */
+  --e-sheet: cubic-bezier(.32,.72,0,1);   /* the collapse itself */
+  --e-out:   cubic-bezier(.16,1,.3,1);    /* things arriving */
+  --e-in:    cubic-bezier(.4,0,.7,1);     /* things leaving */
+}
+
+*{ box-sizing: border-box; }
+
+html,body{ height:100%; background:transparent; }
+body{
+  margin:0;
+  font-family:-apple-system,"SF Pro Text",BlinkMacSystemFont,system-ui,sans-serif;
+  -webkit-font-smoothing: antialiased;
+  overflow:hidden;
+}
+
+/* ---------- stage ---------- */
+
+/* the window behind the artboard */
+.stage{
+  position:fixed;
+  inset:0;
+  overflow:hidden;
+  background:transparent;   /* clear, for recording */
+}
+
+/* preview zoom — layout-neutral, so the artboard keeps its real size.
+   Centred off its own midpoint rather than by layout: scale() doesn't
+   shrink the layout box, so a 1200px-tall frame in a shorter window
+   would otherwise overflow downward instead of staying centred. */
+.fitter{
+  position:absolute;
+  top:50%;
+  left:50%;
+  transform: translate(-50%, -50%) scale(var(--fit));
+  transform-origin: center center;
+}
+
+/* the 960x570 artboard */
+.frame{
+  position:relative;
+  width:var(--frame-w);
+  height:var(--frame-h);
+  display:grid;
+  place-items:center;
+  overflow:hidden;
+  background:transparent;   /* clear, for recording */
+}
+
+/* scene backgrounds removed — the whole canvas is transparent */
+.board-bg, .board3-bg, .board4-bg{ display:none; }
+
+/* A Figma 900x1200 frame mapped onto the 960x570 artboard. Both scenes
+   sit in one of these, so every coordinate in either scene is the
+   literal Figma number. */
+.artboard{
+  position:absolute;
+  top:50%;
+  left:50%;
+  width:900px;
+  height:1200px;
+  transform: translate(-50%,-50%) scale(var(--s2));
+  transform-origin: center center;
+}
+
+/* Card is drawn on the 288px grid, then scaled onto its Figma size.
+   It hangs off a centre LINE rather than a top edge: the scaler is a
+   zero-height flex row at y=703.5 (the middle of the expanded guide,
+   which Figma puts at 189,421 x 523x565), and align-items:center lets
+   the card overflow it equally both ways. Scaling about that same line
+   keeps it fixed, so collapsing closes in toward the middle from both
+   ends instead of dropping from the top. */
+.scaler{
+  position:absolute;
+  left:189px;
+  top:600px;             /* the board's centre line (Figma 703.5, centred) */
+  width:288px;
+  height:0;
+  display:flex;
+  align-items:center;
+  transform: scale(var(--s));
+  transform-origin: 0 50%;
+}
+
+
+.scene{ display:none; }
+.scene.active{ display:block; }
+
+/* ============================================================
+   SCENE 1 — Setup guide card
+   ============================================================ */
+
+.card{
+  position:relative;
+  width:288px;
+  background:var(--surface);
+  border:1px solid var(--card-border);
+  border-radius:12px;
+  overflow:hidden;
+  box-shadow:
+    0 15px 35px 0 rgba(48,49,61,0.08),
+    0 5px 15px 0 rgba(0,0,0,0.12);
+  /* height is driven by JS; transition declared per-state below */
+}
+
+/* --- header --- */
+.card-header{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  padding:8px 12px;
+}
+.card-title{
+  font-size:14px;
+  line-height:20px;
+  font-weight:600;
+  letter-spacing:-0.15px;
+  color:var(--text);
+  white-space:nowrap;
+}
+.card-icons{
+  display:flex;
+  align-items:center;
+  gap:12px;
+}
+.icon-btn{
+  appearance:none;
+  border:0;
+  padding:0;
+  background:none;
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  cursor:pointer;
+  color:var(--icon-subdued);
+  transform:rotate(180deg);   /* matches Figma */
+  transition:opacity .15s ease;
+}
+.icon-btn:hover{ opacity:.6; }
+.icon-btn svg{ width:12px; height:12px; display:block; }
+
+/* --- progress bar --- */
+.card-bar{
+  display:flex;
+  align-items:center;
+  padding:0 12px 8px;
+}
+.track{
+  position:relative;
+  flex:1 0 0;
+  min-width:0;
+  height:4px;
+  background:var(--border);
+  border-radius:999px;
+}
+.fill{
+  position:absolute;
+  left:-1px;
+  top:-1px;
+  height:6px;
+  width:calc(var(--progress, 82) * 1px);
+  background:var(--primary);
+  border:1px solid var(--surface);
+  border-radius:999px;
+  transition: width calc(420ms * var(--k)) var(--e-out);
+}
+
+/* --- collapsed summary line ---
+   Absolutely positioned at y=48 (header 36 + bar 12), exactly where
+   Figma's Summary component sits, so it never affects layout.        */
+.summary{
+  position:absolute;
+  top:48px;
+  left:0;
+  right:0;
+  padding:4px 12px 8px;
+  font-size:14px;
+  line-height:20px;
+  font-weight:400;
+  letter-spacing:-0.15px;
+  color:var(--subdued);
+  white-space:nowrap;
+  pointer-events:none;
+}
+.summary .link{ color:var(--link); }
+
+/* --- task list --- */
+.tasks{ padding:4px; }
+
+.group{
+  width:280px;
+  padding:4px;
+  border-radius:8px;
+  transform-origin:50% 0;
+}
+.group.is-open{ background:var(--offset); }
+
+.group-row{
+  display:flex;
+  align-items:center;
+  gap:8px;
+  padding:4px 8px 4px 4px;
+}
+.group-title{
+  flex:1 0 0;
+  min-width:0;
+  font-size:14px;
+  line-height:20px;
+  font-weight:600;
+  letter-spacing:-0.15px;
+  color:var(--text);
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.chev{
+  display:block;
+  flex-shrink:0;
+  color:var(--icon-subdued);
+}
+.chev svg{ width:8px; height:8px; display:block; }
+
+.lock{
+  display:block;
+  flex-shrink:0;
+  color:var(--icon-default);
+}
+.lock svg{ width:12px; height:12px; display:block; }
+
+.task{
+  display:flex;
+  align-items:center;
+  gap:12px;
+  padding:8px;
+  border-radius:6px;
+}
+.ind{
+  flex-shrink:0;
+  width:12px;
+  height:12px;
+  border-radius:999px;
+  background:var(--border);
+}
+.ind.blocked{
+  background:none;
+  color:var(--border);
+}
+.ind.blocked svg{ width:12px; height:12px; display:block; }
+.task-label{
+  flex:1 0 0;
+  min-width:0;
+  font-size:14px;
+  line-height:20px;
+  font-weight:400;
+  letter-spacing:-0.08px;
+  color:var(--text);
+}
+.task.is-blocked .task-label{
+  color:var(--neutral-300);
+  letter-spacing:-0.15px;
+}
+
+/* ============================================================
+   THE MOTION
+
+   Collapse (expanded -> collapsed), ~520ms:
+     0ms    groups fade + lift, staggered bottom-up (26ms apart), done by 202ms
+     60ms   card height 310 -> 82 on the sheet curve
+     175ms  summary resolves in — it overlaps the tail of the last group's
+            fade, so the card is never an empty white box mid-collapse
+
+   Expand (collapsed -> expanded), ~530ms:
+     0ms    summary drops out (fast)
+     50ms   card height 82 -> 310
+     170ms  groups arrive top-down (28ms apart) as the space opens for them
+   ============================================================ */
+
+/* ---- collapsing ---- */
+.card[data-state="collapsed"]{
+  transition: height calc(460ms * var(--k)) var(--e-sheet) calc(60ms * var(--k));
+}
+.card[data-state="collapsed"] .group{
+  opacity:0;
+  transform:translateY(-4px) scale(.98);
+  transition:
+    opacity   calc(150ms * var(--k)) var(--e-in) calc(var(--rev) * 26ms * var(--k)),
+    transform calc(150ms * var(--k)) var(--e-in) calc(var(--rev) * 26ms * var(--k));
+}
+.card[data-state="collapsed"] .summary{
+  opacity:1;
+  transform:translateY(0);
+  transition:
+    opacity   calc(270ms * var(--k)) var(--e-out) calc(175ms * var(--k)),
+    transform calc(270ms * var(--k)) var(--e-out) calc(175ms * var(--k));
+}
+
+/* ---- expanding ---- */
+.card[data-state="expanded"]{
+  transition: height calc(480ms * var(--k)) var(--e-sheet) calc(50ms * var(--k));
+}
+.card[data-state="expanded"] .group{
+  opacity:1;
+  transform:translateY(0) scale(1);
+  transition:
+    opacity   calc(260ms * var(--k)) var(--e-out) calc((170ms + var(--i) * 28ms) * var(--k)),
+    transform calc(260ms * var(--k)) var(--e-out) calc((170ms + var(--i) * 28ms) * var(--k));
+}
+.card[data-state="expanded"] .summary{
+  opacity:0;
+  transform:translateY(4px);
+  transition:
+    opacity   calc(130ms * var(--k)) var(--e-in) 0ms,
+    transform calc(130ms * var(--k)) var(--e-in) 0ms;
+}
+
+/* instant reset — no motion */
+.card.no-anim,
+.card.no-anim *{ transition:none !important; }
+
+/* ============================================================
+   SCENE 2 — Away placement card (Figma 753:1319)
+
+   Authored on the Figma frame's own 900x1200 grid and scaled down
+   onto the 960x570 artboard, so every number below is the literal
+   Figma coordinate. --s2 is the only conversion.
+   ============================================================ */
+
+.board{
+  font-family:"Graphik","Graphik Trial",-apple-system,"SF Pro Text",system-ui,sans-serif;
+}
+
+.board-bg{
+  position:absolute;
+  pointer-events:none;
+  inset:0 -600px;          /* bleed sideways to fill the wide frame */
+  background:linear-gradient(180deg, #E5E7E8 0%, #D0D1D5 100%);
+}
+
+/* Two views of the case, cross-faded. Both are centred on the board;
+   the rear shot is cropped at the case's base, so sitting it flush with
+   the board's bottom edge puts the bottom of the luggage there too. */
+.luggage{
+  position:absolute;
+  left:83px;
+  width:734px;
+  object-fit:cover;
+  pointer-events:none;
+  -webkit-user-drag:none;
+  opacity:0;
+  transition: opacity calc(130ms * var(--k)) var(--e-in);   /* leaving */
+}
+/* Vertical rhythm taken from 753:2105 (the 750x900 mobile frame):
+   control at 19.08% of the height, then a 4.67% gap before the case.
+   That frame is a different aspect, so only the proportions carry
+   over — the element sizes stay the ones from the 900x1200 frame. */
+.luggage-front{ top:539px; height:515px; }   /* 459 per 753:2105, dropped 80 */
+.luggage-rear { bottom:0;  height:538px; }   /* 734 x 538, flush to y=1200 */
+
+/* the arriving plate waits for the departing one to clear */
+.board[data-placement="topleft"]   .luggage-front,
+.board[data-placement="centertop"] .luggage-front,
+.board[data-placement="centerrear"] .luggage-rear{
+  opacity:1;
+  transition: opacity calc(160ms * var(--k)) var(--e-out) calc(160ms * var(--k));
+}
+
+/* --- the awy monogram ---
+   Its box is the Figma group bounds; the move is a plain translate
+   of that box, so the three letters travel as one.                 */
+.awy{
+  position:absolute;
+  pointer-events:none;     /* printed on the case — never hit-tested */
+  left:198px;
+  top:918px;               /* holds its 379 offset below the front plate */
+  width:103.608px;
+  height:41.443px;
+}
+.ltr{ position:absolute; overflow:hidden; }
+.lyr{ position:absolute; }
+.lyr svg{ position:absolute; inset:0; display:block; }
+
+.ltr-a{ left:0;        top:0;       width:31.082px; height:41.443px; }
+.ltr-w{ left:34.536px; top:1.726px; width:37.989px; height:37.989px; }
+.ltr-y{ left:74.252px; top:1.726px; width:29.355px; height:39.716px; }
+
+/* light layer under, dark layer over — the embossed edge */
+.lyr-a-light{ inset:16.2%  3.78%  25.2%  16.22%; }
+.lyr-a-dark { inset:16%    4.59%  20.2%  3.47%;  }
+.lyr-w-light{ inset:15.6%  5.02%  25%    12.13%; }
+.lyr-w-dark { inset:16%    19.98% 19.4%  4.26%;  }
+.lyr-y-light{ inset:17.4%  5.8%   26.12% 13.99%; }
+.lyr-y-dark { inset:18.4%  36.34% 20%    5.71%;  }
+
+/* --- the placement control --- */
+.control{
+  position:absolute;
+  left:196px;
+  top:228.93px;            /* 19.08% of the board height, per 753:2105 */
+  width:534px;
+  height:174px;
+}
+.control-bg{
+  position:absolute;
+  pointer-events:none;
+  inset:0;
+  background:#FFFFFF;
+  border-radius:16px;
+  box-shadow:0 16px 32px -8px rgba(12,12,13,0.4);   /* Drop Shadow/600 */
+}
+.control-title{
+  position:absolute;
+  pointer-events:none;
+  left:184px;      /* Figma 380 - control 196 */
+  top:24px;        /* Figma 279 - control 255 */
+  width:167px;
+  font-size:28px;
+  line-height:34px;
+  font-weight:700;          /* Figma is 500 */
+  letter-spacing:-0.5px;    /* Figma is 0.5 */
+  color:#00344B;
+  text-align:center;
+}
+
+.seg{
+  position:absolute;
+  left:24px;       /* Figma 220 - 196 */
+  top:70px;        /* Figma 325 - 255 */
+  width:480px;
+  height:64px;
+  background:#FFFFFF;
+  border:1px solid #E2E2E2;
+  border-radius:32px;
+}
+.seg-pill{
+  position:absolute;
+  pointer-events:none;     /* the labels take the clicks, not the pill */
+  top:8px;
+  height:48px;
+  background:#00344B;
+  border-radius:40px;
+}
+.seg-lbl{
+  position:absolute;
+  top:20px;        /* Figma 347 - 325 = 22, lifted 2 */
+  height:24px;
+  font-size:22px;  /* Figma is 20 */
+  line-height:24px;
+  letter-spacing:-0.5px;
+  text-align:center;
+  cursor:pointer;
+  white-space:nowrap;
+  user-select:none;
+  -webkit-user-select:none;
+}
+
+/* font-weight cannot be transitioned, and 400 -> 500 makes this text
+   1.94px wider — centred in a fixed box, that snaps each edge out by
+   ~1px in a single frame. So both weights are rendered stacked and
+   cross-faded instead: the box never reflows and nothing jumps. */
+.seg-lbl span{
+  position:absolute;
+  inset:0;
+  text-align:center;
+  transition: opacity calc(180ms * var(--k)) var(--e-out);
+}
+.seg-lbl .lbl-reg{ font-weight:400; color:#727373; opacity:1; }
+.seg-lbl .lbl-sel{ font-weight:500; color:#FFFFFF; opacity:0; }
+/* Reordered, keeping Figma's own margins (44 left, 32 right) and the
+   gaps between slots (61, 47) — the widths only swap places, so the
+   run still ends exactly where Figma had it. */
+.seg-lbl[data-opt="topleft"]{    left:44px;  width:82px;  }
+.seg-lbl[data-opt="centertop"]{  left:187px; width:107px; }
+.seg-lbl[data-opt="centerrear"]{ left:341px; width:107px; }
+
+/* ============================================================
+   SCENE 2 MOTION
+
+   0ms    the pill slides + resizes to the new option (420ms)
+          the labels trade colour underneath it (180ms)
+          the monogram starts fading out (130ms)
+   130ms  it is invisible, so its position snaps — transform carries
+          a 0s duration on a 130ms delay, which is the whole trick
+   160ms  it fades back up in the new spot (160ms)
+
+   The monogram and the case plates share these numbers on purpose.
+   The monogram is printed on the shell: if it outlived the plate by
+   even a frame it would hang on bare gradient.
+
+   The monogram never travels: it is printed on the case, so sliding
+   it across the shell would read as the wrong physics. Going to or
+   from "Center rear" the whole case swaps the same way — the front
+   plate clears, then the rear plate arrives on the same 160ms beat,
+   so the monogram lands with it rather than ahead of it.
+   ============================================================ */
+
+/* The pill used to animate left+width. Both are layout properties, so
+   every frame relaid out the control and re-rasterised the label on top
+   of it at fractional positions — and the layer was promoted for the
+   move then dropped afterwards, so the text re-rendered on settle. Now
+   the travel (up to 309px) is a composited transform and only the width
+   (at most 25px) touches layout; will-change keeps the layer stable so
+   there is no promote/demote flicker. */
+.seg-pill{
+  will-change: transform;
+  transition:
+    transform calc(420ms * var(--k)) var(--e-sheet),
+    width     calc(420ms * var(--k)) var(--e-sheet);
+}
+.seg-lbl span{ transform: translateZ(0); }   /* stable raster layer */
+
+.awy{
+  opacity:1;
+  transition: transform 0s linear calc(130ms * var(--k));  /* snap, unseen */
+}
+
+/* The monogram is printed on the shell, so it swaps when the case does.
+   Its fade used to be a JS setTimeout while the plates used CSS delays —
+   two clocks, and setTimeout slips exactly when a big image is
+   compositing. One keyframe pass puts it on the plates' clock instead:
+   out over 130ms (as the old plate clears), 30ms of absence, then in
+   over 160ms starting at 160ms — the same frame the new plate arrives. */
+@keyframes awy-swap{
+  0%      { opacity:1; animation-timing-function: var(--e-in);  }
+  40.625% { opacity:0; animation-timing-function: linear;       }  /* 130ms */
+  50%     { opacity:0; animation-timing-function: var(--e-out); }  /* 160ms */
+  100%    { opacity:1; }                                           /* 320ms */
+}
+.awy.swap{ animation: awy-swap calc(320ms * var(--k)) both; }
+
+/* Pill geometry per option, each centred on its own label with the
+   36px of padding Figma draws around "Top left". "Center rear" cannot
+   take 36 — it would run past the container — so it uses the widest
+   padding that still keeps the 8px end inset: 24px. */
+.seg-pill{ left:8px; }   /* the one layout position; states translate from here */
+.board[data-placement="topleft"]    .seg-pill{ transform:translateX(0);     width:154px; }
+.board[data-placement="centertop"]  .seg-pill{ transform:translateX(143px); width:179px; }
+.board[data-placement="centerrear"] .seg-pill{ transform:translateX(309px); width:155px; }
+
+.board[data-placement="topleft"]    .seg-lbl[data-opt="topleft"]    .lbl-reg,
+.board[data-placement="centertop"]  .seg-lbl[data-opt="centertop"]  .lbl-reg,
+.board[data-placement="centerrear"] .seg-lbl[data-opt="centerrear"] .lbl-reg{ opacity:0; }
+
+.board[data-placement="topleft"]    .seg-lbl[data-opt="topleft"]    .lbl-sel,
+.board[data-placement="centertop"]  .seg-lbl[data-opt="centertop"]  .lbl-sel,
+.board[data-placement="centerrear"] .seg-lbl[data-opt="centerrear"] .lbl-sel{ opacity:1; }
+
+/* The monogram's two resting places, as offsets from the Figma position.
+   Horizontal only: centre x 249.80 -> 450 (the case's centre line),
+   holding its own y of 869.72. */
+.board[data-placement="topleft"]    .awy{ transform: translate(0px, 0px); }
+.board[data-placement="centertop"]  .awy{ transform: translate(var(--awy-dx), var(--awy-dy)); }
+.board[data-placement="centerrear"] .awy{ transform: translate(var(--awy-dx), var(--awy-rear-dy)); }
+
+.board.no-anim,
+.board.no-anim *{ transition:none !important; }
+
+/* ============================================================
+   SCENE 3 — Payments management (Figma 775:5763)
+
+   Same 900x1200 board as the others. The widget's inner frames are
+   auto-layout in Figma, so their metadata coordinates are relative;
+   the values below are the resolved absolute positions, each one
+   cross-checked against the Figma render before use.
+   ============================================================ */
+
+.board3{
+  font-family:"SF Pro Text",-apple-system,BlinkMacSystemFont,system-ui,sans-serif;
+  color:#353A44;
+}
+.board3-bg{
+  position:absolute;
+  inset:0 -600px;          /* bleed sideways to fill the wide frame */
+  background:linear-gradient(50.5977915227199deg, #1A496D 1.6863%, #002642 80.169%);
+}
+
+/* --- the Connect volume widget --- */
+.widget{
+  position:absolute;
+  z-index:2;               /* rows emerge from behind it, never over it */
+  left:126px;
+  top:295.271px;           /* state two centred; state one drops it 145.479 */
+  width:647.5px;
+  height:318.5px;
+  background:#FFFFFF;
+  border-radius:14px;
+  box-shadow:
+    inset 0 0 0 1.75px #D8DEE4,        /* the frame stroke, drawn inside */
+    0 16px 8px rgba(12,12,13,0.1),
+    0 4px 2px rgba(12,12,13,0.05);
+}
+.widget-title{
+  position:absolute;
+  left:28px;
+  top:21px;
+  width:563.5px;
+  font-size:24.5px;
+  line-height:35px;
+  letter-spacing:-0.2625px;
+  color:#353A44;
+  white-space:nowrap;
+}
+.widget-info{
+  position:absolute;
+  left:598.5px;    /* 570.5 + 28 padding */
+  top:28px;        /* 7 + 21 */
+  width:21px;
+  height:21px;
+}
+.widget-info svg{ position:absolute; inset:0; display:block; }
+/* Value and delta are one baseline-aligned row, as in Figma, so a
+   longer value pushes the delta along instead of running under it. */
+.widget-value-row{
+  position:absolute;
+  left:28px;
+  top:56px;        /* 21 + 35 */
+  display:flex;
+  align-items:baseline;
+  gap:7px;         /* Figma: value wrapper 189 + 7 -> subvalue at 196 */
+}
+.widget-value{
+  font-size:31.5px;
+  line-height:49px;
+  font-weight:600;
+  letter-spacing:-0.84px;
+  color:#353A44;
+  white-space:nowrap;
+  font-feature-settings:"lnum" 1,"pnum" 1;
+}
+.widget-sub{
+  font-size:21px;
+  line-height:28px;
+  font-weight:600;
+  letter-spacing:-0.042px;
+  color:#217005;
+  white-space:nowrap;
+}
+
+/* --- the chart, in board coordinates --- */
+.chart-el{ position:absolute; }
+.chart-el svg{ position:absolute; inset:0; display:block; }
+
+.y-rule{ left:28px; width:535.5px; height:1.75px; }
+.y-rule-hi{ top:129.5px; }
+.y-rule-lo{ top:260.75px; }
+.y-label{
+  position:absolute;
+  left:574px;
+  width:56px;
+  font-size:17.5px;
+  line-height:17.5px;
+  color:#99A5B8;
+}
+.y-label-hi{ top:121.6px; }   /* centred on the 1,600 rule */
+.y-label-lo{ top:252.9px; }   /* centred on the 1,500 rule */
+
+.chart-dash{ left:29.75px; top:211.75px; width:528.5px; height:3.5px; }
+.chart-line{
+  left:29.75px;
+  top:157.03px;
+  width:530.25px;
+  height:77.943px;
+  transform:scaleY(-1);       /* Figma flips it on the Y axis */
+}
+.chart-dot{ left:551.25px; top:168px; width:17.5px; height:17.5px; }
+
+.x-label{
+  position:absolute;
+  top:269.5px;
+  font-size:21px;
+  line-height:24.5px;
+  color:#6C7688;
+  white-space:nowrap;
+}
+.x-label-jan{ left:28px; }
+.x-label-today{ left:502px; width:60px; text-align:right; }
+
+/* --- the three starred rows --- */
+.starred{
+  position:absolute;
+  z-index:1;
+  left:126px;
+  width:650.391px;
+  height:78.188px;
+  display:flex;
+  align-items:center;
+  gap:21.094px;
+  padding:21.094px;
+  background:#FFFFFF;
+  border-radius:17.578px;
+  box-shadow:
+    inset 0 0 0 1.758px var(--row-stroke, #FFFFFF),
+    0 16px 8px rgba(12,12,13,0.1),
+    0 4px 2px rgba(12,12,13,0.05);
+}
+.starred-1{ top:632.471px; }
+.starred-2{ top:729.501px; }
+.starred-3{ top:826.541px; --row-stroke:#F5F6F8; }
+
+.starred-title{
+  flex:0 0 228.516px;
+  width:228.516px;
+  font-size:24.609px;
+  line-height:35.156px;
+  letter-spacing:-0.2637px;
+  color:#353A44;
+  white-space:nowrap;
+  overflow:hidden;
+  text-overflow:ellipsis;
+}
+.starred-spark{
+  flex:1 0 0;
+  min-width:0;
+  position:relative;
+  display:flex;
+  align-items:center;
+}
+.starred-spark span{ display:block; width:100%; position:relative; }
+.starred-spark svg{ display:block; width:100%; height:100%; }
+.starred-spark.tall span{ height:17.578px; }
+.starred-spark.short span{ height:13.028px; }
+
+.starred-value{
+  flex:0 0 98.438px;
+  font-size:24.609px;
+  line-height:35.156px;
+  letter-spacing:-0.2637px;
+  color:#353A44;
+  white-space:nowrap;
+  font-feature-settings:"lnum" 1,"pnum" 1;
+}
+.starred-sub{
+  flex:0 0 98.438px;
+  font-size:24.609px;
+  line-height:35.156px;
+  letter-spacing:-0.2637px;
+  white-space:nowrap;
+  font-feature-settings:"lnum" 1,"pnum" 1;
+}
+.starred-sub.up{   color:#217005; }
+.starred-sub.down{ color:#B13600; }
+
+/* ============================================================
+   SCENE 3 MOTION
+
+   State one (775:5479) is the same dashboard with the widget sitting
+   145px lower and no rows beneath it. So the change is one move plus
+   a reveal:
+
+   0ms    the widget rises 544 -> 399 on the sheet curve (520ms)
+   80ms   the rows are already arriving, 60ms apart, so the reveal
+          runs WITH the move rather than after it — the last one
+          settles at 500ms, just before the card lands at 520ms
+
+   Two of the three rows sit behind the card in state one, so the
+   card is held above them: they are uncovered as it rises instead
+   of popping on top of it.
+
+   Going back, the rows leave fast (120ms) so the widget is not
+   sliding down onto something still visible.
+   ============================================================ */
+
+.widget{
+  transition: transform calc(520ms * var(--k)) var(--e-sheet);
+}
+.board3[data-view="one"] .widget{ transform: translateY(145.479px); }
+.board3[data-view="two"] .widget{ transform: translateY(0); }
+
+.starred{
+  opacity:0;
+  transform: translateY(-10px);
+  transition:
+    opacity   calc(120ms * var(--k)) var(--e-in),
+    transform calc(120ms * var(--k)) var(--e-in);
+}
+.board3[data-view="two"] .starred{
+  opacity:1;
+  transform: translateY(0);
+  transition:
+    opacity   calc(300ms * var(--k)) var(--e-out) calc((80ms + var(--i) * 60ms) * var(--k)),
+    transform calc(300ms * var(--k)) var(--e-out) calc((80ms + var(--i) * 60ms) * var(--k));
+}
+
+.board3.no-anim,
+.board3.no-anim *{ transition:none !important; }
+
+
+
+/* ============================================================
+   SCENE 4 — Freight marketplace (Figma 753:1358)
+
+   Figma's text nodes here carry -translate-y-1/2, so their `top`
+   is a vertical CENTRE, not a top edge; three values are right
+   edges (-translate-x-full). .lc-t and .lc-r encode those two
+   conventions so every number below is the literal Figma value.
+   Card children are positioned against the card, not the board,
+   so the card can be moved later in one place.
+   ============================================================ */
+
+.board4{
+  font-family:"Inter",-apple-system,"SF Pro Text",system-ui,sans-serif;
+  color:#000000;
+}
+.board4-bg{ position:absolute; inset:0 -600px; }   /* bleed sideways to fill the wide frame */
+.board4-bg svg{ position:absolute; inset:0; display:block; }
+
+
+
+
+/* text conventions: .lc-t is centred on its top value, .lc-r is right-aligned to it */
+.lc-t{ position:absolute; transform:translateY(-50%); white-space:nowrap; }
+.lc-r{ position:absolute; transform:translate(-100%,-50%); white-space:nowrap; text-align:right; }
+
+.lc-head{ left:126.8px; top:49.74px;  font-size:29.403px; line-height:36.754px; font-weight:600; }
+.lc-price{ left:543.96px; top:47.9px;  font-size:29.403px; line-height:36.754px; font-weight:600; }
+.lc-broker{ left:126.8px; top:86.51px; font-size:18.377px; line-height:25.728px; font-weight:500;
+            letter-spacing:0.9188px; color:#545454; }
+.lc-rate{ left:637.98px; top:86.51px;  font-size:18.377px; line-height:25.728px; font-weight:700;
+          color:#545454; }
+
+.lc-city{ left:126.8px; font-size:22.052px; line-height:36.754px; font-weight:500;
+          letter-spacing:0.9188px; }
+.lc-city-a{ top:185.73px; }
+.lc-city-b{ top:273.94px; }
+
+.lc-when{ left:126.8px; font-size:22.052px; line-height:36.754px; font-weight:500; color:#5E5E5E; }
+.lc-when-a{ top:215.13px; }
+.lc-when-b{ top:307.02px; }
+
+.lc-rating{ left:352.84px; font-size:22.052px; line-height:36.754px; font-weight:500; color:#5E5E5E; }
+.lc-rating-a{ top:215.13px; }
+.lc-rating-b{ top:305.18px; }
+
+.lc-dist{ font-size:22.052px; line-height:25.728px; font-weight:500; color:#6A6A6A; }
+.lc-dist-a{ left:638.09px; top:202.28px; }
+.lc-dist-b{ left:636.17px; top:294.16px; }
+
+.lc-spec{ left:126.8px; top:404.41px; font-size:22.052px; line-height:36.754px; font-weight:500;
+          color:#5E5E5E; }
+
+.lc-tile{
+  position:absolute;
+  left:34.92px;
+  top:31.24px;
+  width:73.507px;
+  height:73.507px;
+  background:#000000;
+  border-radius:7.351px;
+}
+.lc-tile-mark{
+  position:absolute;
+  left:49.62px;
+  top:60.64px;
+  width:44.104px;
+  height:16.539px;
+  overflow:hidden;
+}
+.lc-tile-mark img{
+  position:absolute;
+  left:0;
+  top:-33.33%;
+  width:250.77%;
+  height:188.89%;
+  max-width:none;
+  display:block;
+}
+
+.lc-rule{ position:absolute; left:29.4px; width:610.112px; height:1.83769px; }
+.lc-rule svg{ position:absolute; inset:0; display:block; }
+.lc-rule-a{ top:135.99px; }
+.lc-rule-b{ top:356.51px; }
+
+.lc-route{ position:absolute; left:62.48px; top:181.93px; width:18.377px; height:102.911px; }
+.lc-icon{ position:absolute; width:18.377px; height:18.377px; }
+.lc-route svg, .lc-icon svg{ position:absolute; inset:0; display:block; }
+.lc-star-a{ left:328.95px; top:203.98px; }
+.lc-star-b{ left:328.95px; top:295.87px; }
+.lc-snow{  left:62.48px;  top:395.1px;  }
+
+/* ============================================================
+   SCENE 4 CAROUSEL — cards 7 / 8 / 6 (778:8631, 778:8661, 778:8599)
+
+   Those three frames are 366x246: the existing card at exactly
+   1/1.837689. Their internals sit on the same grid, so every card
+   reuses the .lc-* rules and only the copy and the broker mark change.
+   The track carries them; the frame's own overflow clips the ones
+   waiting off-board, so no extra viewport is needed.
+   ============================================================ */
+
+/* Equal 48px of a card either side means the live card must be CENTRED:
+   (900 - 672.594) / 2 = 113.703. Step is then 738.297 (65.703 gap), which
+   puts the neighbours' edges at 48 and 852. The track starts one step to
+   the left so slide 1 — the real first card — sits at 113.703. */
+.load-track{
+  position:absolute;
+  left:-624.594px;         /* 113.703 - 738.297 */
+  top:373.965px;
+  display:flex;
+  align-items:flex-start;
+  gap:65.703px;
+  transform: translateX(calc((1 - var(--slide, 1)) * 738.297px));
+  transition: transform calc(620ms * var(--k)) var(--e-sheet);
+}
+.load-card{
+  position:relative;
+  flex:0 0 672.594px;
+  width:672.594px;
+  height:452.071px;
+  background:#FFFFFF;
+  box-shadow:0 16px 32px -8px rgba(12,12,13,0.4);
+}
+
+/* The track is [c3' c0 c1 c2 c3 c0' c1'] — a clone of the last card at the
+   head and of the first two at the tail. So every slide, including the
+   first and the last, has a real neighbour on both sides. Slide 5 (the
+   copy of card 0) is pixel-identical to slide 1, peeks included, which is
+   what lets the wrap happen without a seam or a change of direction. */
+
+.board4.no-anim,
+.board4.no-anim *{ transition:none !important; }
+
+/* --- broker marks, each scaled off its 366-wide frame --- */
+.lc-tile-flexport  { background:#052439; }
+.lc-tile-reverse   { background:#052439; }
+.lc-tile-transplace{ background:#A41E36; }
+
+.lc-mark{ position:absolute; overflow:hidden; }
+.lc-mark img{ position:absolute; max-width:none; display:block; }
+
+.lc-mark-flexport{ left:44.105px; top:60.644px; width:56.968px; height:14.702px; }
+.lc-mark-flexport img{ left:-54.97%; top:-150%; width:209.27%; height:397.5%; }
+
+.lc-mark-reverse{ left:56.968px; top:53.293px; width:27.565px; height:27.565px; }
+.lc-mark-reverse img{ left:-271.21%; top:-114.81%; width:640.6%; height:329.63%; }
+
+.lc-mark-transplace{ left:58.806px; top:53.293px; width:25.728px; height:29.403px; }
+.lc-mark-transplace img{ left:-400.86%; top:-389.47%; width:1822.07%; height:884.21%; }
+/* covers the stray edge of the glyph, as the source frame does */
+.lc-patch-transplace{
+  position:absolute;
+  left:80.858px;
+  top:69.832px;
+  width:9.188px;
+  height:12.864px;
+  background:#A41E36;
+}
+
+/* ============================================================
+   PLACEHOLDER SCENES
+   ============================================================ */
+/* An unbuilt scene still fills the whole artboard, so switching scenes
+   never changes the size of the thing you are looking at. Absolute
+   against .frame, so it cannot push the centring grid row around. */
+.placeholder{
+  position:absolute;
+  inset:0;
+  display:grid;
+  place-items:center;
+  border:1px dashed rgba(255,255,255,.35);
+  color:rgba(255,255,255,.65);
+  font-size:12px;
+  letter-spacing:.02em;
+  text-align:center;
+  line-height:1.6;
+}
+
+/* ============================================================
+   CHROME (hidden with H before recording)
+   ============================================================ */
+.chrome{
+  position:fixed;
+  left:50%;
+  bottom:24px;
+  transform:translateX(-50%);
+  display:flex;
+  align-items:center;
+  gap:6px;
+  padding:6px;
+  border-radius:12px;
+  background:rgba(14,17,27,.93);
+  border:1px solid rgba(255,255,255,.1);
+  box-shadow:0 8px 32px rgba(0,0,0,.3);
+  font-size:11px;
+  color:rgba(255,255,255,.85);
+  user-select:none;
+  transition:opacity .25s ease, transform .25s ease;
+  z-index:10;
+}
+.chrome[hidden]{
+  display:flex !important;
+  opacity:0;
+  pointer-events:none;
+  transform:translateX(-50%) translateY(12px);
+}
+.chrome button{
+  appearance:none;
+  white-space:nowrap;
+  border:0;
+  border-radius:7px;
+  padding:6px 10px;
+  background:rgba(255,255,255,.08);
+  color:inherit;
+  font:inherit;
+  cursor:pointer;
+  transition:background .15s ease;
+}
+.chrome button:hover{ background:rgba(255,255,255,.16); }
+.chrome button.on{ background:#675DFF; color:#fff; }
+.chrome .sep{
+  width:1px;
+  height:18px;
+  background:rgba(255,255,255,.14);
+  margin:0 3px;
+}
+.chrome .lbl{
+  padding:0 4px 0 6px;
+  opacity:.45;
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+}
+.hint{
+  position:fixed;
+  left:50%;
+  bottom:6px;
+  transform:translateX(-50%);
+  font-size:10px;
+  color:rgba(255,255,255,.4);
+  font-family:ui-monospace,SFMono-Regular,Menlo,monospace;
+  transition:opacity .25s ease;
+  z-index:10;
+}
+.hint[hidden]{ display:block !important; opacity:0; }
+
+/* ---- embed mode (?embed) — for iframing on a site ----
+   No controls, no hint, transparent, scaled to fill the iframe. */
+html.embed .chrome, html.embed .hint{ display:none !important; }
+</style>
+</head>
+<body>
+
+<div class="stage" id="stage">
+ <div class="fitter" id="fitter">
+  <div class="frame" id="frame">
+    <!-- ============ SCENE 1 ============ -->
+    <div class="scene active" data-scene="1">
+     <div class="artboard">
+
+
+      <div class="scaler" id="scaler">
+      <div class="card" id="card" data-state="expanded">
+
+        <div class="card-header">
+          <div class="card-title">Setup guide</div>
+          <div class="card-icons">
+            <button class="icon-btn" id="expandBtn" aria-label="Collapse">
+              <svg viewBox="0 0 21.78 21.78" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M12.2513 4.5375C11.4995 4.5375 10.89 3.92805 10.89 3.17625C10.89 2.42445 11.4995 1.815 12.2513 1.815H18.6038C19.3555 1.815 19.965 2.42445 19.965 3.17625V9.52875C19.965 10.2805 19.3555 10.89 18.6038 10.89C17.852 10.89 17.2425 10.2805 17.2425 9.52875V6.4626L6.4626 17.2425H9.52875C10.2805 17.2425 10.89 17.852 10.89 18.6038C10.89 19.3555 10.2805 19.965 9.52875 19.965H3.17625C2.42445 19.965 1.815 19.3555 1.815 18.6038V12.2513C1.815 11.4995 2.42445 10.89 3.17625 10.89C3.92805 10.89 4.5375 11.4995 4.5375 12.2513V15.3174L15.3174 4.5375H12.2513Z" fill="currentColor"/></svg>
+            </button>
+            <button class="icon-btn" aria-label="Close">
+              <svg viewBox="0 0 21.78 21.78" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M2.26682 2.26682C2.8693 1.66434 3.84611 1.66434 4.4486 2.26682L10.89 8.70818L17.3313 2.26682C17.9338 1.66434 18.9106 1.66434 19.5131 2.26682C20.1156 2.8693 20.1156 3.84611 19.5131 4.4486L13.0717 10.89L19.5131 17.3313C20.1156 17.9338 20.1156 18.9106 19.5131 19.5131C18.9106 20.1156 17.9338 20.1156 17.3313 19.5131L10.89 13.0717L4.4486 19.5131C3.84611 20.1156 2.8693 20.1156 2.26682 19.5131C1.66434 18.9106 1.66434 17.9338 2.26682 17.3313L8.70818 10.89L2.26682 4.4486C1.66434 3.84611 1.66434 2.8693 2.26682 2.26682Z" fill="currentColor"/></svg>
+            </button>
+          </div>
+        </div>
+
+        <div class="card-bar">
+          <div class="track"><div class="fill" id="fill"></div></div>
+        </div>
+
+        <div class="summary" id="summary">Choose your business model</div>
+
+        <div class="tasks" id="tasks">
+
+          <div class="group is-open" style="--i:0; --rev:2">
+            <div class="group-row">
+              <div class="group-title">Set up Connect</div>
+              <span class="chev">
+                <svg viewBox="0 0 14.52 14.52" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.10003 10.2847C0.817437 10.0139 0.6897 9.65046 0.680709 9.2877C0.684122 8.95369 0.809731 8.62021 1.05908 8.36002L6.27721 2.91502C6.53382 2.64725 6.88857 2.49578 7.25945 2.49563C7.63032 2.49547 7.9852 2.64665 8.24204 2.9142L13.4602 8.35013C13.7123 8.61276 13.8485 8.95028 13.8394 9.2877C13.8407 9.64706 13.7005 10.0063 13.4208 10.2748C12.8785 10.7954 12.0167 10.7778 11.4961 10.2355L7.26083 5.82341L3.0247 10.2437C2.50452 10.7865 1.64282 10.8049 1.10003 10.2847Z" fill="currentColor"/></svg>
+              </span>
+            </div>
+            <div class="group-body">
+              <div class="task">
+                <span class="ind"></span>
+                <span class="task-label">Choose your business model</span>
+              </div>
+              <div class="task is-blocked">
+                <span class="ind blocked">
+                  <svg viewBox="0 0 21.78 21.78" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.815" y="1.815" width="18.15" height="18.15" rx="9.075" stroke="currentColor" stroke-width="3.63"/><path d="M3.62998 18.1498L18.15 3.62976" stroke="currentColor" stroke-width="3.63"/></svg>
+                </span>
+                <span class="task-label">Create a test account</span>
+              </div>
+              <div class="task is-blocked">
+                <span class="ind blocked">
+                  <svg viewBox="0 0 21.78 21.78" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.815" y="1.815" width="18.15" height="18.15" rx="9.075" stroke="currentColor" stroke-width="3.63"/><path d="M3.62998 18.1498L18.15 3.62976" stroke="currentColor" stroke-width="3.63"/></svg>
+                </span>
+                <span class="task-label">Create a test charge</span>
+              </div>
+              <div class="task is-blocked">
+                <span class="ind blocked">
+                  <svg viewBox="0 0 21.78 21.78" fill="none" xmlns="http://www.w3.org/2000/svg"><rect x="1.815" y="1.815" width="18.15" height="18.15" rx="9.075" stroke="currentColor" stroke-width="3.63"/><path d="M3.62998 18.1498L18.15 3.62976" stroke="currentColor" stroke-width="3.63"/></svg>
+                </span>
+                <span class="task-label">View your integration guide</span>
+              </div>
+            </div>
+          </div>
+
+          <div class="group" style="--i:1; --rev:1">
+            <div class="group-row">
+              <div class="group-title">Verify your business</div>
+              <span class="chev">
+                <svg viewBox="0 0 14.52 14.52" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.10003 4.23532C0.557244 4.75549 0.53891 5.61719 1.05908 6.15998L6.27721 11.605C6.53382 11.8727 6.88857 12.0242 7.25945 12.0244C7.63032 12.0245 7.9852 11.8734 8.24204 11.6058L13.4602 6.16988C13.9808 5.62752 13.9632 4.7658 13.4208 4.24518C12.8785 3.72455 12.0167 3.74217 11.4961 4.28453L7.26083 8.69659L3.0247 4.27627C2.50452 3.73348 1.64282 3.71515 1.10003 4.23532Z" fill="currentColor"/></svg>
+              </span>
+            </div>
+          </div>
+
+          <div class="group" style="--i:2; --rev:0">
+            <div class="group-row">
+              <span class="lock">
+                <svg viewBox="0 0 21.78 21.78" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M11.9109 15.3142C12.3242 15.0038 12.5916 14.5095 12.5916 13.9528C12.5916 13.0131 11.8297 12.2513 10.89 12.2513C9.95025 12.2513 9.18844 13.0131 9.18844 13.9528C9.18844 14.5095 9.45577 15.0038 9.86906 15.3142V16.6753C9.86906 17.2392 10.3262 17.6963 10.89 17.6963C11.4538 17.6963 11.9109 17.2392 11.9109 16.6753V15.3142Z" fill="currentColor"/><path fill-rule="evenodd" clip-rule="evenodd" d="M4.76438 5.445V8.1675H3.40313C2.65133 8.1675 2.04188 8.77695 2.04188 9.52875V17.6963C2.04188 19.9516 3.87023 21.78 6.12563 21.78H15.6544C17.9098 21.78 19.7381 19.9516 19.7381 17.6963V9.52875C19.7381 8.77695 19.1287 8.1675 18.3769 8.1675H17.0156V5.445C17.0156 2.43781 14.5778 0 11.5706 0H10.2094C7.20218 0 4.76438 2.43781 4.76438 5.445ZM14.9738 8.1675V5.445C14.9738 3.56551 13.4501 2.04188 11.5706 2.04188H10.2094C8.32988 2.04188 6.80625 3.56551 6.80625 5.445V8.1675H14.9738ZM4.08375 17.6963V10.2094H17.6963V17.6963C17.6963 18.8239 16.7821 19.7381 15.6544 19.7381H6.12563C4.99793 19.7381 4.08375 18.8239 4.08375 17.6963Z" fill="currentColor"/></svg>
+              </span>
+              <div class="group-title">Go live</div>
+              <span class="chev">
+                <svg viewBox="0 0 14.52 14.52" fill="none" xmlns="http://www.w3.org/2000/svg"><path fill-rule="evenodd" clip-rule="evenodd" d="M1.10003 4.23532C0.557244 4.75549 0.53891 5.61719 1.05908 6.15998L6.27721 11.605C6.53382 11.8727 6.88857 12.0242 7.25945 12.0244C7.63032 12.0245 7.9852 11.8734 8.24204 11.6058L13.4602 6.16988C13.9808 5.62752 13.9632 4.7658 13.4208 4.24518C12.8785 3.72455 12.0167 3.74217 11.4961 4.28453L7.26083 8.69659L3.0247 4.27627C2.50452 3.73348 1.64282 3.71515 1.10003 4.23532Z" fill="currentColor"/></svg>
+              </span>
+            </div>
+          </div>
+
+        </div>
+      </div>
+      </div>
+
+     </div>
+    </div>
+
+    <!-- ============ SCENE 2 ============ -->
+    <div class="scene" data-scene="2">
+      <div class="artboard board" id="board" data-placement="topleft">
+
+        <div class="board-bg"></div>
+
+
+        <img class="luggage luggage-front" src="luggage.png" alt="">
+        <img class="luggage luggage-rear"  src="luggage-rear.png" alt="">
+
+        <div class="awy">
+          <div class="ltr ltr-a">
+            <div class="lyr lyr-a-light">
+              <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 24.8676 24.2856" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g>
+              <path d="M24.6978 22.7937C24.6978 22.7108 24.5298 22.4621 24.4458 22.1306C24.3618 21.799 24.1938 21.4675 24.1938 21.3846C24.1938 21.3017 24.0258 21.0531 23.9418 20.8044C23.8578 20.5557 23.6897 20.3071 23.6897 20.2242C23.6057 20.1413 23.6057 19.8927 23.5217 19.8098C23.5217 19.7269 23.3537 19.4782 23.2697 19.2296C23.1857 19.0638 23.1017 18.8151 23.1017 18.8151C23.1017 18.8151 22.9337 18.4007 22.6817 17.9034C22.4297 17.4061 22.2616 16.9916 22.2616 16.9088C22.2616 16.8259 22.1776 16.743 22.1776 16.743C22.1776 16.743 22.0936 16.4943 21.9256 16.1628C21.8416 15.9141 21.7576 15.6655 21.6736 15.5826C21.6736 15.5826 21.5896 15.4168 21.5896 15.251C21.5056 14.8366 21.1696 14.0906 21.1696 14.0077C21.0856 13.9249 20.8335 13.096 20.4975 12.4329C19.9935 11.1067 20.0775 11.2725 19.3214 9.69767C19.2374 9.44901 19.1534 9.28324 19.1534 9.28324C19.1534 9.28324 19.0694 9.11747 19.0694 9.03458C18.9854 8.9517 18.9014 8.62015 18.8174 8.3715C18.6494 7.87418 18.3974 7.29398 18.2293 6.87955C18.1453 6.71377 18.0613 6.46512 17.9773 6.29934C17.8933 6.13357 17.7253 5.63625 17.5573 5.22182C17.3893 4.80739 17.1373 4.1443 16.9693 3.72987C16.8012 3.31544 16.5492 2.81813 16.4652 2.65236C16.3812 2.48658 16.2132 2.15504 16.1292 1.90638C16.0452 1.65772 15.8772 1.32618 15.7092 0.994633C15.5411 0.663089 15.4571 0.41443 15.4571 0.41443C15.4571 0.41443 15.4571 0.331544 15.3731 0.331544C15.2891 0.331544 15.2051 0.248658 15.2051 0.165772C15.1211 0.0828856 15.1211 0 15.0371 0C14.8691 0 14.3651 -1.2351e-08 13.525 0.0828864C13.021 0.0828864 11.8449 0.165773 11.0048 0.165773C8.73664 0.248659 8.82065 0.165773 8.82065 0.497317C8.82065 0.580203 8.73664 0.663089 8.65264 0.745975C8.65264 1.16041 8.48463 1.74061 8.23261 2.23793C7.98059 2.81813 7.72857 3.31544 7.56056 3.81276C7.47655 4.06142 7.30854 4.31008 7.30854 4.39296C7.25254 4.44822 7.22453 4.50348 7.22453 4.55874C7.22453 4.64162 7.14053 4.64162 7.14053 4.80739C7.14053 4.97317 7.05652 5.13894 6.97251 5.30471C6.97251 5.47048 6.8045 5.80203 6.7205 5.9678C6.63649 6.21646 6.46848 6.548 6.38447 6.71378C6.30047 6.96243 6.21646 7.12821 6.21646 7.12821C6.21646 7.12821 6.04845 7.54264 5.88043 7.95707C5.54441 8.78593 5.29239 9.36613 5.04037 10.0292C4.87236 10.3608 4.78836 10.7752 4.70435 10.7752C4.70435 10.7752 4.62034 10.941 4.62034 11.1067C4.53634 11.2725 4.53634 11.4383 4.45233 11.6041C4.20031 12.4329 4.0323 12.7645 3.94829 13.1789C3.86429 13.3447 3.61227 14.0906 3.36025 14.7537C3.10823 15.4168 2.94022 15.997 2.85621 16.1628C2.85621 16.3286 2.7722 16.5772 2.6882 16.743C2.60419 16.9088 2.52018 17.2403 2.43618 17.489C2.35217 17.7376 2.26817 17.9034 2.26817 17.9863C2.18416 18.0692 1.59612 19.7269 1.51211 20.0584C1.51211 20.2242 1.3441 20.5558 1.26009 20.8044C1.09208 21.0531 0.924068 21.5504 0.840062 21.799C0.756055 22.1306 0.588043 22.545 0.504037 22.7108C0.336025 23.0423 0.0840065 23.7883 0 24.037V24.2027H0.756055C1.26009 24.2027 2.7722 24.1199 4.36832 24.1199C5.20838 24.1199 5.88043 24.1199 6.21646 24.037C6.21646 23.9541 6.30046 23.8712 6.38447 23.8712C6.46848 23.8712 6.46848 23.8712 6.38447 23.7883C6.30046 23.5397 6.30046 23.3739 6.38447 23.1252C6.46848 23.0423 6.46848 22.8766 6.46848 22.7937V22.7108C6.46848 22.6279 6.55248 22.4621 6.55248 22.2964C6.63649 22.1306 6.7205 21.799 6.7205 21.6333C6.8045 21.3846 6.8045 21.2188 6.88851 21.136L6.97252 20.9702H7.98059C9.5767 21.0531 11.0048 21.0531 12.0129 21.0531C14.113 21.0531 15.9612 21.136 16.1292 21.136H17.3893C17.4733 21.2188 17.5573 21.4675 17.5573 21.5504C17.5573 21.6333 17.5573 21.7162 17.6413 21.799C17.8093 22.2135 18.2293 23.2081 18.2293 23.291C18.2293 23.291 18.3133 23.3739 18.3133 23.4568C18.3974 23.5397 18.3974 23.6225 18.3974 23.6225C18.3974 23.6778 18.4254 23.7331 18.4814 23.7883C18.4814 23.7883 18.5654 23.8712 18.5654 23.9541C18.5654 24.037 18.6494 24.1199 18.8174 24.1199H19.1534C19.2374 24.1199 19.5734 24.1199 19.9935 24.2027C20.5815 24.2856 21.0015 24.2856 22.0936 24.2856C23.8577 24.2856 24.1098 24.2856 24.4458 24.1199C24.5578 24.0646 24.6418 24.0093 24.6978 23.9541C25.0338 23.5397 24.7818 22.8766 24.6978 22.7937ZM10.5008 15.4997C9.99673 15.4997 9.24068 15.4168 9.24068 15.4168C9.24068 15.4168 9.32469 15.251 9.40869 15.0024C9.4927 14.7537 9.66071 14.2564 9.74472 13.9249C9.91273 13.3447 9.99673 12.9302 10.1647 12.2671C10.1647 12.1843 10.2488 12.0185 10.2488 11.8527C10.3328 11.5212 10.4168 11.2725 10.5848 10.941C10.5008 10.8581 10.6688 10.2779 11.0888 9.03458C11.4248 8.03995 11.5088 7.87418 11.5088 7.79129C11.5088 7.79129 11.5929 7.45975 11.6769 7.29398C11.7609 7.1282 11.8449 6.79666 11.8449 6.71377C11.8449 6.548 11.8449 6.29934 12.0129 6.21646C12.0689 6.1612 12.2089 6.18883 12.4329 6.29934C12.6009 6.38223 12.7689 6.46511 12.7689 6.63089C12.7689 6.71377 12.937 7.45975 13.105 7.54263C13.161 7.59789 13.189 7.65315 13.189 7.70841C13.189 7.70841 13.273 8.03995 13.357 8.20572C13.441 8.3715 13.525 8.78593 13.693 9.03458C13.777 9.20036 13.861 9.44901 13.861 9.44901C13.917 9.50427 13.945 9.55953 13.945 9.61479C13.945 9.69767 13.945 9.78056 14.029 10.0292C14.029 10.195 14.197 10.6094 14.3651 11.0239C14.5331 11.5212 14.6171 11.8527 14.7011 12.1843C14.7851 12.35 14.7851 12.4329 14.7851 12.5987C14.7851 12.6816 14.8691 12.7645 14.8691 12.7645C14.8691 12.8473 14.9531 12.9302 14.9531 12.9302C14.9531 13.0131 15.0371 13.0131 15.0371 13.096C15.1211 13.1789 15.1211 13.3447 15.1211 13.4275C15.2051 13.6762 15.3731 13.9249 15.4571 14.3393C15.5411 14.5051 15.6252 14.9195 15.7932 15.1682C15.8772 15.4168 15.9612 15.6655 15.9612 15.7484C16.0452 15.8312 15.7932 15.8312 14.2811 15.7484C13.693 15.7484 12.6849 15.6655 12.1809 15.6655H11.5089C11.2568 15.6655 11.0888 15.6655 11.0888 15.5826C11.0888 15.5826 10.7528 15.5826 10.5008 15.4997Z" fill="#E7E7E5"/>
+              </g>
+              </svg>
+            </div>
+            <div class="lyr lyr-a-dark">
+              <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 28.5764 26.4409" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g>
+              <path d="M5.05374 23.9541H4.38169V23.7883C4.46569 23.5396 4.71771 22.7937 4.88572 22.4621C4.96973 22.2964 5.13774 21.8819 5.22175 21.5504C5.30575 21.2188 5.47377 20.7215 5.64178 20.5557C5.72579 20.3071 5.8938 19.9755 5.8938 19.8098C5.9778 19.4782 6.56585 17.8205 6.64985 17.7376C6.64985 17.6547 6.73386 17.489 6.81787 17.2403C6.90187 16.9916 6.98588 16.6601 7.06988 16.4943C7.15389 16.3286 7.2379 16.0799 7.2379 15.9141C7.3219 15.7484 7.48992 15.0853 7.74194 14.5051C7.99395 13.842 8.24597 13.096 8.32998 12.9302C8.41399 12.5158 8.582 12.1014 8.83402 11.3554C8.91802 11.1896 8.91802 11.0238 9.00203 10.8581C9.00203 10.6923 9.08604 10.5265 9.08604 10.5265C9.17004 10.5265 9.25405 10.1121 9.42206 9.78056C9.67408 9.11747 9.9261 8.53727 10.2621 7.70841C10.4301 7.29398 10.5981 6.87955 10.5981 6.87955C10.5981 6.87955 10.6822 6.71377 10.7662 6.46512C10.8502 6.29934 11.0182 5.9678 11.1022 5.71914C11.1862 5.55337 11.3542 5.22182 11.3542 5.05605C11.4382 4.89028 11.5222 4.72451 11.5222 4.55873C11.5222 4.39296 11.6062 4.39296 11.6062 4.31008C11.6062 4.22719 11.6062 4.22719 11.6902 4.1443C11.6902 4.06142 11.8582 3.81276 11.9422 3.5641C12.1103 3.06679 12.3623 2.56947 12.6143 1.98927C12.8663 1.57484 12.9503 1.07752 12.9503 0.663089C12.9503 0.497317 13.2023 0.331545 13.2023 0.248658C13.2023 0.0828864 13.2863 0 12.9503 0C12.6143 0.0828864 12.3623 0.0828864 12.2783 0.165772C12.1103 0.331544 11.7742 0.497316 11.3542 0.828861C11.0182 0.994633 10.2621 1.49195 10.1781 1.57484C10.1781 1.57484 10.0941 1.65772 10.0101 1.65772C9.9261 1.74061 9.75808 1.74061 9.75808 1.82349C9.67408 1.82349 9.59007 1.90638 9.42206 1.98927C8.91802 2.23792 8.75001 2.32081 8.75001 2.48658C8.66601 2.65235 7.82594 3.23256 7.32191 3.39833C7.2379 3.39833 7.2379 3.48122 7.2379 3.64699C7.2379 3.81276 6.90188 4.80739 5.97781 7.54263C5.80979 7.95706 5.72579 8.37149 5.64178 8.45438C5.64178 8.53727 5.47377 8.9517 5.30576 9.36613C5.13775 9.78056 4.96973 10.3608 4.80172 10.6094C3.70964 13.842 2.78557 16.4943 2.53355 17.3232C2.44955 17.5719 2.36554 17.8205 2.36554 17.8205C2.36554 17.9034 2.28154 18.0692 2.19753 18.2349C2.02952 18.6494 1.86151 19.1467 1.86151 19.3125C1.69349 19.644 1.27346 21.0531 1.18946 21.5504C1.10545 21.799 1.02144 22.0477 1.02144 22.2135C0.937437 22.4621 0.517406 23.7883 0.433401 24.2027C0.433401 24.3685 0.349394 24.4514 0.349394 24.5343C0.265388 24.6172 -0.0706368 25.7776 0.0133697 25.8605V26.1091C0.0133697 26.2749 0.0133697 26.3578 0.0973762 26.3578C0.181383 26.4407 0.433401 26.4407 1.94551 26.4407C3.54163 26.4407 3.96166 26.4407 4.12967 26.3578H4.29768C4.29768 26.4407 4.4657 26.4407 5.64178 26.3578C5.8098 26.3578 6.39784 26.3578 6.81787 26.2749C7.65793 26.2749 6.98588 26.2749 7.06989 26.3578C7.15389 26.4407 7.15389 26.4407 7.32191 26.3578C7.40591 26.3578 7.48992 26.192 7.57392 26.192C7.65793 26.1091 7.74194 26.0262 7.74194 26.0262C7.82594 26.0262 8.16197 25.7776 8.582 25.5289C8.41399 25.7776 8.582 25.6947 8.582 25.6947C8.66601 25.6947 8.75001 25.6118 8.83402 25.5289C8.91802 25.446 9.00203 25.3631 9.17004 25.2803C9.25405 25.1974 9.33805 25.1145 9.33805 25.1145C9.33805 25.1145 9.42206 25.0316 9.59007 24.9487C9.67408 24.8658 9.84209 24.8658 9.84209 24.7829L9.9261 24.7001C10.0941 24.7001 10.4301 24.1199 10.4301 24.037C10.4301 24.037 10.5141 23.8712 10.5141 23.7883C10.4301 23.6225 10.2621 23.7883 10.1781 23.7883H9.9261C9.59007 23.7883 8.91802 23.8712 8.07796 23.8712C6.39783 23.8712 5.55777 23.9541 5.05374 23.9541Z" fill="#001E3D"/>
+              <path d="M15.4706 15.7488H16.1426C16.6467 15.7488 17.6548 15.8317 18.2429 15.8317C19.7551 15.9146 20.0071 15.9146 19.9231 15.8317C19.9231 15.7488 19.8391 15.5001 19.7551 15.2515C19.5871 15.0028 19.503 14.5883 19.419 14.4226C19.335 14.0081 19.167 13.7594 19.083 13.5108C19.083 13.4279 19.083 13.2621 18.999 13.1792C18.999 13.0963 18.915 13.0963 18.915 13.0134C18.915 13.0134 18.831 12.9305 18.831 12.8477C18.831 12.8477 18.747 12.7648 18.747 12.6819C18.747 12.5161 18.747 12.4332 18.6629 12.2674C18.5789 11.9359 18.4949 11.6043 18.3269 11.107C18.1589 10.6925 17.9909 10.2781 17.9909 10.1123C17.9069 9.86361 17.9069 9.78072 17.9069 9.69783C17.9069 9.61494 17.9069 9.61494 17.8228 9.53205C17.8228 9.53205 17.7388 9.28338 17.6548 9.1176C17.4868 8.86893 17.4028 8.45448 17.3188 8.2887C17.2348 8.12292 17.1508 7.79136 17.1508 7.79136C17.1508 7.7361 17.1228 7.68084 17.0668 7.62558C16.8987 7.54269 16.7307 6.79668 16.7307 6.71379C16.7307 6.54801 16.5627 6.46512 16.3947 6.38223C16.1706 6.27171 16.0306 6.24408 15.9746 6.29934C15.8066 6.38223 15.8066 6.6309 15.8066 6.79668C15.8066 6.87957 15.7226 7.21113 15.6386 7.37691C15.5546 7.54269 15.4706 7.87425 15.4706 7.87425C15.4706 7.95714 15.3865 8.12292 15.0505 9.1176C14.6305 10.3609 14.4624 10.9412 14.5464 11.0241C14.3784 11.3556 14.2944 11.6043 14.2104 11.9359V12.0187C14.2104 12.1845 15.1345 14.7541 15.4706 15.7488Z" fill="#001E3D"/>
+              <path d="M26.056 24.3687C24.9639 24.3687 24.5438 24.3687 23.9558 24.2858C23.5357 24.2029 23.1997 24.2029 23.1157 24.2029H22.7796C22.6116 24.2029 22.5276 24.12 22.5276 24.0371C22.5276 23.9542 22.4436 23.8713 22.4436 23.8713C22.3876 23.8161 22.3596 23.7608 22.3596 23.7055C22.3596 23.7055 22.3596 23.6227 22.2756 23.5398C22.2756 23.4569 22.1916 23.374 22.1916 23.374C22.1916 23.2911 21.7715 22.2964 21.6035 21.882C21.5195 21.7991 21.5195 21.7162 21.5195 21.6333C21.5195 21.5504 21.4355 21.3017 21.3515 21.2188H20.0913C19.9233 21.2188 18.0751 21.136 15.9748 21.136C14.9667 21.136 13.5385 21.136 11.9423 21.0531H10.9342L10.8502 21.2189C10.7662 21.3017 10.7662 21.4675 10.6822 21.7162C10.6822 21.882 10.5982 22.2135 10.5141 22.3793C10.5141 22.5451 10.4301 22.7109 10.4301 22.7938V22.8766C11.3542 22.8766 13.2865 22.9595 13.7905 22.9595C14.4626 22.9595 15.0507 22.9595 15.0507 23.0424C15.1347 23.0424 15.3867 23.0424 15.7228 23.1253C16.9829 23.2082 18.1591 23.2911 18.3271 23.2911H18.4951L18.7471 24.2029C19.0832 25.5291 19.0832 25.6949 19.0832 25.7778C18.9992 26.0265 19.2512 26.1922 19.5032 26.0265C19.5592 25.9712 19.6152 25.9712 19.6712 26.0265C19.7553 26.1094 19.9233 26.1094 20.2593 26.1094H21.0994C21.3514 26.1094 21.8555 26.1922 22.2756 26.1922C24.7119 26.2751 24.9639 26.2751 25.0479 26.358C25.1319 26.358 25.1319 26.4409 25.2159 26.4409C25.2999 26.4409 25.552 26.2751 25.72 26.0265C25.804 25.9436 25.972 25.8607 25.972 25.8607C26.056 25.8607 26.3921 25.6949 26.5601 25.5291C26.6161 25.4739 26.6721 25.4462 26.7281 25.4462C26.7281 25.4462 26.9801 25.2804 27.1482 25.1976C27.3162 25.0318 27.6522 24.866 27.7362 24.7831C28.0723 24.5344 28.4923 24.2858 28.5763 24.0371C28.5763 24.0371 28.4923 24.12 28.3243 24.2029C28.0723 24.3687 27.8202 24.3687 26.056 24.3687Z" fill="#001E3D"/>
+              </g>
+              </svg>
+            </div>
+          </div>
+          <div class="ltr ltr-w">
+            <div class="lyr lyr-w-light">
+              <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 31.4736 22.5657" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g>
+              <path d="M30.5976 0.151956C29.3571 0.151956 26.6436 0.0759774 26.1784 0.151956H25.7907L25.6357 0.759788C25.5581 1.0637 25.4031 1.59556 25.3255 1.89947C25.248 2.20339 25.1705 2.65926 25.093 2.8872C25.0154 3.11513 25.0154 3.41905 24.9379 3.57101C24.9379 3.72296 24.8604 4.10286 24.7828 4.40678C24.7053 4.71069 24.5503 5.3945 24.3952 5.92635C24.0851 7.29397 24.0075 7.59789 23.8525 8.20572C23.4648 9.49736 23.0772 11.5488 22.9221 12.3846C22.7671 13.4483 22.5345 14.436 22.457 14.36C22.457 14.36 22.3794 14.2081 22.3019 14.0561C22.2244 13.9041 22.2244 13.7522 22.1468 13.6762C22.0693 13.4483 21.8367 12.8404 21.8367 12.7645C21.8367 12.6885 21.8367 12.6885 21.7592 12.6125C21.7592 12.6125 21.6817 12.3846 21.6041 12.2326C21.5266 12.0806 21.4491 11.6248 21.294 11.2449C20.9064 10.1052 20.7513 9.57334 20.6738 9.26943C20.6738 9.11747 20.5187 8.66159 20.4412 8.35768C20.1311 7.59789 20.1311 7.29397 19.976 6.53418C19.976 6.45821 19.976 6.38223 19.8985 6.30625C19.821 6.00233 19.6659 5.54646 19.5884 5.31852C19.4333 4.78667 19.2782 4.3308 19.2007 3.79894C19.0457 3.11513 18.9681 2.96318 18.8906 2.65926C18.8131 2.5073 18.7355 2.20339 18.658 1.97545C18.5805 1.82349 18.5029 1.51958 18.5029 1.29164C18.4254 0.911746 18.1928 0.455872 18.1153 0.303915C18.0378 0.227935 17.8827 0.227935 17.4175 0.227935C17.0299 0.227935 14.7815 0.227935 14.1613 0.227935C13.8512 0.227935 13.6186 0.227935 13.5411 0.303915C13.4635 0.303915 13.3085 0.379894 13.2309 0.379894C13.1534 0.379894 13.0759 0.379894 13.0759 0.455873C12.9984 0.531852 12.9208 0.835768 12.6882 1.67154C12.3006 3.03916 12.2231 3.41905 12.1455 3.64699C12.068 3.87492 11.7579 5.09059 11.6803 5.3945C11.6803 5.47048 11.6028 5.69842 11.5253 5.85038C11.2927 6.45821 11.2152 6.68614 11.2152 6.76212C11.2152 6.8381 11.2152 6.91408 11.1376 6.99006C11.0601 7.218 10.9826 7.29397 10.9826 7.44593C10.9826 7.52191 10.9051 7.90181 10.8275 8.20572C10.6725 8.81355 10.4399 9.57334 9.9747 11.4728C9.89717 11.8527 9.74211 12.3846 9.74211 12.5365C9.74211 12.7645 9.66458 12.9164 9.58705 12.9924C9.50952 13.1444 9.50952 13.1444 9.43199 12.8404C9.27693 12.4605 9.27693 12.4605 9.12187 12.1566C9.04434 12.0047 8.96681 11.8527 8.96681 11.7008C8.88928 11.6248 8.88928 11.4728 8.88928 11.4728C8.88928 11.3968 8.81175 11.3209 8.81175 11.2449C8.81175 11.1689 8.65669 10.865 8.57917 10.637C8.42411 10.1052 8.11399 9.26943 8.03646 9.04149C8.03646 8.96551 7.95893 8.73758 7.8814 8.58562C7.72634 8.12974 7.49375 7.59789 7.33869 7.14202C7.26116 6.91408 7.18363 6.68614 7.18363 6.61017C7.1061 6.45821 6.95104 5.92636 6.79598 5.54646C6.64093 5.16657 6.5634 4.78667 6.5634 4.78667C6.5634 4.71069 6.40834 4.40678 6.33081 4.10286C6.25328 3.72297 6.02069 3.19111 5.94316 2.8872C5.86563 2.5073 5.71057 2.20339 5.71057 2.20339C5.71057 2.20339 5.71057 2.12741 5.63304 2.05143C5.63304 1.97545 5.55551 1.82349 5.47798 1.67154C5.40045 1.51958 5.32292 1.21566 5.24539 1.06371C5.16786 0.911748 5.16786 0.683811 5.16786 0.607831C5.16786 0.455874 5.16786 0.455874 4.54763 0.379895C3.92739 0.379895 3.61727 0.303915 3.38468 0.227937C3.30715 0.227937 3.07457 0.151958 2.84198 0.151958C2.68692 0.151958 2.3768 0.151958 2.22174 0.0759788C2.06668 0.0759788 1.75656 0 1.52398 0C1.2914 0.151956 1.05881 0.151956 0.903751 0.0759774C0.748692 0.0759774 0.593633 0.0759774 0.593633 0.0759774C0.593633 0.0759774 0.438574 0.0759774 0.361044 0.0759774C0.283515 0.0759774 0.205985 0.0759774 0.205985 0.151956C0.205985 0.227935 0.205985 0.227935 0.128456 0.303914H0.0509255C-0.0266039 0.303914 -0.0266039 0.379893 0.128455 0.683808C0.205984 0.911745 0.283514 1.21566 0.361044 1.4436C0.438573 1.67153 0.671162 2.35534 0.826221 2.96318C1.05881 3.57101 1.2914 4.40677 1.36893 4.71069C1.44646 5.01461 1.60152 5.31852 1.60152 5.3945C1.60152 5.47048 1.67905 5.62244 1.75657 5.7744C1.8341 5.92635 1.8341 6.07831 1.91163 6.07831C1.91163 6.15429 2.14422 6.61016 2.29928 7.21799C2.45434 7.82583 2.68693 8.43366 2.76446 8.58561C2.84199 8.73757 2.91952 8.96551 2.99705 9.11747C3.07458 9.42138 3.38469 10.3331 3.46222 10.4851C3.53975 10.5611 3.61728 11.0169 4.54764 13.6002C5.16787 15.4237 5.40046 16.0315 5.40046 16.2595C5.40046 16.3355 5.47799 16.4114 5.47799 16.4874C5.47799 16.5634 5.55552 16.6394 5.55552 16.7154C5.55552 16.7913 5.63305 16.8673 5.63305 16.9433C5.63305 17.0193 5.78811 17.7031 5.86564 17.7031C5.94317 17.7791 6.09823 18.3869 6.25329 18.7668C6.40835 19.3746 6.56341 19.9824 6.796 20.5903C6.87353 20.9702 7.02858 21.2741 7.02858 21.426C7.18364 22.1099 7.3387 22.3378 7.80388 22.3378C7.95894 22.3378 8.19153 22.3378 8.50164 22.3378C9.74212 22.4138 9.74212 22.4138 9.81965 22.4138C9.89718 22.3378 10.3624 22.3378 11.6028 22.3378H12.4556L12.5332 22.2618C12.6107 22.1858 12.6107 22.1099 12.6107 22.0339C12.6107 21.9579 12.6107 21.8819 12.6882 21.8819C12.7658 21.8819 12.7658 21.73 12.7658 21.654C12.7658 21.502 12.8433 21.1981 12.9208 20.7422C12.9208 20.6663 12.9984 20.4383 13.0759 20.2104C13.1534 19.6785 13.386 18.8428 13.4635 18.6908C13.4635 18.6148 13.5411 18.4629 13.5411 18.3869C13.5411 18.3109 13.6186 18.083 13.6186 18.007C13.6961 17.7791 13.9287 16.7154 14.0838 16.1835C14.1613 15.9556 14.1613 15.7276 14.2388 15.5757C14.3164 15.4237 14.3164 15.2718 14.3939 15.1198C14.704 14.0561 14.8591 13.5242 14.8591 13.0684C14.9366 12.7645 15.0141 12.4605 15.0141 12.4605C15.0141 12.4605 15.0141 12.3086 15.0917 12.1566C15.0917 12.0047 15.2467 11.5488 15.3242 11.0929C15.4793 10.637 15.5568 10.2572 15.5568 10.2572C15.5568 10.1052 15.7894 9.57334 15.7894 9.57334C15.867 9.64932 16.1771 10.637 16.4872 11.7007C16.6422 12.3086 16.7198 12.3846 16.9524 13.2203C17.0299 13.5242 17.185 13.9041 17.2625 14.2081C17.34 14.436 17.4951 14.8159 17.5726 15.0438C17.7277 15.4237 18.1153 16.4874 18.1153 16.6394C18.1153 16.7154 18.1928 17.0193 18.3479 17.3232C18.503 17.7031 18.658 18.2349 18.7355 18.6148C18.8131 18.9947 18.9681 19.2986 18.9681 19.2986C18.9681 19.3746 19.0457 19.4506 19.0457 19.5266C19.0457 19.6026 19.0457 19.6785 19.1232 19.7545C19.1232 19.7545 19.2007 19.9825 19.2782 20.1344C19.3558 20.5143 19.5884 21.1981 19.821 21.73C19.8985 21.9579 19.976 22.1858 19.976 22.2618C20.0535 22.4138 20.2861 22.5657 20.4412 22.5657C20.5963 22.4898 21.7592 22.4898 22.1468 22.4898C22.5345 22.4898 22.6895 22.4898 23.6974 22.4898C24.3177 22.4898 24.5503 22.4138 24.7053 22.3378C24.7828 22.2618 25.0154 22.2618 25.093 22.2618C25.3255 22.2618 25.3255 22.2618 25.4806 22.0339C25.6357 21.8059 25.7132 21.73 25.7132 21.4261C25.7132 21.2741 25.7907 21.0462 25.7907 20.8942C25.7907 20.8182 25.7907 20.7422 25.7907 20.6663C25.7907 20.6663 25.7907 20.4383 25.8683 20.2864C25.9458 20.0584 26.0233 19.7545 26.0233 19.6026C26.0233 19.4506 26.1008 19.1467 26.1784 18.9947C26.2559 18.8428 26.3334 18.3869 26.411 17.931C26.4885 17.5511 26.566 17.1712 26.6435 17.0193C26.6435 16.9433 26.7211 16.7913 26.7211 16.7913C26.7211 16.7154 26.7211 16.6394 26.7986 16.5634C26.7986 16.4874 26.9537 16.1075 27.0312 15.8036C27.1087 15.4237 27.2638 15.1198 27.2638 15.0438C27.2638 14.9678 27.3413 14.8159 27.3413 14.6639C27.3413 14.512 27.4188 14.36 27.4188 14.36C27.4188 14.284 27.4964 14.1321 27.4964 13.9801C27.4964 13.8282 27.6514 13.3723 27.8065 13.0684C27.9615 12.6885 28.0391 12.3846 28.0391 12.3086C28.0391 12.2326 28.1166 12.0047 28.1941 11.7008C28.2717 11.3968 28.4267 11.0929 28.4267 10.941C28.4267 10.789 28.5042 10.5611 28.5818 10.4091C28.7368 10.0292 28.8919 9.26943 28.8919 9.19345C28.8919 9.11747 28.8919 9.04149 28.9694 8.88953C29.047 8.73758 29.202 8.12974 29.2795 7.67387C29.3571 7.36996 29.4346 6.91408 29.5121 6.61017C29.5897 6.45821 29.5897 6.30625 29.6672 6.23027C29.6672 6.15429 29.7447 5.92636 29.8223 5.69842C29.8998 5.47048 29.9773 5.24255 30.0548 5.01461C30.1324 4.86265 30.1324 4.63472 30.2099 4.55874C30.2099 4.48276 30.2874 4.3308 30.2874 4.25482C30.2874 4.17884 30.4425 3.87493 30.52 3.57101C30.6751 3.03916 30.9077 2.50731 30.9852 2.05143C31.0627 1.67154 31.2178 1.4436 31.3728 1.06371C31.2953 0.911749 31.3728 0.759791 31.4504 0.607833C31.5279 0.227935 31.4504 0.151956 30.5976 0.151956Z" fill="#E7E7E5"/>
+              </g>
+              </svg>
+            </div>
+            <div class="lyr lyr-w-dark">
+              <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 28.7839 24.5412" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g>
+              <path d="M12.8125 22.2618C12.735 22.2618 12.735 22.2618 11.4945 22.1859C11.1844 22.1859 10.9518 22.1859 10.7968 22.1859C10.3316 22.1859 10.1765 21.9579 10.0215 21.2741C10.0215 21.1221 9.86641 20.8182 9.78889 20.4383C9.5563 19.8305 9.40124 19.2227 9.24618 18.6148C9.09112 18.2349 8.93606 17.6271 8.85853 17.5511C8.781 17.5511 8.62594 16.8673 8.62594 16.7913C8.62594 16.7154 8.54841 16.6394 8.54841 16.5634C8.54841 16.4874 8.47088 16.4115 8.47088 16.3355C8.47088 16.2595 8.39335 16.1835 8.39335 16.1075C8.39335 15.8796 8.16077 15.2718 7.54053 13.4483C6.61018 10.865 6.53265 10.4091 6.45512 10.3331C6.37759 10.1812 6.06747 9.26944 5.98994 8.96552C5.91241 8.81356 5.83488 8.58563 5.75735 8.43367C5.67982 8.28171 5.44723 7.67388 5.29217 7.06605C5.13711 6.45822 4.90453 6.00234 4.90453 5.92637C4.827 5.92637 4.827 5.77441 4.74947 5.62245C4.67194 5.47049 4.59441 5.31853 4.59441 5.24256C4.59441 5.16658 4.43935 4.86266 4.36182 4.55874C4.28429 4.25483 4.0517 3.41906 3.81911 2.81123C3.66406 2.2034 3.43147 1.51959 3.35394 1.29165C3.27641 1.06371 3.19888 0.759796 3.12135 0.531859C2.96629 0.227944 2.96629 0.151965 3.04382 0.151965H3.12135C3.04382 0.151965 2.96629 0.151965 2.88876 0.303922C2.81123 0.303922 2.7337 0.379901 2.7337 0.379901C2.7337 0.379901 2.57864 0.531859 2.42358 0.607838C2.34605 0.683817 2.11346 0.911754 1.95841 0.987733C1.88088 1.13969 1.49323 1.36763 1.26064 1.51959C0.407815 2.12742 0.0201677 2.43133 0.0201677 2.58329C0.0201677 2.65927 0.0201677 2.73525 0.0201677 2.81123C-0.0573617 2.96318 0.0976971 3.41906 0.330286 4.02689C0.407815 4.25483 0.640404 4.78668 0.717933 5.16657C1.02805 6.00234 1.4157 7.06605 1.49323 7.218C1.57076 7.44594 1.88088 8.05377 2.03593 8.50965C2.26852 9.26944 2.42358 9.57335 2.7337 10.4851C2.88876 10.941 3.04382 11.3209 3.12135 11.4728C3.19888 11.6248 3.19888 11.7767 3.27641 11.8527C3.27641 11.8527 3.43147 12.1566 3.509 12.4606C3.58653 12.7645 3.74158 13.1444 3.81911 13.2203C3.89664 13.3723 4.0517 13.9801 4.28429 14.588C4.43935 15.1958 4.67194 15.7276 4.67194 15.8036C4.67194 15.8796 4.74947 16.0316 4.74947 16.1075C4.827 16.4115 5.60229 18.6908 5.67982 18.9188C5.75735 19.0707 5.91241 19.4506 5.98994 19.6785C6.61018 21.3501 7.463 23.8574 7.61806 24.0853C7.69559 24.1613 7.77312 24.3133 7.92818 24.3892L8.16077 24.5412H9.40124C10.1765 24.5412 11.1069 24.4652 11.7271 24.4652C12.2698 24.4652 12.6575 24.3892 12.735 24.3892C12.8125 24.3892 13.1227 24.2373 13.1227 24.2373C13.1227 24.2373 13.1227 24.1613 13.2002 24.1613C13.2777 24.1613 13.6654 23.8574 13.7429 23.7814C13.7429 23.7814 13.898 23.7054 13.9755 23.6295C14.2081 23.4775 14.3631 23.4015 14.7508 23.0216C15.0609 22.7177 15.216 22.5657 15.5261 22.4138C15.6811 22.3378 15.6811 22.2618 15.7587 22.1099C15.7587 22.1099 15.7587 22.1099 15.7587 22.0339H14.9058C13.3552 22.1859 12.8901 22.1859 12.8125 22.2618Z" fill="#001E3D"/>
+              <path d="M11.0294 8.88994C11.1069 9.11788 11.4171 9.95369 11.5721 10.4856C11.6497 10.7135 11.8047 11.0174 11.8047 11.0934C11.8047 11.1694 11.8823 11.2454 11.8823 11.3214C11.8823 11.3214 11.8823 11.4733 11.9598 11.5493C11.9598 11.7013 12.0373 11.8533 12.1149 12.0052C12.2699 12.3091 12.2699 12.3091 12.425 12.6891C12.5025 12.993 12.5025 12.993 12.5801 12.841C12.6576 12.765 12.7351 12.6131 12.7351 12.3851C12.7351 12.2332 12.8902 11.7013 12.9677 11.3214C13.4329 9.42181 13.6655 8.66199 13.8206 8.05413C13.8981 7.7502 13.9757 7.37029 13.9757 7.2943C13.9757 7.14234 14.0532 7.06636 14.1307 6.83841C14.2083 6.76243 14.2083 6.68644 14.2083 6.61046C14.2083 6.53448 14.2858 6.30653 14.5184 5.69867C14.5959 5.54671 14.6735 5.31876 14.6735 5.24278C14.751 4.93885 15.0611 3.72313 15.1387 3.49518C15.2162 3.26723 15.2937 2.88732 15.6814 1.51963C15.914 0.683826 15.9915 0.379897 16.0691 0.303914C15.9915 0.303914 15.8365 0.379897 15.6814 0.531862C15.4488 0.759811 15.0611 0.911775 14.8285 1.06374C14.5959 1.13972 14.2858 1.29169 14.2083 1.51964C13.8981 1.82357 13.2779 2.27946 12.7351 2.58339C12.425 2.65937 12.1149 2.88732 11.9598 2.88732C11.8823 2.9633 11.7272 2.9633 11.6497 2.9633C11.5721 2.9633 11.4171 3.19125 11.5721 3.34321C11.6497 3.4192 11.5721 3.57116 11.4946 3.87509C11.4171 4.10304 11.262 4.255 11.262 4.40697C11.262 4.48295 11.0294 4.93885 10.9519 5.24278C10.7193 5.54671 10.5642 6.30653 10.4091 6.76243C10.4091 6.83841 10.3316 6.91439 10.3316 6.99037C10.4867 7.44627 10.7193 7.97815 10.8743 8.43404C10.9519 8.58601 11.0294 8.81395 11.0294 8.88994Z" fill="#001E3D"/>
+              <path d="M23.6667 9.1179C23.7442 9.42183 23.8993 9.95371 24.287 11.0934C24.442 11.4734 24.5196 11.9293 24.5971 12.0812C24.6746 12.2332 24.7522 12.4611 24.7522 12.4611C24.8297 12.5371 24.8297 12.5371 24.8297 12.6131C24.8297 12.6891 25.0623 13.2969 25.1398 13.5249C25.2174 13.6009 25.2174 13.7528 25.2949 13.9048C25.3724 14.0568 25.45 14.2087 25.45 14.2087C25.5275 14.2847 25.7601 13.2969 25.9152 12.2332C26.0702 11.3974 26.4579 9.34585 26.8456 8.05414C27.0006 7.44628 27.0782 7.14235 27.3883 5.77467C27.5434 5.24279 27.6984 4.55895 27.776 4.25502C27.8535 3.95109 27.931 3.57118 27.931 3.41921C28.0086 3.26725 28.0086 2.96332 28.0861 2.73537C28.1636 2.50742 28.2412 2.05153 28.3187 1.7476C28.3962 1.44367 28.5513 0.91179 28.6288 0.60786L28.7839 0C28.7064 0 28.5513 -1.13223e-08 28.3187 0.0759828C28.0861 0.151966 27.5434 0.379912 27.0782 0.60786C26.5354 0.835808 25.8376 1.13974 25.5275 1.36768C25.2174 1.59563 24.7522 1.82358 24.5971 1.89956C24.287 2.12751 24.1319 2.35546 23.5116 4.331C23.0464 5.24279 22.9689 5.77467 22.9689 6.00262C22.9689 6.0786 22.9689 6.23056 22.8914 6.38253C23.0464 7.21834 23.124 7.44628 23.3566 8.20611C23.5116 8.51004 23.6667 8.96593 23.6667 9.1179Z" fill="#001E3D"/>
+              <path d="M27.6987 22.1864C27.5436 22.2624 27.311 22.3384 26.6908 22.3384C25.6828 22.3384 25.5278 22.3384 25.1401 22.3384C24.7524 22.3384 23.5894 22.3384 23.4344 22.4144C23.2793 22.4144 23.0467 22.2624 22.9692 22.1105C22.9692 22.0345 22.8916 21.8065 22.8141 21.5786C22.5815 21.0467 22.3489 20.3629 22.2714 19.983C22.1938 19.831 22.1163 19.603 22.1163 19.603C22.0388 19.5271 22.0388 19.4511 22.0388 19.3751C22.0388 19.2991 21.9612 19.2231 21.9612 19.1471C21.9612 19.1471 21.8062 18.8432 21.7286 18.4633C21.6511 18.0834 21.496 17.5515 21.341 17.1716C21.1859 16.8677 21.1084 16.5637 21.1084 16.4878C21.1084 16.3358 20.7207 15.272 20.5656 14.8921C20.4881 14.6642 20.333 14.2843 20.2555 14.0563C20.178 13.7524 20.0229 13.3725 19.9454 13.0685C19.7128 12.2327 19.6352 12.1568 19.4802 11.5489C19.17 10.4851 18.8599 9.49737 18.7824 9.42139C18.7824 9.42139 18.5498 9.95326 18.5498 10.1052C18.5498 10.1052 18.4722 10.4851 18.3172 10.941C18.2396 11.3969 18.0846 11.8528 18.0846 12.0048C18.007 12.1568 18.007 12.3087 18.007 12.3087C18.007 12.3087 17.9295 12.6126 17.852 12.9166C17.7744 13.3725 17.6194 13.9043 17.3868 14.9681C17.5418 15.5 17.5418 15.576 17.6969 15.9559C17.7744 16.1078 17.852 16.4878 17.9295 16.6397C18.0846 17.0956 18.3172 17.9314 18.4722 17.9314C18.5498 18.0074 18.6273 18.3873 18.8599 19.2991C19.17 20.4388 20.0229 22.9463 20.0229 23.0222C20.1004 23.2502 20.2555 23.7061 20.2555 23.7821C20.2555 23.934 20.4106 24.01 20.6432 24.162C21.1859 24.314 24.4423 24.238 24.9075 24.162C24.985 24.162 25.1401 24.162 25.2176 24.162C25.2952 24.162 25.3727 24.162 25.4502 24.162C25.4502 24.162 25.5278 24.086 25.6053 24.086C25.6828 24.086 25.8379 23.934 25.993 23.8581C26.148 23.7061 26.3031 23.6301 26.3031 23.6301C26.3031 23.6301 26.4582 23.5541 26.5357 23.4781C26.7683 23.2502 27.0784 23.0223 27.311 22.7943C27.3886 22.7183 27.6212 22.4144 27.6987 22.3384C27.6987 22.2624 27.7762 22.1864 27.8538 22.1864C28.0088 22.1105 27.7762 22.1105 27.6987 22.1864Z" fill="#001E3D"/>
+              </g>
+              </svg>
+            </div>
+          </div>
+          <div class="ltr ltr-y">
+            <div class="lyr lyr-y-light">
+              <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 23.5439 22.4329" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g>
+              <path d="M23.4646 0.317728C23.3852 0.317728 22.6712 0.238295 21.8778 0.238295C21.005 0.238295 19.8943 0.238295 19.3389 0.238295C17.9902 0.238295 18.0695 0.238295 17.9902 0.39716C17.9902 0.476593 17.9108 0.556025 17.9108 0.556025C17.9108 0.556025 17.7521 0.71489 17.6728 0.873755C17.5935 1.03262 17.4348 1.19148 17.3554 1.27092C17.2761 1.35035 17.2761 1.35035 17.2761 1.42978C17.2761 1.50921 16.6414 2.38297 16.324 2.85957C16.2447 3.01843 16.086 3.1773 16.086 3.25673C16.086 3.33616 15.848 3.57446 15.6893 3.89219C15.4513 4.20992 15.2926 4.44822 15.2926 4.52765C15.2926 4.60708 15.2133 4.68652 15.1339 4.84538C15.0546 5.00425 14.8959 5.24254 14.8166 5.40141C14.4199 6.03687 14.1025 6.51346 14.0232 6.51346L13.9439 6.5929C13.9439 6.75176 12.3571 9.0553 12.1984 9.13474C12.1984 9.13474 12.1191 8.97587 11.9604 8.81701C11.881 8.65814 11.7224 8.34041 11.5637 8.18155C11.3257 7.86382 11.0876 7.54609 10.7703 6.99006C10.691 6.83119 10.5323 6.67233 10.3736 6.51347C10.2943 6.3546 10.1356 6.19574 10.0562 6.1163C9.81822 5.79857 8.70747 4.36879 8.62814 4.28935C8.5488 4.20992 8.5488 4.20992 8.46946 4.13049C8.46946 4.05106 8.31078 3.89219 8.23144 3.73333C8.07276 3.57446 7.83474 3.1773 7.59673 2.939C7.35871 2.62127 7.20003 2.38297 7.12069 2.30354C7.04135 2.22411 7.04135 2.22411 7.04135 2.14468C7.04135 2.14468 7.04135 2.06524 6.96201 1.98581C6.88267 1.90638 6.80333 1.74751 6.724 1.66808C6.64466 1.58865 6.64466 1.50922 6.56532 1.50922C6.56532 1.50922 6.48598 1.42978 6.40664 1.35035C6.16862 0.95319 5.69259 0.476595 5.61325 0.397163C5.53391 0.397163 5.29589 0.397163 4.81985 0.397163C4.02646 0.397163 4.18514 0.397163 2.99505 0.397163C2.12232 0.397163 1.64629 0.31773 1.56695 0.238298C1.56695 0.238298 1.24959 0.158865 0.932236 0.158865C0.614879 0.158865 0.218184 0.158865 0.138844 0.158865C0.218184 -7.10182e-08 0.0595046 0 0.0595046 0C-0.0198349 0.0794328 -0.0198349 0.238298 0.0595046 0.397163C0.138844 0.476595 0.218183 0.63546 0.376861 0.794325C0.535539 0.95319 0.852896 1.35035 1.01157 1.58865C1.24959 1.82695 1.48761 2.22411 1.64629 2.46241C1.80497 2.70071 2.04298 3.01844 2.20166 3.1773C2.36034 3.33617 2.43968 3.49503 2.51902 3.57446C2.51902 3.57446 2.75704 3.89219 3.07439 4.28936C3.31241 4.68652 3.55043 5.00425 3.62977 5.08368C4.18514 5.79857 4.97853 6.91063 4.97853 6.99006C4.97853 6.99006 4.97853 7.06949 5.05787 7.06949C5.13721 7.06949 5.9306 8.10212 6.40664 8.81701C6.56532 9.13474 6.88267 9.45247 7.35871 10.0085C7.51739 10.2468 7.67607 10.4851 7.75541 10.5645C7.83475 10.644 7.83475 10.7234 7.91408 10.7234L7.99342 10.8028C7.99342 10.8028 8.07276 10.9617 8.1521 11.0411C8.23144 11.1206 8.31078 11.2794 8.39012 11.3589C8.46946 11.4383 8.46946 11.5177 8.5488 11.5177C8.5488 11.5177 8.70748 11.6766 8.78682 11.8354C8.86616 11.9943 9.10417 12.2326 9.26285 12.3915C9.42153 12.5503 9.65955 12.7886 9.73889 12.9475C9.9769 13.2652 9.9769 13.1064 10.1356 16.522C10.1356 17.2369 10.2149 17.8723 10.2149 18.0312C10.2149 18.19 10.2149 18.6666 10.2943 19.0638C10.2943 19.461 10.2943 20.017 10.3736 20.3347C10.3736 20.6525 10.4529 21.129 10.4529 21.4468C10.4529 22.0822 10.4529 22.0822 10.6116 22.2411L10.7703 22.4H11.4843C11.881 22.4 12.5158 22.4 12.9124 22.3205C13.3885 22.3205 13.9439 22.3205 14.4199 22.3205C14.5786 22.4 14.5786 22.4794 14.6579 22.4C14.7372 22.4 14.7372 22.3205 14.8166 22.3205C14.8959 22.2411 14.8959 22.1617 14.8959 22.1617C14.8166 22.0822 14.8166 21.4468 14.7372 20.3347C14.7372 19.6198 14.6579 18.9844 14.6579 18.5078C14.6579 18.4283 14.6579 18.0312 14.5786 17.5546C14.5786 17.1574 14.4992 16.4425 14.4992 15.9659C14.4199 14.4567 14.4199 14.2184 14.4992 13.8213C14.5786 13.6624 14.6579 13.4241 14.6579 13.3447C14.6579 13.2652 14.7372 13.1858 14.7372 13.1858C14.7372 13.1858 14.8959 12.9475 15.0546 12.6298C15.4513 12.1532 15.848 11.5177 15.848 11.4383C15.848 11.4383 15.9273 11.2794 16.0067 11.2C16.086 11.0411 16.1654 10.9617 16.1654 10.9617C16.1654 10.8823 16.8794 9.84963 17.1968 9.37304C17.3554 9.21417 17.4348 9.05531 17.4348 8.97588C17.4348 8.97588 17.5141 8.89644 17.5141 8.81701C17.5935 8.81701 17.6728 8.65814 17.8315 8.49928C17.9108 8.34042 18.0695 8.18155 18.0695 8.10212C18.1488 8.02269 18.2282 7.86382 18.3869 7.70496C18.4662 7.54609 18.7042 7.30779 18.7835 7.14893C19.1009 6.67233 19.2596 6.43404 19.4976 6.11631C19.6563 5.87801 19.8943 5.56028 20.053 5.32198C20.529 4.68652 20.9257 4.05106 21.1637 3.81276C21.2431 3.73333 21.3224 3.57447 21.4017 3.49503C21.4017 3.4156 21.4811 3.4156 21.4811 3.4156C21.5604 3.4156 22.3538 2.30355 22.8298 1.74752C22.9885 1.58865 23.1472 1.27092 23.3059 1.11206C23.5439 0.794327 23.5439 0.794327 23.5439 0.55603C23.5439 0.39716 23.5439 0.317728 23.4646 0.317728Z" fill="#E7E7E5"/>
+              </g>
+              </svg>
+            </div>
+            <div class="lyr lyr-y-dark">
+              <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 17.0103 24.4652" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <g>
+              <path d="M16.8516 21.9234C16.3756 21.9234 15.8202 21.9234 15.3442 21.9234C14.9475 22.0028 14.3128 22.0028 13.9161 22.0028H13.202L13.0434 21.8439C12.8847 21.6851 12.8847 21.6851 12.8847 21.0496C12.8847 20.7319 12.8053 20.2553 12.8053 19.9376C12.726 19.6198 12.726 19.0638 12.726 18.6666C12.6467 18.2695 12.6467 17.7929 12.6467 17.634C12.6467 17.4752 12.5673 16.8397 12.5673 16.1248C12.4086 12.7092 12.4086 12.8681 12.1706 12.5503C12.0913 12.3915 11.8533 12.1532 11.6946 11.9943C11.5359 11.8354 11.2979 11.5971 11.2186 11.4383C11.1392 11.2794 10.9805 11.1206 10.9805 11.1206C10.9012 11.1206 10.9012 11.0411 10.8219 10.9617C10.7425 10.8823 10.6632 10.7234 10.5838 10.644C10.5045 10.5645 10.4252 10.4057 10.4252 10.4057L10.3458 10.3262C10.2665 10.3262 10.2665 10.2468 10.1872 10.1674C10.1078 10.0879 9.94913 9.84963 9.79046 9.61133C9.31442 9.05531 8.99706 8.73758 8.83838 8.41985C8.36235 7.70495 7.56896 6.67233 7.48962 6.67233C7.41028 6.67233 7.41028 6.5929 7.41028 6.5929C7.41028 6.51346 6.61689 5.40141 6.06151 4.68652C5.98217 4.60708 5.74416 4.28935 5.50614 3.89219C5.18878 3.49503 4.95076 3.1773 4.95076 3.1773C4.87142 3.09787 4.79209 2.939 4.63341 2.78014C4.47473 2.62127 4.23671 2.30354 4.07803 2.06525C3.91935 1.82695 3.68134 1.42979 3.44332 1.19149C3.28464 0.95319 2.96728 0.556027 2.80861 0.397163C2.64993 0.238298 2.57059 0.0794328 2.49125 0C2.49125 0 2.49125 -1.18364e-08 2.41191 0.0794328C2.25323 0.238298 2.09455 0.397163 2.01521 0.397163C1.3805 0.873758 0.983805 1.27092 0.825127 1.35035C0.745788 1.42979 0.587109 1.66808 0.428431 1.82695C-0.0476038 2.38298 -0.126942 2.38298 0.190414 2.70071C0.50777 3.09787 1.30116 4.13049 1.53918 4.36879C1.7772 4.68652 2.33257 5.24255 2.33257 5.32198C2.33257 5.32198 2.33257 5.40141 2.41191 5.40141L2.49125 5.48084C2.57059 5.63971 3.04662 6.19573 3.28464 6.3546C3.44332 6.43403 3.76068 6.99006 4.23671 7.54609C4.31605 7.70495 4.47473 7.86382 4.55407 8.02268C4.79209 8.34041 4.95076 8.57871 5.18878 8.81701C5.34746 8.97587 5.4268 9.05531 5.4268 9.13474C5.4268 9.21417 5.4268 9.21417 5.50614 9.21417C5.58548 9.21417 5.82349 9.5319 6.77556 10.8028C7.2516 11.4383 7.80697 12.1532 8.04499 12.3915C8.12433 12.4709 8.36235 12.7092 8.52103 13.0269L8.83838 13.5035V13.9007C8.83838 14.139 8.91772 14.6156 8.91772 14.7744C8.99706 15.6482 8.99706 15.9659 9.0764 16.9986C9.0764 17.4752 9.0764 18.1106 9.0764 18.3489C9.0764 18.5872 9.0764 18.9049 9.15574 19.1432C9.15574 19.5404 9.23508 21.7645 9.23508 22.7177C9.23508 22.956 9.23508 23.3532 9.23508 23.512V23.9092L9.39376 24.0681C9.4731 24.1475 9.63178 24.2269 9.63178 24.2269C9.71112 24.2269 10.1078 24.2269 10.5045 24.2269C10.9012 24.2269 11.3772 24.2269 11.4566 24.3063C11.9326 24.3858 13.202 24.4652 13.4401 24.4652C13.5194 24.4652 13.5987 24.3858 13.6781 24.3858C13.7574 24.3063 13.9161 24.2269 14.1541 24.0681C14.3921 23.9886 14.5508 23.8298 14.5508 23.8298C14.5508 23.8298 14.7095 23.7503 14.7888 23.6709C15.8202 23.0354 16.1376 22.7971 16.7723 22.4C16.8516 22.3205 16.931 22.2411 17.0103 22.1617V22.0822C17.0103 22.0822 17.0103 22.0028 16.8516 21.9234Z" fill="#001E3D"/>
+              </g>
+              </svg>
+            </div>
+          </div>
+        </div>
+
+        <div class="control">
+          <div class="control-bg"></div>
+          <div class="control-title">Placement</div>
+          <div class="seg">
+            <div class="seg-pill"></div>
+            <div class="seg-lbl" data-opt="topleft"><span class="lbl-reg">Top left</span><span class="lbl-sel">Top left</span></div>
+            <div class="seg-lbl" data-opt="centertop"><span class="lbl-reg">Center top</span><span class="lbl-sel">Center top</span></div>
+            <div class="seg-lbl" data-opt="centerrear"><span class="lbl-reg">Center rear</span><span class="lbl-sel">Center rear</span></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ============ SCENE 3 ============ -->
+    <div class="scene" data-scene="3">
+      <div class="artboard board3" id="board3" data-view="one">
+
+        <div class="board3-bg"></div>
+
+
+        <div class="widget">
+          <div class="widget-title">Connect volume</div>
+          <div class="widget-info">
+          <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 21 21" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <g>
+          <path d="M7.875 0.984375C7.15013 0.984375 6.5625 1.572 6.5625 2.29688C6.5625 3.02175 7.15013 3.60938 7.875 3.60938H15.5345L2.35317 16.7907C1.84061 17.3032 1.84061 18.1343 2.35317 18.6468C2.86574 19.1594 3.69676 19.1594 4.20933 18.6468L17.3906 5.46553V13.125C17.3906 13.8499 17.9783 14.4375 18.7031 14.4375C19.428 14.4375 20.0156 13.8499 20.0156 13.125V2.29688C20.0156 1.572 19.428 0.984375 18.7031 0.984375H7.875Z" fill="#6C7688"/>
+          </g>
+          </svg>
+          </div>
+          <div class="widget-value-row">
+            <div class="widget-value">$2,428,640.18</div>
+            <div class="widget-sub">+24%</div>
+          </div>
+
+          <div class="chart-el y-rule y-rule-hi">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 535.5 1.75003" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M535.5 0.875L4.19972e-08 0.875026" stroke="#D8DEE4" stroke-width="1.75"/>
+            </svg>
+          </div>
+          <div class="y-label y-label-hi">$2.5M</div>
+          <div class="chart-el y-rule y-rule-lo">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 535.5 1.75003" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M535.5 0.875L4.19972e-08 0.875026" stroke="#D8DEE4" stroke-width="1.75"/>
+            </svg>
+          </div>
+          <div class="y-label y-label-lo">$2.3M</div>
+
+          <div class="chart-el chart-dash">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 532 3.5" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1.75 1.75H14.6402H27.5305H40.4207H53.311H66.2012H79.0915H91.9817H104.872H117.762H130.652H143.543H156.433H169.323H182.213H195.104H207.994H220.884H233.774H246.665H259.555H272.445H285.335H298.226H311.116H324.006H336.896H349.787H362.677H375.567H388.457H401.348H414.238H427.128H440.018H452.909H465.799H478.689H491.579H504.469H517.36H530.25" stroke="#D8DEE4" stroke-width="3.5" stroke-linecap="round" stroke-dasharray="5.25 8.75"/>
+            </svg>
+          </div>
+          <div class="chart-el chart-line">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 533.75 81.4432" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M532 58.9657L522.531 22.8339L513.063 22.0794L503.594 20.5704L494.125 18.6842L484.656 30.0435L475.188 28.1573L465.719 27.4028L456.25 26.271L446.781 43.0165L427.844 45.28L418.375 46.0345L408.906 29.6663L380.5 66.9297L371.031 68.4387L361.563 79.6932L352.094 67.307L333.156 64.289L323.688 22.8758L314.219 20.2351L304.75 22.1213L295.281 17.2171L266.875 12.6902L257.406 10.0495L247.938 8.91775L238.469 4.3908L229 21.3669L219.531 18.7261L210.063 16.4627L200.594 3.25906L191.125 5.89978L181.656 7.40876L172.187 11.1812L162.719 11.5585L153.25 13.0674L143.781 1.75008L134.313 4.76804L124.844 44.6722L115.375 47.313L105.906 32.6947L96.4376 48.8219L86.9688 49.9537L77.5 32.8309L68.0313 34.3399L58.5625 39.2441L49.0938 30.7456L39.625 35.2725L30.1562 29.6139L20.6875 36.6034L11.2189 33.5854L1.75 23.6303" stroke="#9966FF" stroke-width="3.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div class="chart-el chart-dot">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 17.5 17.5" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <circle cx="8.75" cy="8.75" r="7" fill="#9966FF" stroke="white" stroke-width="3.5"/>
+            </svg>
+          </div>
+
+          <div class="x-label x-label-jan">Jan</div>
+          <div class="x-label x-label-today">Today</div>
+        </div>
+
+        <div class="starred starred-1" style="--i:0">
+          <div class="starred-title">Revenue</div>
+          <div class="starred-spark tall"><span>
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 122.168 20.215" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1.31841 3.48982L4.23381 5.81634L7.1492 3.48982L10.0646 5.81634L12.98 5.19594L15.8954 1.31841L18.8108 12.8993L21.7262 7.93605L24.6416 8.40136L27.557 10.4177L30.4724 8.40136L33.3878 9.33196L36.3032 10.4177H39.2186L42.134 17.3972L45.0494 17.7074L47.9648 15.3809L50.8802 15.0707L53.7956 11.8136L56.7109 13.3646L59.6263 4.83403L62.5417 3.59322L65.4571 6.69524L68.3725 7.31565L71.2879 6.69524L74.2033 4.52383L77.1187 7.31565L80.0341 11.6585L82.9495 12.1238L85.8649 10.883H88.7803L91.6957 14.1401L94.6111 8.40136H97.5265L100.442 18.4312L103.357 6.22994L106.273 15.7945H109.188L112.103 15.3292L115.019 12.8476L117.934 16.8802L120.85 18.8965" stroke="#9966FF" stroke-width="2.63672" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span></div>
+          <div class="starred-value">$1.01 M</div>
+          <div class="starred-sub down">-1.2%</div>
+        </div>
+        <div class="starred starred-2" style="--i:1">
+          <div class="starred-title">Payment volume</div>
+          <div class="starred-spark tall"><span>
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 122.168 20.215" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1.31841 3.48982L4.23381 5.81634L7.1492 3.48982L10.0646 5.81634L12.98 5.19594L15.8954 1.31841L18.8108 12.8993L21.7262 7.93605L24.6416 8.40136L27.557 10.4177L30.4724 8.40136L33.3878 9.33196L36.3032 10.4177H39.2186L42.134 17.3972L45.0494 17.7074L47.9648 15.3809L50.8802 15.0707L53.7956 11.8136L56.7109 13.3646L59.6263 4.83403L62.5417 3.59322L65.4571 6.69524L68.3725 7.31565L71.2879 6.69524L74.2033 4.52383L77.1187 7.31565L80.0341 11.6585L82.9495 12.1238L85.8649 10.883H88.7803L91.6957 14.1401L94.6111 8.40136H97.5265L100.442 18.4312L103.357 6.22994L106.273 15.7945H109.188L112.103 15.3292L115.019 12.8476L117.934 16.8802L120.85 18.8965" stroke="#9966FF" stroke-width="2.63672" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span></div>
+          <div class="starred-value">$1.23 M</div>
+          <div class="starred-sub down">-1.4%</div>
+        </div>
+        <div class="starred starred-3" style="--i:2">
+          <div class="starred-title">Churn</div>
+          <div class="starred-spark short"><span>
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 122.169 15.6652" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M1.31871 7.67753L5.58769 9.38364L9.85666 9.69384L14.1256 7.36732L18.3946 7.05712L22.6636 14.3469L26.9326 7.10882L31.2015 7.36733L35.4705 6.12652L39.7395 9.22854L44.0084 9.84894L48.2774 9.22854L52.5464 7.05712L56.8154 9.84894L61.0843 5.40271L65.3533 5.86801L69.6223 4.62721H73.8913L78.1602 7.88433L82.4292 10.9347H86.6982L90.9671 6.90202L95.2361 8.76324L99.5051 4.2653H103.774L108.043 3.8L112.312 1.31838L116.581 5.35101L120.85 3.8517" stroke="#9966FF" stroke-width="2.63672" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </span></div>
+          <div class="starred-value">5.70%</div>
+          <div class="starred-sub up">-0.4%</div>
+        </div>
+
+      </div>
+    </div>
+    <!-- ============ SCENE 4 ============ -->
+    <div class="scene" data-scene="4">
+      <div class="artboard board4" id="board4" data-view="one">
+
+        <div class="board4-bg">
+          <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 900 1200" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <path id="bg" d="M0 0H900V1200H0V0Z" fill="url(#s4-bg-grad)"/>
+          <defs>
+          <linearGradient id="s4-bg-grad" x1="682" y1="-30.1075" x2="136.785" y2="937.49" gradientUnits="userSpaceOnUse">
+          <stop offset="0.236859" stop-color="#C8D3D1"/>
+          <stop offset="1" stop-color="#909793"/>
+          </linearGradient>
+          </defs>
+          </svg>
+        </div>
+
+
+      <div class="load-track">
+        <div class="load-card">
+
+          <div class="lc-tile"></div>
+          <div class="lc-tile-mark"><img src="data:image/png;base64,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" alt=""></div>
+
+          <div class="lc-t lc-head">Single stop reefer load</div>
+          <div class="lc-t lc-broker">Brokered by Uber Freight</div>
+          <div class="lc-t lc-price">$1,850</div>
+          <div class="lc-r lc-rate">$2.49/mi</div>
+
+          <div class="lc-rule lc-rule-a">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 610.112 1.83769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line y1="0.918844" x2="610.112" y2="0.918844" stroke="#E2E2E2" stroke-width="1.83769"/>
+            </svg>
+          </div>
+
+          <div class="lc-route">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 18.3769 102.911" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g>
+            <circle cx="9.18844" cy="9.18844" r="9.18844" fill="black"/>
+            <rect y="84.5341" width="18.3769" height="18.3769" fill="black"/>
+            <line x1="9.18831" y1="11.0268" x2="9.18831" y2="93.7227" stroke="black" stroke-width="3.67538"/>
+            </g>
+            </svg>
+          </div>
+
+          <div class="lc-t lc-city lc-city-a">Houston, TX</div>
+          <div class="lc-t lc-when lc-when-a">Feb 8, 10:00 PST&nbsp;&bull;&nbsp;</div>
+          <div class="lc-icon lc-star-a">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 18.3769 18.3769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.8779 6.24977L18.2148 6.87642C18.3765 6.89256 18.4299 7.10058 18.3167 7.20588L13.5408 11.6256L14.9312 18.1486C14.966 18.3125 14.7954 18.4314 14.6652 18.3507L9.18844 14.9457L3.71163 18.3507C3.57986 18.433 3.41092 18.3091 3.44566 18.1469L4.83609 11.6256L0.0602009 7.20592C-0.0529733 7.10148 0.000381297 6.89259 0.162057 6.87646L6.49893 6.24981L9.02429 0.113937C9.06875 0.00694655 9.18273 -0.0406044 9.30155 0.0417615L11.8779 6.24977Z" fill="#FFC043"/>
+            </svg>
+          </div>
+          <div class="lc-t lc-rating lc-rating-a">4.8</div>
+          <div class="lc-r lc-dist lc-dist-a">3 mi away</div>
+
+          <div class="lc-t lc-city lc-city-b">Dallas, TX</div>
+          <div class="lc-t lc-when lc-when-b">Feb 9, 08:00 PST&nbsp;&bull;&nbsp;</div>
+          <div class="lc-icon lc-star-b">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 18.3769 18.3769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.8779 6.24977L18.2148 6.87642C18.3765 6.89256 18.4299 7.10058 18.3167 7.20588L13.5408 11.6256L14.9312 18.1486C14.966 18.3125 14.7954 18.4314 14.6652 18.3507L9.18844 14.9457L3.71163 18.3507C3.57986 18.433 3.41092 18.3091 3.44566 18.1469L4.83609 11.6256L0.0602009 7.20592C-0.0529733 7.10148 0.000381297 6.89259 0.162057 6.87646L6.49893 6.24981L9.02429 0.113937C9.06875 0.00694655 9.18273 -0.0406044 9.30155 0.0417615L11.8779 6.24977Z" fill="#FFC043"/>
+            </svg>
+          </div>
+          <div class="lc-t lc-rating lc-rating-b">4.0</div>
+          <div class="lc-r lc-dist lc-dist-b">487 mi</div>
+
+          <div class="lc-rule lc-rule-b">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 610.112 1.83769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line y1="0.918844" x2="610.112" y2="0.918844" stroke="#E2E2E2" stroke-width="1.83769"/>
+            </svg>
+          </div>
+
+          <div class="lc-icon lc-snow">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 18.3769 18.3769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.5699 9.92797L14.3692 10.5155L12.0628 9.18844L14.3692 7.86133L16.5699 8.44891C16.6939 8.48132 16.8198 8.49753 16.9418 8.49753C17.5758 8.49753 18.1569 8.0761 18.3276 7.43585C18.5329 6.672 18.0777 5.88587 17.3116 5.68123L15.9237 5.31045L16.2996 3.92661C16.5049 3.16277 16.0497 2.37663 15.2836 2.172C14.5196 1.96736 13.7291 2.42121 13.5238 3.18506L12.9345 5.37934L10.6282 6.70645V4.05223L12.2396 2.44552C12.8004 1.88631 12.8004 0.978614 12.2396 0.419406C11.6787 -0.139802 10.7684 -0.139802 10.2075 0.419406L9.19149 1.43246L8.17545 0.419406C7.6146 -0.139802 6.70424 -0.139802 6.14339 0.419406C5.58254 0.978614 5.58254 1.88631 6.14339 2.44552L7.75482 4.05223V6.70645L5.44843 5.37934L4.85913 3.18506C4.65389 2.42121 3.86545 1.96736 3.09936 2.172C2.33327 2.37663 1.87809 3.16277 2.08333 3.92661L2.4552 5.31045L1.0673 5.68123C0.301212 5.88587 -0.15397 6.672 0.0512679 7.43585C0.223993 8.0761 0.803131 8.49753 1.43713 8.49753C1.56109 8.49753 1.68505 8.48132 1.809 8.44891L4.00973 7.86133L6.31612 9.18844L4.00973 10.5155L1.809 9.92797C1.04291 9.72333 0.254474 10.1772 0.0492358 10.941C-0.156003 11.7049 0.29918 12.491 1.06527 12.6956L2.45317 13.0664L2.0813 14.4503C1.87606 15.2141 2.33124 16.0002 3.09733 16.2049C3.22129 16.2373 3.34727 16.2535 3.4692 16.2535C4.1032 16.2535 4.68437 15.8321 4.85506 15.1918L5.44436 12.9975L7.75075 11.6704V14.3246L6.13933 15.9314C5.57848 16.4906 5.57848 17.3983 6.13933 17.9575C6.41975 18.2371 6.78756 18.3769 7.15536 18.3769C7.52316 18.3769 7.89097 18.2371 8.17139 17.9575L9.18742 16.9444L10.2035 17.9575C10.4839 18.2371 10.8517 18.3769 11.2195 18.3769C11.5873 18.3769 11.9551 18.2371 12.2355 17.9575C12.7964 17.3983 12.7964 16.4906 12.2355 15.9314L10.6241 14.3246V11.6704L12.9305 12.9975L13.5198 15.1918C13.6925 15.8321 14.2716 16.2535 14.9056 16.2535C15.0296 16.2535 15.1536 16.2373 15.2775 16.2049C16.0436 16.0002 16.4988 15.2141 16.2935 14.4503L15.9217 13.0664L17.3096 12.6956C18.0757 12.491 18.5308 11.7049 18.3256 10.941C18.1244 10.1752 17.338 9.72131 16.5699 9.92797Z" fill="#276EF1"/>
+            </svg>
+          </div>
+          <div class="lc-t lc-spec">Reefer &bull; Hard beverage &bull; 42,102 lbs</div>
+
+        </div>
+
+        <div class="load-card">
+
+          <div class="lc-tile lc-tile-flexport"></div>
+          <div class="lc-mark lc-mark-flexport"><img src="data:image/png;base64,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" alt=""></div>
+          <div class="lc-t lc-head">Single stop reefer load</div>
+          <div class="lc-t lc-broker">Brokered by Flexport</div>
+          <div class="lc-t lc-price">$1,999</div>
+          <div class="lc-r lc-rate">$4.00/mi</div>
+
+          <div class="lc-rule lc-rule-a">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 610.112 1.83769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line y1="0.918844" x2="610.112" y2="0.918844" stroke="#E2E2E2" stroke-width="1.83769"/>
+            </svg>
+          </div>
+
+          <div class="lc-route">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 18.3769 102.911" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g>
+            <circle cx="9.18844" cy="9.18844" r="9.18844" fill="black"/>
+            <rect y="84.5341" width="18.3769" height="18.3769" fill="black"/>
+            <line x1="9.18831" y1="11.0268" x2="9.18831" y2="93.7227" stroke="black" stroke-width="3.67538"/>
+            </g>
+            </svg>
+          </div>
+
+          <div class="lc-t lc-city lc-city-a">San Francisco, CA</div>
+          <div class="lc-t lc-when lc-when-a">Feb 8, 06:00 PST&nbsp;&bull;&nbsp;</div>
+          <div class="lc-icon lc-star-a">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 18.3769 18.3769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.8779 6.24977L18.2148 6.87642C18.3765 6.89256 18.4299 7.10058 18.3167 7.20588L13.5408 11.6256L14.9312 18.1486C14.966 18.3125 14.7954 18.4314 14.6652 18.3507L9.18844 14.9457L3.71163 18.3507C3.57986 18.433 3.41092 18.3091 3.44566 18.1469L4.83609 11.6256L0.0602009 7.20592C-0.0529733 7.10148 0.000381297 6.89259 0.162057 6.87646L6.49893 6.24981L9.02429 0.113937C9.06875 0.00694655 9.18273 -0.0406044 9.30155 0.0417615L11.8779 6.24977Z" fill="#FFC043"/>
+            </svg>
+          </div>
+          <div class="lc-t lc-rating lc-rating-a">3.9</div>
+          <div class="lc-r lc-dist lc-dist-a">19 mi away</div>
+
+          <div class="lc-t lc-city lc-city-b">Los Angeles, CA</div>
+          <div class="lc-t lc-when lc-when-b">Feb 8, 12:00 PST&nbsp;&bull;&nbsp;</div>
+          <div class="lc-icon lc-star-b">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 18.3769 18.3769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.8779 6.24977L18.2148 6.87642C18.3765 6.89256 18.4299 7.10058 18.3167 7.20588L13.5408 11.6256L14.9312 18.1486C14.966 18.3125 14.7954 18.4314 14.6652 18.3507L9.18844 14.9457L3.71163 18.3507C3.57986 18.433 3.41092 18.3091 3.44566 18.1469L4.83609 11.6256L0.0602009 7.20592C-0.0529733 7.10148 0.000381297 6.89259 0.162057 6.87646L6.49893 6.24981L9.02429 0.113937C9.06875 0.00694655 9.18273 -0.0406044 9.30155 0.0417615L11.8779 6.24977Z" fill="#FFC043"/>
+            </svg>
+          </div>
+          <div class="lc-t lc-rating lc-rating-b">4.4</div>
+          <div class="lc-r lc-dist lc-dist-b">500 mi</div>
+
+          <div class="lc-rule lc-rule-b">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 610.112 1.83769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line y1="0.918844" x2="610.112" y2="0.918844" stroke="#E2E2E2" stroke-width="1.83769"/>
+            </svg>
+          </div>
+
+          <div class="lc-icon lc-snow">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 18.3769 18.3769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.5699 9.92797L14.3692 10.5155L12.0628 9.18844L14.3692 7.86133L16.5699 8.44891C16.6939 8.48132 16.8198 8.49753 16.9418 8.49753C17.5758 8.49753 18.1569 8.0761 18.3276 7.43585C18.5329 6.672 18.0777 5.88587 17.3116 5.68123L15.9237 5.31045L16.2996 3.92661C16.5049 3.16277 16.0497 2.37663 15.2836 2.172C14.5196 1.96736 13.7291 2.42121 13.5238 3.18506L12.9345 5.37934L10.6282 6.70645V4.05223L12.2396 2.44552C12.8004 1.88631 12.8004 0.978614 12.2396 0.419406C11.6787 -0.139802 10.7684 -0.139802 10.2075 0.419406L9.19149 1.43246L8.17545 0.419406C7.6146 -0.139802 6.70424 -0.139802 6.14339 0.419406C5.58254 0.978614 5.58254 1.88631 6.14339 2.44552L7.75482 4.05223V6.70645L5.44843 5.37934L4.85913 3.18506C4.65389 2.42121 3.86545 1.96736 3.09936 2.172C2.33327 2.37663 1.87809 3.16277 2.08333 3.92661L2.4552 5.31045L1.0673 5.68123C0.301212 5.88587 -0.15397 6.672 0.0512679 7.43585C0.223993 8.0761 0.803131 8.49753 1.43713 8.49753C1.56109 8.49753 1.68505 8.48132 1.809 8.44891L4.00973 7.86133L6.31612 9.18844L4.00973 10.5155L1.809 9.92797C1.04291 9.72333 0.254474 10.1772 0.0492358 10.941C-0.156003 11.7049 0.29918 12.491 1.06527 12.6956L2.45317 13.0664L2.0813 14.4503C1.87606 15.2141 2.33124 16.0002 3.09733 16.2049C3.22129 16.2373 3.34727 16.2535 3.4692 16.2535C4.1032 16.2535 4.68437 15.8321 4.85506 15.1918L5.44436 12.9975L7.75075 11.6704V14.3246L6.13933 15.9314C5.57848 16.4906 5.57848 17.3983 6.13933 17.9575C6.41975 18.2371 6.78756 18.3769 7.15536 18.3769C7.52316 18.3769 7.89097 18.2371 8.17139 17.9575L9.18742 16.9444L10.2035 17.9575C10.4839 18.2371 10.8517 18.3769 11.2195 18.3769C11.5873 18.3769 11.9551 18.2371 12.2355 17.9575C12.7964 17.3983 12.7964 16.4906 12.2355 15.9314L10.6241 14.3246V11.6704L12.9305 12.9975L13.5198 15.1918C13.6925 15.8321 14.2716 16.2535 14.9056 16.2535C15.0296 16.2535 15.1536 16.2373 15.2775 16.2049C16.0436 16.0002 16.4988 15.2141 16.2935 14.4503L15.9217 13.0664L17.3096 12.6956C18.0757 12.491 18.5308 11.7049 18.3256 10.941C18.1244 10.1752 17.338 9.72131 16.5699 9.92797Z" fill="#276EF1"/>
+            </svg>
+          </div>
+          <div class="lc-t lc-spec">Reefer &bull; Vegetables &bull; 47,232 lbs</div>
+
+        </div>
+
+        <div class="load-card">
+
+          <div class="lc-tile lc-tile-reverse"></div>
+          <div class="lc-mark lc-mark-reverse"><img src="data:image/png;base64,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AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAMAs+Beo4i/vjxzWEwAAAABJRU5ErkJggg==" alt=""></div>
+          <div class="lc-t lc-head">Single stop reefer load</div>
+          <div class="lc-t lc-broker">Brokered by Flexport</div>
+          <div class="lc-t lc-price">$1,999</div>
+          <div class="lc-r lc-rate">$4.00/mi</div>
+
+          <div class="lc-rule lc-rule-a">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 610.112 1.83769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line y1="0.918844" x2="610.112" y2="0.918844" stroke="#E2E2E2" stroke-width="1.83769"/>
+            </svg>
+          </div>
+
+          <div class="lc-route">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 18.3769 102.911" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g>
+            <circle cx="9.18844" cy="9.18844" r="9.18844" fill="black"/>
+            <rect y="84.5341" width="18.3769" height="18.3769" fill="black"/>
+            <line x1="9.18831" y1="11.0268" x2="9.18831" y2="93.7227" stroke="black" stroke-width="3.67538"/>
+            </g>
+            </svg>
+          </div>
+
+          <div class="lc-t lc-city lc-city-a">San Francisco, CA</div>
+          <div class="lc-t lc-when lc-when-a">Feb 8, 06:00 PST&nbsp;&bull;&nbsp;</div>
+          <div class="lc-icon lc-star-a">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 18.3769 18.3769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.8779 6.24977L18.2148 6.87642C18.3765 6.89256 18.4299 7.10058 18.3167 7.20588L13.5408 11.6256L14.9312 18.1486C14.966 18.3125 14.7954 18.4314 14.6652 18.3507L9.18844 14.9457L3.71163 18.3507C3.57986 18.433 3.41092 18.3091 3.44566 18.1469L4.83609 11.6256L0.0602009 7.20592C-0.0529733 7.10148 0.000381297 6.89259 0.162057 6.87646L6.49893 6.24981L9.02429 0.113937C9.06875 0.00694655 9.18273 -0.0406044 9.30155 0.0417615L11.8779 6.24977Z" fill="#FFC043"/>
+            </svg>
+          </div>
+          <div class="lc-t lc-rating lc-rating-a">4.5</div>
+          <div class="lc-r lc-dist lc-dist-a">19 mi away</div>
+
+          <div class="lc-t lc-city lc-city-b">Los Angeles, CA</div>
+          <div class="lc-t lc-when lc-when-b">Feb 8, 12:00 PST&nbsp;&bull;&nbsp;</div>
+          <div class="lc-icon lc-star-b">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 18.3769 18.3769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.8779 6.24977L18.2148 6.87642C18.3765 6.89256 18.4299 7.10058 18.3167 7.20588L13.5408 11.6256L14.9312 18.1486C14.966 18.3125 14.7954 18.4314 14.6652 18.3507L9.18844 14.9457L3.71163 18.3507C3.57986 18.433 3.41092 18.3091 3.44566 18.1469L4.83609 11.6256L0.0602009 7.20592C-0.0529733 7.10148 0.000381297 6.89259 0.162057 6.87646L6.49893 6.24981L9.02429 0.113937C9.06875 0.00694655 9.18273 -0.0406044 9.30155 0.0417615L11.8779 6.24977Z" fill="#FFC043"/>
+            </svg>
+          </div>
+          <div class="lc-t lc-rating lc-rating-b">5.0</div>
+          <div class="lc-r lc-dist lc-dist-b">500 mi</div>
+
+          <div class="lc-rule lc-rule-b">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 610.112 1.83769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line y1="0.918844" x2="610.112" y2="0.918844" stroke="#E2E2E2" stroke-width="1.83769"/>
+            </svg>
+          </div>
+
+          <div class="lc-icon lc-snow">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 18.3769 18.3769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.5699 9.92797L14.3692 10.5155L12.0628 9.18844L14.3692 7.86133L16.5699 8.44891C16.6939 8.48132 16.8198 8.49753 16.9418 8.49753C17.5758 8.49753 18.1569 8.0761 18.3276 7.43585C18.5329 6.672 18.0777 5.88587 17.3116 5.68123L15.9237 5.31045L16.2996 3.92661C16.5049 3.16277 16.0497 2.37663 15.2836 2.172C14.5196 1.96736 13.7291 2.42121 13.5238 3.18506L12.9345 5.37934L10.6282 6.70645V4.05223L12.2396 2.44552C12.8004 1.88631 12.8004 0.978614 12.2396 0.419406C11.6787 -0.139802 10.7684 -0.139802 10.2075 0.419406L9.19149 1.43246L8.17545 0.419406C7.6146 -0.139802 6.70424 -0.139802 6.14339 0.419406C5.58254 0.978614 5.58254 1.88631 6.14339 2.44552L7.75482 4.05223V6.70645L5.44843 5.37934L4.85913 3.18506C4.65389 2.42121 3.86545 1.96736 3.09936 2.172C2.33327 2.37663 1.87809 3.16277 2.08333 3.92661L2.4552 5.31045L1.0673 5.68123C0.301212 5.88587 -0.15397 6.672 0.0512679 7.43585C0.223993 8.0761 0.803131 8.49753 1.43713 8.49753C1.56109 8.49753 1.68505 8.48132 1.809 8.44891L4.00973 7.86133L6.31612 9.18844L4.00973 10.5155L1.809 9.92797C1.04291 9.72333 0.254474 10.1772 0.0492358 10.941C-0.156003 11.7049 0.29918 12.491 1.06527 12.6956L2.45317 13.0664L2.0813 14.4503C1.87606 15.2141 2.33124 16.0002 3.09733 16.2049C3.22129 16.2373 3.34727 16.2535 3.4692 16.2535C4.1032 16.2535 4.68437 15.8321 4.85506 15.1918L5.44436 12.9975L7.75075 11.6704V14.3246L6.13933 15.9314C5.57848 16.4906 5.57848 17.3983 6.13933 17.9575C6.41975 18.2371 6.78756 18.3769 7.15536 18.3769C7.52316 18.3769 7.89097 18.2371 8.17139 17.9575L9.18742 16.9444L10.2035 17.9575C10.4839 18.2371 10.8517 18.3769 11.2195 18.3769C11.5873 18.3769 11.9551 18.2371 12.2355 17.9575C12.7964 17.3983 12.7964 16.4906 12.2355 15.9314L10.6241 14.3246V11.6704L12.9305 12.9975L13.5198 15.1918C13.6925 15.8321 14.2716 16.2535 14.9056 16.2535C15.0296 16.2535 15.1536 16.2373 15.2775 16.2049C16.0436 16.0002 16.4988 15.2141 16.2935 14.4503L15.9217 13.0664L17.3096 12.6956C18.0757 12.491 18.5308 11.7049 18.3256 10.941C18.1244 10.1752 17.338 9.72131 16.5699 9.92797Z" fill="#276EF1"/>
+            </svg>
+          </div>
+          <div class="lc-t lc-spec">Reefer &bull; Fruit &bull; 40,000 lbs</div>
+
+        </div>
+
+        <div class="load-card">
+
+          <div class="lc-tile lc-tile-transplace"></div>
+          <div class="lc-mark lc-mark-transplace"><img src="data:image/png;base64,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" alt=""></div>
+          <div class="lc-patch-transplace"></div>
+          <div class="lc-t lc-head">Single stop reefer load</div>
+          <div class="lc-t lc-broker">Brokered by Transplace</div>
+          <div class="lc-t lc-price">$1,400</div>
+          <div class="lc-r lc-rate">$2.25/mi</div>
+
+          <div class="lc-rule lc-rule-a">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 610.112 1.83769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line y1="0.918844" x2="610.112" y2="0.918844" stroke="#E2E2E2" stroke-width="1.83769"/>
+            </svg>
+          </div>
+
+          <div class="lc-route">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 18.3769 102.911" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <g>
+            <circle cx="9.18844" cy="9.18844" r="9.18844" fill="black"/>
+            <rect y="84.5341" width="18.3769" height="18.3769" fill="black"/>
+            <line x1="9.18831" y1="11.0268" x2="9.18831" y2="93.7227" stroke="black" stroke-width="3.67538"/>
+            </g>
+            </svg>
+          </div>
+
+          <div class="lc-t lc-city lc-city-a">Columbus, OH</div>
+          <div class="lc-t lc-when lc-when-a">Feb 8, 10:00 EST&nbsp;&bull;&nbsp;</div>
+          <div class="lc-icon lc-star-a">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 18.3769 18.3769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.8779 6.24977L18.2148 6.87642C18.3765 6.89256 18.4299 7.10058 18.3167 7.20588L13.5408 11.6256L14.9312 18.1486C14.966 18.3125 14.7954 18.4314 14.6652 18.3507L9.18844 14.9457L3.71163 18.3507C3.57986 18.433 3.41092 18.3091 3.44566 18.1469L4.83609 11.6256L0.0602009 7.20592C-0.0529733 7.10148 0.000381297 6.89259 0.162057 6.87646L6.49893 6.24981L9.02429 0.113937C9.06875 0.00694655 9.18273 -0.0406044 9.30155 0.0417615L11.8779 6.24977Z" fill="#FFC043"/>
+            </svg>
+          </div>
+          <div class="lc-t lc-rating lc-rating-a">4.5</div>
+          <div class="lc-r lc-dist lc-dist-a">1 mi away</div>
+
+          <div class="lc-t lc-city lc-city-b">Louisville, KY</div>
+          <div class="lc-t lc-when lc-when-b">Feb 8, 18:00 EST&nbsp;&bull;&nbsp;</div>
+          <div class="lc-icon lc-star-b">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 18.3769 18.3769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path fill-rule="evenodd" clip-rule="evenodd" d="M11.8779 6.24977L18.2148 6.87642C18.3765 6.89256 18.4299 7.10058 18.3167 7.20588L13.5408 11.6256L14.9312 18.1486C14.966 18.3125 14.7954 18.4314 14.6652 18.3507L9.18844 14.9457L3.71163 18.3507C3.57986 18.433 3.41092 18.3091 3.44566 18.1469L4.83609 11.6256L0.0602009 7.20592C-0.0529733 7.10148 0.000381297 6.89259 0.162057 6.87646L6.49893 6.24981L9.02429 0.113937C9.06875 0.00694655 9.18273 -0.0406044 9.30155 0.0417615L11.8779 6.24977Z" fill="#FFC043"/>
+            </svg>
+          </div>
+          <div class="lc-t lc-rating lc-rating-b">5.0</div>
+          <div class="lc-r lc-dist lc-dist-b">850 mi</div>
+
+          <div class="lc-rule lc-rule-b">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 610.112 1.83769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <line y1="0.918844" x2="610.112" y2="0.918844" stroke="#E2E2E2" stroke-width="1.83769"/>
+            </svg>
+          </div>
+
+          <div class="lc-icon lc-snow">
+            <svg preserveAspectRatio="none" overflow="visible" style="display:block" width="100%" height="100%" viewBox="0 0 18.3769 18.3769" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M16.5699 9.92797L14.3692 10.5155L12.0628 9.18844L14.3692 7.86133L16.5699 8.44891C16.6939 8.48132 16.8198 8.49753 16.9418 8.49753C17.5758 8.49753 18.1569 8.0761 18.3276 7.43585C18.5329 6.672 18.0777 5.88587 17.3116 5.68123L15.9237 5.31045L16.2996 3.92661C16.5049 3.16277 16.0497 2.37663 15.2836 2.172C14.5196 1.96736 13.7291 2.42121 13.5238 3.18506L12.9345 5.37934L10.6282 6.70645V4.05223L12.2396 2.44552C12.8004 1.88631 12.8004 0.978614 12.2396 0.419406C11.6787 -0.139802 10.7684 -0.139802 10.2075 0.419406L9.19149 1.43246L8.17545 0.419406C7.6146 -0.139802 6.70424 -0.139802 6.14339 0.419406C5.58254 0.978614 5.58254 1.88631 6.14339 2.44552L7.75482 4.05223V6.70645L5.44843 5.37934L4.85913 3.18506C4.65389 2.42121 3.86545 1.96736 3.09936 2.172C2.33327 2.37663 1.87809 3.16277 2.08333 3.92661L2.4552 5.31045L1.0673 5.68123C0.301212 5.88587 -0.15397 6.672 0.0512679 7.43585C0.223993 8.0761 0.803131 8.49753 1.43713 8.49753C1.56109 8.49753 1.68505 8.48132 1.809 8.44891L4.00973 7.86133L6.31612 9.18844L4.00973 10.5155L1.809 9.92797C1.04291 9.72333 0.254474 10.1772 0.0492358 10.941C-0.156003 11.7049 0.29918 12.491 1.06527 12.6956L2.45317 13.0664L2.0813 14.4503C1.87606 15.2141 2.33124 16.0002 3.09733 16.2049C3.22129 16.2373 3.34727 16.2535 3.4692 16.2535C4.1032 16.2535 4.68437 15.8321 4.85506 15.1918L5.44436 12.9975L7.75075 11.6704V14.3246L6.13933 15.9314C5.57848 16.4906 5.57848 17.3983 6.13933 17.9575C6.41975 18.2371 6.78756 18.3769 7.15536 18.3769C7.52316 18.3769 7.89097 18.2371 8.17139 17.9575L9.18742 16.9444L10.2035 17.9575C10.4839 18.2371 10.8517 18.3769 11.2195 18.3769C11.5873 18.3769 11.9551 18.2371 12.2355 17.9575C12.7964 17.3983 12.7964 16.4906 12.2355 15.9314L10.6241 14.3246V11.6704L12.9305 12.9975L13.5198 15.1918C13.6925 15.8321 14.2716 16.2535 14.9056 16.2535C15.0296 16.2535 15.1536 16.2373 15.2775 16.2049C16.0436 16.0002 16.4988 15.2141 16.2935 14.4503L15.9217 13.0664L17.3096 12.6956C18.0757 12.491 18.5308 11.7049 18.3256 10.941C18.1244 10.1752 17.338 9.72131 16.5699 9.92797Z" fill="#276EF1"/>
+            </svg>
+          </div>
+          <div class="lc-t lc-spec">Reefer &bull; Fruit &bull; 40,000 lbs</div>
+
+        </div>
+      </div>
+      </div>
+    </div>
+
+  </div>
+ </div>
+</div>
+
+<div class="chrome" id="chrome">
+  <button id="playBtn">Play ⏎</button>
+  <button id="toggleBtn">Toggle</button>
+  <button id="resetBtn">Reset</button>
+  <span class="sep"></span>
+  <span class="lbl">Scene</span>
+  <button data-scene-btn="1" class="on">1</button>
+  <button data-scene-btn="2">2</button>
+  <button data-scene-btn="3">3</button>
+  <button data-scene-btn="4">4</button>
+  <span class="sep"></span>
+  <span class="lbl">Speed</span>
+  <button data-k="2">.5×</button>
+  <button data-k="1" class="on">1×</button>
+  <button data-k=".5">2×</button>
+  <span class="sep"></span>
+  <span class="lbl">Zoom</span>
+  <button data-zoom="fit">Fit</button>
+  <button data-zoom="1" class="on">100%</button>
+  <button data-zoom="2">200%</button>
+</div>
+<div class="hint" id="hint">H hide chrome · ⏎ play · T toggle · R reset · 1–4 scene · [ ] speed</div>
+
+<script>
+(function(){
+  'use strict';
+
+  var root      = document.documentElement;
+  var fitter    = document.getElementById('fitter');
+  var frame     = document.getElementById('frame');
+  var card      = document.getElementById('card');
+  var board     = document.getElementById('board');
+  var awy       = document.querySelector('.awy');
+  var board3    = document.getElementById('board3');
+  var board4    = document.getElementById('board4');
+  var chrome    = document.getElementById('chrome');
+  var hint      = document.getElementById('hint');
+
+  var scene = '1';   // which scene the transport controls drive
+
+  /* ---- geometry, straight off the Figma frame ---- */
+  var FRAME_W = 960, FRAME_H = 570;    // artboard (Figma 900x1200 boards at 47.5%)
+  var GUIDE   = 1;                     // setup guide, against its Figma size
+  var CARD_W  = 523 * GUIDE;           // 261.5
+  var CARD_H  = 565 * GUIDE;           // 282.5
+  var BASE_W  = 288;                   // grid the card is authored on
+  var SCALE   = CARD_W / BASE_W;       // .90799…
+
+  // Height is set on the unscaled card, so divide the scale back out.
+  var EXPANDED_H  = CARD_H / SCALE;    // 311.13 -> renders at 282.5
+  var COLLAPSED_H = 82;                // 1px border + header 36 + bar 12 + summary 32 + 1px
+
+  /* ---- preview zoom ----
+     Defaults to 1:1 so the artboard measures 960x570 on screen and in
+     the inspector. 'fit' is a convenience for small windows only. */
+  var zoom = '1';
+  var PAD  = 48;                       // breathing room around 'fit'; 0 when embedded
+  function applyZoom(){
+    var s = (zoom === 'fit')
+      ? Math.min((window.innerWidth - PAD) / FRAME_W, (window.innerHeight - PAD) / FRAME_H)
+      : parseFloat(zoom);
+    root.style.setProperty('--fit', s);
+  }
+  window.addEventListener('resize', applyZoom);
+
+  /* ---- check the content still fits the pinned height ---- */
+  function measure(){
+    card.classList.add('no-anim');
+    var h = card.style.height;
+    card.style.height = 'auto';
+    var natural = card.offsetHeight;
+    card.style.height = h;
+    void card.offsetHeight;
+    card.classList.remove('no-anim');
+    console.log('card content: ' + natural.toFixed(1) + 'px base / ' +
+      (natural * SCALE).toFixed(1) + 'px rendered — target ' + CARD_H);
+    if (natural > EXPANDED_H + 0.5) console.warn('content is taller than the Figma height; it will clip');
+    return natural;
+  }
+
+  /* ---- state ---- */
+  function setState(next, instant){
+    if (instant) card.classList.add('no-anim');
+    card.dataset.state = next;
+    card.style.height = (next === 'collapsed' ? COLLAPSED_H : EXPANDED_H) + 'px';
+    if (instant){
+      void card.offsetHeight;
+      card.classList.remove('no-anim');
+    }
+  }
+
+  /* ---- scene 2 state ----
+     The control changes immediately; the monogram cross-fades rather
+     than travelling. CSS holds its position change on a 0s/200ms-delay
+     transition, so it lands while opacity is still 0 — all this has to
+     do is drop it out and bring it back. */
+  var PLACEMENTS = ['topleft', 'centertop', 'centerrear'];
+  function setPlacement(next, instant){
+    if (instant){
+      board.classList.add('no-anim');
+      awy.classList.remove('swap');
+      board.dataset.placement = next;
+      void board.offsetHeight;
+      board.classList.remove('no-anim');
+      return;
+    }
+
+    if (board.dataset.placement === next) return;
+
+    board.dataset.placement = next;
+
+    // Restart the monogram's swap on this very frame, so it runs off the
+    // same clock as the plates' CSS delays rather than a JS timer.
+    awy.classList.remove('swap');
+    void awy.offsetWidth;                // reflow, or the restart is coalesced
+    awy.classList.add('swap');
+  }
+
+  /* ---- scene 3 state ---- */
+  var VIEWS = ['one', 'two'];
+  function setView(next, instant){
+    if (instant) board3.classList.add('no-anim');
+    board3.dataset.view = next;
+    if (instant){
+      void board3.offsetHeight;
+      board3.classList.remove('no-anim');
+    }
+  }
+
+  /* ---- scene 4 carousel ----
+     Track is [c3' c0 c1 c2 c3 c0' c1']. HOME (1) is the real first card;
+     LAST (5) is its copy. Travelling onto LAST and then taking up HOME
+     with transitions off loops forever without ever reversing. */
+  var CARDS      = 4;
+  var HOME       = 1;
+  var LAST       = HOME + CARDS;   // 5
+  var SLIDE_MS   = 620;            // must match the .load-track transition
+  var slideTimer = null;
+
+  function curSlide(){
+    return parseInt(board4.style.getPropertyValue('--slide'), 10) || HOME;
+  }
+  function jumpSlide(n){
+    board4.classList.add('no-anim');
+    board4.style.setProperty('--slide', n);
+    void board4.offsetHeight;
+    board4.classList.remove('no-anim');
+  }
+  function setSlide(next, instant){
+    clearTimeout(slideTimer);
+    if (instant){ jumpSlide(next); return; }
+    board4.style.setProperty('--slide', next);
+    if (next === LAST){
+      slideTimer = setTimeout(function(){ jumpSlide(HOME); }, SLIDE_MS * k());
+    }
+  }
+  function nextSlide(){
+    var cur = curSlide();
+    if (cur >= LAST){ jumpSlide(HOME); cur = HOME; }   // wrap already in flight
+    setSlide(cur + 1, false);
+  }
+
+  function toggle(){
+    if (scene === '4'){
+      nextSlide();
+      return;
+    }
+    if (scene === '3'){
+      setView(board3.dataset.view === 'two' ? 'one' : 'two', false);
+      return;
+    }
+    if (scene === '2'){
+      var i = PLACEMENTS.indexOf(board.dataset.placement);
+      setPlacement(PLACEMENTS[(i + 1) % PLACEMENTS.length], false);
+      return;
+    }
+    setState(card.dataset.state === 'collapsed' ? 'expanded' : 'collapsed', false);
+  }
+
+  /* ---- play sequence (for recording) ---- */
+  var timers = [];
+  function clearTimers(){
+    timers.forEach(clearTimeout);
+    timers = [];
+  }
+  function at(ms, fn){
+    timers.push(setTimeout(fn, ms * k()));
+  }
+  function k(){
+    return parseFloat(getComputedStyle(root).getPropertyValue('--k')) || 1;
+  }
+
+  function play(){
+    clearTimers();
+    if (scene === '4'){
+      setSlide(HOME, true);
+      at(150,  function(){ setSlide(HOME + 1, false); });
+      at(1450, function(){ setSlide(HOME + 2, false); });
+      at(2750, function(){ setSlide(HOME + 3, false); });
+      at(4050, function(){ setSlide(LAST,     false); });  // onto the copy, then home
+      return;
+    }
+    if (scene === '3'){
+      setView('one', true);
+      at(150,  function(){ setView('two', false); });
+      at(2050, function(){ setView('one', false); });
+      return;
+    }
+    if (scene === '2'){
+      setPlacement('topleft', true);
+      at(150,  function(){ setPlacement('centertop',  false); });
+      at(1650, function(){ setPlacement('centerrear', false); });
+      at(3150, function(){ setPlacement('topleft',    false); });
+      return;
+    }
+    setState('expanded', true);
+    at(150,  function(){ setState('collapsed', false); });
+    at(1550, function(){ setState('expanded',  false); });
+  }
+
+  function reset(){
+    clearTimers();
+    if (scene === '4'){ setSlide(HOME, true); return; }
+    if (scene === '3'){ setView('one', true); return; }
+    if (scene === '2'){ setPlacement('topleft', true); return; }
+    setState('expanded', true);
+  }
+
+  /* ---- chrome wiring ---- */
+  function markGroup(attr, el){
+    var group = chrome.querySelectorAll('[' + attr + ']');
+    for (var i = 0; i < group.length; i++) group[i].classList.remove('on');
+    el.classList.add('on');
+  }
+
+  document.getElementById('playBtn').onclick   = play;
+  document.getElementById('toggleBtn').onclick = toggle;
+  document.getElementById('resetBtn').onclick  = reset;
+  document.getElementById('expandBtn').onclick = toggle;
+
+  chrome.addEventListener('click', function(e){
+    var b = e.target.closest('button');
+    if (!b) return;
+
+    if (b.dataset.sceneBtn){
+      var n = b.dataset.sceneBtn;
+      var scenes = document.querySelectorAll('.scene');
+      for (var i = 0; i < scenes.length; i++){
+        scenes[i].classList.toggle('active', scenes[i].dataset.scene === n);
+      }
+      markGroup('data-scene-btn', b);
+      scene = n;
+      clearTimers();
+      if (n === '1'){ measure(); }
+      reset();
+    }
+    if (b.dataset.k){
+      root.style.setProperty('--k', b.dataset.k);
+      markGroup('data-k', b);
+    }
+    if (b.dataset.zoom){
+      zoom = b.dataset.zoom;
+      applyZoom();
+      markGroup('data-zoom', b);
+    }
+  });
+
+  /* ---- the segmented control is live ---- */
+  board.addEventListener('click', function(e){
+    var lbl = e.target.closest('.seg-lbl');
+    if (!lbl) return;
+    var opt = lbl.dataset.opt;
+    if (PLACEMENTS.indexOf(opt) === -1) return;
+    clearTimers();
+    setPlacement(opt, false);
+  });
+
+  /* ---- keyboard ---- */
+  var SPEEDS = ['2','1','.5'];
+
+  document.addEventListener('keydown', function(e){
+    if (root.classList.contains('embed')) return;   // no shortcuts when embedded
+    var key = e.key.toLowerCase();
+
+    if (key === 'h'){
+      var hidden = !chrome.hasAttribute('hidden');
+      chrome.toggleAttribute('hidden', hidden);
+      hint.toggleAttribute('hidden', hidden);
+      return;
+    }
+    if (e.key === 'Enter' || e.key === ' '){ e.preventDefault(); play();   return; }
+    if (key === 't'){ toggle(); return; }
+    if (key === 'r'){ reset();  return; }
+
+    if (key >= '1' && key <= '4'){
+      var btn = chrome.querySelector('[data-scene-btn="' + key + '"]');
+      if (btn) btn.click();
+      return;
+    }
+    if (e.key === '[' || e.key === ']'){
+      var cur = String(k());
+      if (cur === '0.5') cur = '.5';
+      var idx = SPEEDS.indexOf(cur);
+      if (idx === -1) idx = 1;
+      idx += (e.key === '[' ? -1 : 1);
+      idx = Math.max(0, Math.min(SPEEDS.length - 1, idx));
+      var sb = chrome.querySelector('[data-k="' + SPEEDS[idx] + '"]');
+      if (sb) sb.click();
+    }
+  });
+
+  /* ---- init ---- */
+  // TWO clones, not one. Slide 4 shows the copy of card 0 in place, but it
+  // also needs something in the 24px peek slot beside it — otherwise that
+  // slot is empty at slide 4 and card 1 pops into it the moment the wrap
+  // takes hold. With copies of cards 0 and 1, slide 4 and slide 0 are the
+  // same picture down to the peek, so the seam cannot be seen.
+  // Cloned at runtime so the copies can never drift from the originals.
+  (function(){
+    if (!board4) return;
+    var track = board4.querySelector('.load-track');
+    if (!track || track.children.length !== CARDS) return;
+    var real = [].slice.call(track.children);
+    track.insertBefore(real[CARDS - 1].cloneNode(true), real[0]);  // tail card at the head
+    track.appendChild(real[0].cloneNode(true));                    // first two at the tail
+    track.appendChild(real[1].cloneNode(true));
+    board4.style.setProperty('--slide', HOME);
+  })();
+
+  applyZoom();
+  if (document.fonts && document.fonts.ready){
+    document.fonts.ready.then(measure);
+  }
+  measure();
+  setState('expanded', true);
+
+  /* ---- embed mode ----
+     card-animations.html?embed&scene=2
+     Shows one scene, scales it to fill the iframe, and plays it once
+     each time the pointer enters (a tap counts on touch screens). */
+  var params = new URLSearchParams(location.search);
+  if (params.has('embed')){
+    root.classList.add('embed');
+    PAD  = 0;
+    zoom = 'fit';
+    applyZoom();
+
+    var want = params.get('scene') || '1';
+    if (!/^[1-4]$/.test(want)) want = '1';
+    var scenes = document.querySelectorAll('.scene');
+    for (var i = 0; i < scenes.length; i++){
+      scenes[i].classList.toggle('active', scenes[i].dataset.scene === want);
+    }
+    scene = want;
+    reset();
+
+    // Plays once per hover. A hover mid-run is ignored, so the sequence
+    // always finishes cleanly; leaving early lets it finish too. Each run
+    // ends back on its first frame, ready for the next hover.
+    // RUN_MS = last cue + its transition, so the lock lifts once settled.
+    var RUN_MS  = { '1': 2150, '2': 3950, '3': 2950, '4': 4750 };   // 550ms shorter lead-in
+    var running = false;
+    function trigger(){
+      if (running) return;
+      running = true;
+      play();
+      setTimeout(function(){ running = false; }, RUN_MS[scene] * k());
+    }
+    root.addEventListener('pointerenter', trigger);   // <html> fills the iframe
+    // The portfolio page makes the iframe click-through and posts 'play'
+    // when the pointer enters the card, so card clicks still navigate.
+    window.addEventListener('message', function(e){
+      if (e.data === 'card-animation:play') trigger();
+    });
+  }
+})();
+</script>
+</body>
+</html>
