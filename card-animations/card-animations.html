@@ -211,7 +211,7 @@ body{
   background:var(--primary);
   border:1px solid var(--surface);
   border-radius:999px;
-  transition: width calc(420ms * var(--k)) var(--e-out);
+  transition: width calc(300ms * var(--k)) var(--e-out);
 }
 
 /* --- collapsed summary line ---
@@ -312,54 +312,56 @@ body{
 /* ============================================================
    THE MOTION
 
-   Collapse (expanded -> collapsed), ~520ms:
-     0ms    groups fade + lift, staggered bottom-up (26ms apart), done by 202ms
-     60ms   card height 310 -> 82 on the sheet curve
-     175ms  summary resolves in — it overlaps the tail of the last group's
+   Every state change settles within 300ms, delays included.
+
+   Collapse (expanded -> collapsed), 300ms:
+     0ms    groups fade + lift, staggered bottom-up (18ms apart), done by 136ms
+     40ms   card height 310 -> 82 on the sheet curve (260ms)
+     120ms  summary resolves in — it overlaps the tail of the last group's
             fade, so the card is never an empty white box mid-collapse
 
-   Expand (collapsed -> expanded), ~530ms:
-     0ms    summary drops out (fast)
-     50ms   card height 82 -> 310
-     170ms  groups arrive top-down (28ms apart) as the space opens for them
+   Expand (collapsed -> expanded), 300ms:
+     0ms    summary drops out (fast, 90ms)
+     30ms   card height 82 -> 310 (270ms)
+     100ms  groups arrive top-down (15ms apart) as the space opens for them
    ============================================================ */
 
 /* ---- collapsing ---- */
 .card[data-state="collapsed"]{
-  transition: height calc(460ms * var(--k)) var(--e-sheet) calc(60ms * var(--k));
+  transition: height calc(260ms * var(--k)) var(--e-sheet) calc(40ms * var(--k));
 }
 .card[data-state="collapsed"] .group{
   opacity:0;
   transform:translateY(-4px) scale(.98);
   transition:
-    opacity   calc(150ms * var(--k)) var(--e-in) calc(var(--rev) * 26ms * var(--k)),
-    transform calc(150ms * var(--k)) var(--e-in) calc(var(--rev) * 26ms * var(--k));
+    opacity   calc(100ms * var(--k)) var(--e-in) calc(var(--rev) * 18ms * var(--k)),
+    transform calc(100ms * var(--k)) var(--e-in) calc(var(--rev) * 18ms * var(--k));
 }
 .card[data-state="collapsed"] .summary{
   opacity:1;
   transform:translateY(0);
   transition:
-    opacity   calc(270ms * var(--k)) var(--e-out) calc(175ms * var(--k)),
-    transform calc(270ms * var(--k)) var(--e-out) calc(175ms * var(--k));
+    opacity   calc(180ms * var(--k)) var(--e-out) calc(120ms * var(--k)),
+    transform calc(180ms * var(--k)) var(--e-out) calc(120ms * var(--k));
 }
 
 /* ---- expanding ---- */
 .card[data-state="expanded"]{
-  transition: height calc(480ms * var(--k)) var(--e-sheet) calc(50ms * var(--k));
+  transition: height calc(270ms * var(--k)) var(--e-sheet) calc(30ms * var(--k));
 }
 .card[data-state="expanded"] .group{
   opacity:1;
   transform:translateY(0) scale(1);
   transition:
-    opacity   calc(260ms * var(--k)) var(--e-out) calc((170ms + var(--i) * 28ms) * var(--k)),
-    transform calc(260ms * var(--k)) var(--e-out) calc((170ms + var(--i) * 28ms) * var(--k));
+    opacity   calc(170ms * var(--k)) var(--e-out) calc((100ms + var(--i) * 15ms) * var(--k)),
+    transform calc(170ms * var(--k)) var(--e-out) calc((100ms + var(--i) * 15ms) * var(--k));
 }
 .card[data-state="expanded"] .summary{
   opacity:0;
   transform:translateY(4px);
   transition:
-    opacity   calc(130ms * var(--k)) var(--e-in) 0ms,
-    transform calc(130ms * var(--k)) var(--e-in) 0ms;
+    opacity   calc(90ms * var(--k)) var(--e-in) 0ms,
+    transform calc(90ms * var(--k)) var(--e-in) 0ms;
 }
 
 /* instant reset — no motion */
@@ -396,7 +398,7 @@ body{
   pointer-events:none;
   -webkit-user-drag:none;
   opacity:0;
-  transition: opacity calc(130ms * var(--k)) var(--e-in);   /* leaving */
+  transition: opacity calc(110ms * var(--k)) var(--e-in);   /* leaving */
 }
 /* Vertical rhythm taken from 753:2105 (the 750x900 mobile frame):
    control at 19.08% of the height, then a 4.67% gap before the case.
@@ -410,7 +412,28 @@ body{
 .board[data-placement="centertop"] .luggage-front,
 .board[data-placement="centerrear"] .luggage-rear{
   opacity:1;
-  transition: opacity calc(160ms * var(--k)) var(--e-out) calc(160ms * var(--k));
+  transition: opacity calc(160ms * var(--k)) var(--e-out) calc(110ms * var(--k));
+}
+
+/* The rear plate also grows in from 90%. Its origin sits on the monogram's
+   spot (x centre, y 278 of 538). Leaving, it holds full size through the fade and
+   snaps back to 90% once invisible, ready for the next arrival.
+   will-change keeps the plate on its own layer for good: otherwise the
+   scale promotes a 2MB image at the start and drops it at the end, and
+   each re-raster shows as a flash (same fix as .seg-pill). */
+.luggage-rear{
+  will-change: transform, opacity;
+  transform: translateY(16px) scale(.9);   /* grows from 90% and rises 16 Figma px (~8px) */
+  transform-origin: 50% 51.7%;
+  transition:
+    opacity   calc(110ms * var(--k)) var(--e-in),
+    transform 0s linear calc(110ms * var(--k));
+}
+.board[data-placement="centerrear"] .luggage-rear{
+  transform: translateY(0) scale(1);
+  transition:
+    opacity   calc(190ms * var(--k)) var(--e-out) calc(110ms * var(--k)),
+    transform calc(190ms * var(--k)) var(--e-out) calc(110ms * var(--k));
 }
 
 /* --- the awy monogram ---
@@ -524,12 +547,14 @@ body{
 /* ============================================================
    SCENE 2 MOTION
 
-   0ms    the pill slides + resizes to the new option (420ms)
+   Settles within 300ms.
+
+   0ms    the pill slides + resizes to the new option (300ms)
           the labels trade colour underneath it (180ms)
-          the monogram starts fading out (130ms)
-   130ms  it is invisible, so its position snaps — transform carries
-          a 0s duration on a 130ms delay, which is the whole trick
-   160ms  it fades back up in the new spot (160ms)
+          the monogram starts fading out (110ms)
+   110ms  it is invisible, so its position snaps — transform carries
+          a 0s duration on a 110ms delay, which is the whole trick
+   110ms  it fades back up in the new spot (160ms), no gap
 
    The monogram and the case plates share these numbers on purpose.
    The monogram is printed on the shell: if it outlived the plate by
@@ -538,7 +563,7 @@ body{
    The monogram never travels: it is printed on the case, so sliding
    it across the shell would read as the wrong physics. Going to or
    from "Center rear" the whole case swaps the same way — the front
-   plate clears, then the rear plate arrives on the same 160ms beat,
+   plate clears, then the rear plate arrives on the same 110ms beat,
    so the monogram lands with it rather than ahead of it.
    ============================================================ */
 
@@ -552,29 +577,41 @@ body{
 .seg-pill{
   will-change: transform;
   transition:
-    transform calc(420ms * var(--k)) var(--e-sheet),
-    width     calc(420ms * var(--k)) var(--e-sheet);
+    transform calc(300ms * var(--k)) var(--e-sheet),
+    width     calc(300ms * var(--k)) var(--e-sheet);
 }
 .seg-lbl span{ transform: translateZ(0); }   /* stable raster layer */
 
 .awy{
   opacity:1;
-  transition: transform 0s linear calc(130ms * var(--k));  /* snap, unseen */
+  transition: transform 0s linear calc(110ms * var(--k));  /* snap, unseen */
 }
 
 /* The monogram is printed on the shell, so it swaps when the case does.
    Its fade used to be a JS setTimeout while the plates used CSS delays —
    two clocks, and setTimeout slips exactly when a big image is
    compositing. One keyframe pass puts it on the plates' clock instead:
-   out over 130ms (as the old plate clears), 30ms of absence, then in
-   over 160ms starting at 160ms — the same frame the new plate arrives. */
+   out over 110ms (as the old plate clears), then straight back in over
+   160ms — the same frame the new plate arrives. No empty beat between
+   plates, which read as a flash of bare gradient. */
 @keyframes awy-swap{
   0%      { opacity:1; animation-timing-function: var(--e-in);  }
-  40.625% { opacity:0; animation-timing-function: linear;       }  /* 130ms */
-  50%     { opacity:0; animation-timing-function: var(--e-out); }  /* 160ms */
-  100%    { opacity:1; }                                           /* 320ms */
+  40.741% { opacity:0; animation-timing-function: var(--e-out); }  /* 110ms */
+  100%    { opacity:1; }                                           /* 270ms */
 }
-.awy.swap{ animation: awy-swap calc(320ms * var(--k)) both; }
+.awy.swap{ animation: awy-swap calc(270ms * var(--k)) both; }
+
+/* The rear plate fades in over a longer 190ms (done at 300ms), so the
+   monogram's fade matches it. Only the plate grows and rises — the
+   monogram just fades in place. */
+@keyframes awy-swap-rear{
+  0%      { opacity:1; animation-timing-function: var(--e-in);  }
+  36.667% { opacity:0; animation-timing-function: var(--e-out); }  /* 110ms */
+  100%    { opacity:1; }                                           /* 300ms */
+}
+.board[data-placement="centerrear"] .awy.swap{
+  animation: awy-swap-rear calc(300ms * var(--k)) both;
+}
 
 /* Pill geometry per option, each centred on its own label with the
    36px of padding Figma draws around "Top left". "Center rear" cannot
@@ -795,10 +832,10 @@ body{
    145px lower and no rows beneath it. So the change is one move plus
    a reveal:
 
-   0ms    the widget rises 544 -> 399 on the sheet curve (520ms)
-   80ms   the rows are already arriving, 60ms apart, so the reveal
+   0ms    the widget rises 544 -> 399 on the sheet curve (300ms)
+   40ms   the rows are already arriving, 30ms apart, so the reveal
           runs WITH the move rather than after it — the last one
-          settles at 500ms, just before the card lands at 520ms
+          settles at 300ms, as the card lands
 
    Two of the three rows sit behind the card in state one, so the
    card is held above them: they are uncovered as it rises instead
@@ -809,7 +846,7 @@ body{
    ============================================================ */
 
 .widget{
-  transition: transform calc(520ms * var(--k)) var(--e-sheet);
+  transition: transform calc(300ms * var(--k)) var(--e-sheet);
 }
 .board3[data-view="one"] .widget{ transform: translateY(145.479px); }
 .board3[data-view="two"] .widget{ transform: translateY(0); }
@@ -825,8 +862,8 @@ body{
   opacity:1;
   transform: translateY(0);
   transition:
-    opacity   calc(300ms * var(--k)) var(--e-out) calc((80ms + var(--i) * 60ms) * var(--k)),
-    transform calc(300ms * var(--k)) var(--e-out) calc((80ms + var(--i) * 60ms) * var(--k));
+    opacity   calc(200ms * var(--k)) var(--e-out) calc((40ms + var(--i) * 30ms) * var(--k)),
+    transform calc(200ms * var(--k)) var(--e-out) calc((40ms + var(--i) * 30ms) * var(--k));
 }
 
 .board3.no-anim,
@@ -947,7 +984,7 @@ body{
   align-items:flex-start;
   gap:65.703px;
   transform: translateX(calc((1 - var(--slide, 1)) * 738.297px));
-  transition: transform calc(620ms * var(--k)) var(--e-sheet);
+  transition: transform calc(300ms * var(--k)) var(--e-sheet);
 }
 .load-card{
   position:relative;
@@ -1705,7 +1742,7 @@ html.embed .chrome, html.embed .hint{ display:none !important; }
 
   /* ---- scene 2 state ----
      The control changes immediately; the monogram cross-fades rather
-     than travelling. CSS holds its position change on a 0s/200ms-delay
+     than travelling. CSS holds its position change on a 0s/110ms-delay
      transition, so it lands while opacity is still 0 — all this has to
      do is drop it out and bring it back. */
   var PLACEMENTS = ['topleft', 'centertop', 'centerrear'];
@@ -1748,7 +1785,7 @@ html.embed .chrome, html.embed .hint{ display:none !important; }
   var CARDS      = 4;
   var HOME       = 1;
   var LAST       = HOME + CARDS;   // 5
-  var SLIDE_MS   = 620;            // must match the .load-track transition
+  var SLIDE_MS   = 300;            // must match the .load-track transition
   var slideTimer = null;
 
   function curSlide(){
@@ -1804,32 +1841,35 @@ html.embed .chrome, html.embed .hint{ display:none !important; }
     return parseFloat(getComputedStyle(root).getPropertyValue('--k')) || 1;
   }
 
+  // The first cue runs synchronously: each instant setter forces a reflow,
+  // so the rest frame is committed and the transition starts on this very
+  // frame — no lead-in between hover and motion.
   function play(){
     clearTimers();
     if (scene === '4'){
       setSlide(HOME, true);
-      at(150,  function(){ setSlide(HOME + 1, false); });
-      at(1450, function(){ setSlide(HOME + 2, false); });
-      at(2750, function(){ setSlide(HOME + 3, false); });
-      at(4050, function(){ setSlide(LAST,     false); });  // onto the copy, then home
+      setSlide(HOME + 1, false);
+      at(1300, function(){ setSlide(HOME + 2, false); });
+      at(2600, function(){ setSlide(HOME + 3, false); });
+      at(3900, function(){ setSlide(LAST,     false); });  // onto the copy, then home
       return;
     }
     if (scene === '3'){
       setView('one', true);
-      at(150,  function(){ setView('two', false); });
-      at(2050, function(){ setView('one', false); });
+      setView('two', false);
+      at(700, function(){ setView('one', false); });
       return;
     }
     if (scene === '2'){
       setPlacement('topleft', true);
-      at(150,  function(){ setPlacement('centertop',  false); });
-      at(1650, function(){ setPlacement('centerrear', false); });
-      at(3150, function(){ setPlacement('topleft',    false); });
+      setPlacement('centertop', false);
+      at(1160, function(){ setPlacement('centerrear', false); });
+      at(2320, function(){ setPlacement('topleft',    false); });
       return;
     }
     setState('expanded', true);
-    at(150,  function(){ setState('collapsed', false); });
-    at(1550, function(){ setState('expanded',  false); });
+    setState('collapsed', false);
+    at(800, function(){ setState('expanded',  false); });
   }
 
   function reset(){
@@ -1972,7 +2012,7 @@ html.embed .chrome, html.embed .hint{ display:none !important; }
     // always finishes cleanly; leaving early lets it finish too. Each run
     // ends back on its first frame, ready for the next hover.
     // RUN_MS = last cue + its transition, so the lock lifts once settled.
-    var RUN_MS  = { '1': 2150, '2': 3950, '3': 2950, '4': 4750 };   // 550ms shorter lead-in
+    var RUN_MS  = { '1': 1100, '2': 2620, '3': 1000, '4': 4200 };   // last cue + 300ms
     var running = false;
     function trigger(){
       if (running) return;
